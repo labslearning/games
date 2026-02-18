@@ -46,7 +46,7 @@ export default function HolographicHUD() {
           <div style={styles.mainDisplay}>
             <div style={styles.dataGroup}>
               <span style={styles.label}>CORE_TEMP</span>
-              <span style={styles.bigValue}>{(temp || 0).toFixed(0)}<small>K</small></span>
+              <span style={styles.bigValue}>{temp.toFixed(0)}<small>K</small></span>
             </div>
             
             {/* GRÁFICO DE ONDAS (Sparkline SVG) */}
@@ -63,7 +63,7 @@ export default function HolographicHUD() {
           <div style={styles.footer}>
             <div style={styles.barLabel}>
               <span>PRESSURE_PSI</span>
-              <span>{(pressure || 0).toFixed(1)}</span>
+              <span>{pressure.toFixed(1)}</span>
             </div>
             <div style={styles.barContainer}>
               <motion.div 

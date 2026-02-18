@@ -1,127 +1,105 @@
-import React, { useRef, Suspense } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { 
-  OrbitControls, Environment, ContactShadows, 
-  MeshTransmissionMaterial, Float, PositionalAudio 
-} from '@react-three/drei';
-import { Physics } from '@react-three/rapier';
-import { EffectComposer, Bloom, Noise, Vignette } from '@react-three/postprocessing';
-
-// Nuestros componentes de ingeniería avanzada
+import React, { useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import { Environment, Float } from '@react-three/drei';
+import * as THREE from 'three';
 import { useGameStore } from '../store/useGameStore';
-import MolecularPhysics from './MolecularPhysics';
-import HeatField from './HeatField'; // El shader de distorsión térmica [cite: 23, 70]
-import SparkParticles from './SparkParticles'; // VFX de emergencia [cite: 28, 75]
-import EmergencyLights from './EmergencyLights';
 
-/**
- * REACTOR SHELL: El contenedor visual con refracción física real.
- */
-function ReactorShell() {
-  const { temp, isCritical } = useGameStore();
-  const audioRef = useRef();
+export default function Reactor3D() {
+  const { isCritical, volume, pressure, temp } = useGameStore();
+  const { camera } = useThree();
+  const baseCamPos = useRef(new THREE.Vector3(0, 5, 12));
+  
+  const ring1 = useRef();
+  const ring2 = useRef();
+  const pistonAssembly = useRef(); 
 
   useFrame(() => {
-    if (audioRef.current) {
-      // Modulación de frecuencia basada en temperatura [cite: 12, 59]
-      audioRef.current.setPlaybackRate(1 + (temp / 1000));
-      audioRef.current.setVolume(isCritical ? 1.5 : 0.4);
+    const speed = temp / 1000;
+    if (ring1.current) ring1.current.rotation.y += speed * 0.1;
+    if (ring2.current) ring2.current.rotation.y -= speed * 0.15;
+
+    // Cinemática del Ensamblaje del Pistón
+    const targetPistonY = 4 * (volume / 100);
+    if (pistonAssembly.current) {
+      pistonAssembly.current.position.y += (targetPistonY - pistonAssembly.current.position.y) * 0.15;
+    }
+
+    // Screen Shake (Limitado y Seguro)
+    if (pressure > 1800) {
+      const rawIntensity = (pressure - 1800) / 4000; 
+      const cappedIntensity = Math.min(0.8, rawIntensity); 
+      camera.position.x = baseCamPos.current.x + (Math.random() - 0.5) * cappedIntensity;
+      camera.position.y = baseCamPos.current.y + (Math.random() - 0.5) * cappedIntensity;
+      camera.position.z = baseCamPos.current.z + (Math.random() - 0.5) * cappedIntensity;
+    } else {
+      camera.position.lerp(baseCamPos.current, 0.1);
     }
   });
 
   return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
-      <mesh castShadow position={[0, 2, 0]}>
-        <cylinderGeometry args={[2.2, 2.2, 4.5, 32]} />
-        <MeshTransmissionMaterial 
-          backside 
-          samples={16} 
-          thickness={0.2} 
-          chromaticAberration={isCritical ? 0.8 : 0.05} 
-          distortion={isCritical ? 1.5 : 0.1} 
-          temporalDistortion={0.1} 
-          color={isCritical ? "#ffaaaa" : "#ffffff"}
-        />
-        {/* Audio Espacial Industrial [cite: 11, 58] */}
-        <Suspense fallback={null}>
-          <PositionalAudio 
-            ref={audioRef} 
-            url="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364035/drone_sound_yyqqnv.wav" 
-            loop 
-            distance={5} 
-          />
-        </Suspense>
-      </mesh>
-    </Float>
-  );
-}
+    <group>
+      <Environment preset="night" />
+      <ambientLight intensity={0.3} />
+      <pointLight position={[0, 2, 0]} intensity={isCritical ? 10 : 2} color={isCritical ? "#ff0055" : "#00f2ff"} />
 
-/**
- * ESCENA PRINCIPAL: Configuración de Grado Industrial.
- */
-export default function Reactor3D() {
-  const { isCritical, shakeIntensity } = useGameStore();
-  const groupRef = useRef();
-
-  // TIER GOD: Efecto de sacudida de cámara (Camera Shake)
-  useFrame((state) => {
-    if (shakeIntensity > 0) {
-      state.camera.position.x += (Math.random() - 0.5) * shakeIntensity;
-      state.camera.position.y += (Math.random() - 0.5) * shakeIntensity;
-    }
-  });
-
-  return (
-    <div style={{ width: '100vw', height: '100vh', background: '#020205' }}>
-      <Canvas shadows camera={{ position: [0, 5, 12], fov: 45 }}>
-        <color attach="background" args={['#020205']} />
+      <Float speed={isCritical ? 8 : 1} rotationIntensity={isCritical ? 1 : 0.1}>
         
-        <Suspense fallback={null}>
-          {/* 1. Iluminación y Atmosfera AAA */}
-          <EmergencyLights />
-          <Environment preset="night" blur={0.8} />
+        {/* EL CRISTAL DE CONTENCIÓN */}
+        <mesh position={[0, 2, 0]}>
+          <cylinderGeometry args={[2.5, 2.5, 4, 64]} />
+          <meshPhysicalMaterial color={isCritical ? "#ff0055" : "#0055ff"} transparent opacity={0.15} roughness={0.0} metalness={1} side={2} />
+        </mesh>
+        
+        {/* ⚙️ EL NUEVO ENSAMBLAJE MECÁNICO DEL PISTÓN TIER GOD */}
+        <group ref={pistonAssembly} position={[0, 4, 0]}>
+          
+          {/* 1. El Eje de Transmisión (Piston Rod) */}
+          <mesh position={[0, 2.5, 0]}>
+            <cylinderGeometry args={[0.4, 0.4, 5, 32]} />
+            <meshStandardMaterial color="#aaaaaa" metalness={1} roughness={0.2} />
+          </mesh>
 
-          <group ref={groupRef}>
-            {/* 2. El Reactor y su Capa de Calor (Shader GLSL) [cite: 70, 71] */}
-            <ReactorShell />
-            <HeatField /> 
+          {/* 2. La Cabeza del Pistón (Bloque Principal) */}
+          <mesh position={[0, 0, 0]}>
+            <cylinderGeometry args={[2.46, 2.46, 0.3, 64]} />
+            <meshStandardMaterial color="#1a1a1a" metalness={0.9} roughness={0.5} />
+          </mesh>
 
-            {/* 3. Motor de Físicas WASM (Rapier)  */}
-            <Physics gravity={[0, -9.81, 0]}>
-              <MolecularPhysics count={500} />
-              <SparkParticles count={100} /> {/* VFX Procedural [cite: 75] */}
-            </Physics>
-          </group>
+          {/* 3. Anillos de Sellado (Goma Industrial) */}
+          <mesh position={[0, -0.05, 0]}>
+            <torusGeometry args={[2.46, 0.04, 16, 64]} />
+            <meshStandardMaterial color="#000000" roughness={0.9} metalness={0.1} />
+          </mesh>
+          <mesh position={[0, 0.05, 0]}>
+            <torusGeometry args={[2.46, 0.04, 16, 64]} />
+            <meshStandardMaterial color="#000000" roughness={0.9} metalness={0.1} />
+          </mesh>
 
-          {/* 4. Post-procesamiento Cinematográfico [cite: 30, 77] */}
-          <EffectComposer disableNormalPass>
-            <Bloom 
-              luminanceThreshold={1} 
-              intensity={isCritical ? 3.0 : 0.5} 
-              mipmapBlur 
-            />
-            <Noise opacity={isCritical ? 0.3 : 0.05} />
-            <Vignette eskil={false} offset={0.1} darkness={1.1} />
-          </EffectComposer>
+          {/* 4. Anillo LED Dinámico (Indica el estrés de presión) */}
+          <mesh position={[0, 0.15, 0]}>
+            <torusGeometry args={[2.4, 0.03, 16, 64]} />
+            <meshStandardMaterial color={isCritical ? "#ff0055" : "#ffea00"} emissive={isCritical ? "#ff0055" : "#ffea00"} emissiveIntensity={isCritical ? 5 : 2} />
+          </mesh>
 
-          <ContactShadows 
-            resolution={1024} 
-            scale={20} 
-            blur={2} 
-            opacity={0.8} 
-            far={10} 
-            color="#000000" 
-            position={[0, -0.01, 0]} 
-          />
-        </Suspense>
+        </group>
 
-        <OrbitControls 
-          enablePan={false} 
-          minDistance={5} 
-          maxDistance={25} 
-          makeDefault 
-        />
-      </Canvas>
-    </div>
+        {/* Base del Reactor */}
+        <mesh position={[0, -0.1, 0]}>
+          <cylinderGeometry args={[2.6, 2.8, 0.4, 64]} />
+          <meshStandardMaterial color="#111" metalness={0.9} roughness={0.4} />
+        </mesh>
+
+        {/* Anillos Magnéticos Exteriores */}
+        <mesh ref={ring1} position={[0, 1, 0]} rotation={[Math.PI/2, 0, 0]}>
+          <torusGeometry args={[2.8, 0.05, 16, 64]} />
+          <meshStandardMaterial color={isCritical ? "#ff0055" : "#00f2ff"} emissive={isCritical ? "#ff0055" : "#00f2ff"} emissiveIntensity={4} />
+        </mesh>
+        <mesh ref={ring2} position={[0, 3, 0]} rotation={[Math.PI/2, 0, 0]}>
+          <torusGeometry args={[2.8, 0.05, 16, 64]} />
+          <meshStandardMaterial color={isCritical ? "#ff0055" : "#00f2ff"} emissive={isCritical ? "#ff0055" : "#00f2ff"} emissiveIntensity={4} />
+        </mesh>
+
+      </Float>
+    </group>
   );
 }

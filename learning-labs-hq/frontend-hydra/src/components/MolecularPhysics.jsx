@@ -1,122 +1,98 @@
-import React, { useMemo, useRef, useCallback } from 'react';
-import { InstancedRigidBodies, CylinderCollider, RigidBody } from '@react-three/rapier';
-import { useGameStore } from '../store/useGameStore';
+import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useGameStore, MATERIALS } from '../store/useGameStore';
 
-/**
- * COMPONENTE: MolecularPhysics (TIER GOD EDITION)
- * 1. Físicas WASM (Rapier): Colisiones reales entre miles de cuerpos.
- * 2. Audio Dinámico: Gatilla el sonido de 'Crash' de Cloudinary según la fuerza.
- * 3. Simulación Térmica: Movimiento Browniano basado en la temperatura del reactor.
- */
-export default function MolecularPhysics({ count = 500 }) {
-  const { temp, triggerAIAssistance, reportImpact } = useGameStore();
-  const rigidBodies = useRef();
+export default function MolecularPhysics({ count = 150 }) {
+  const meshRef = useRef();
+  const materialRef = useRef();
+  const { temp, volume, activeMaterial } = useGameStore();
+  const visualVolume = useRef(volume);
 
-  // URL del actor (sonido) en Cloudinary para impactos
-  const CRASH_SOUND_URL = "https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/crash_ebp5po.wav";
-
-  // 1. Optimización de Memoria: Matrices y Colores para la GPU
-  const colorArray = useMemo(() => new Float32Array(count * 3), [count]);
-  const tempColor = new THREE.Color();
-
-  // 2. Setup Inicial: Posicionamiento aleatorio dentro del volumen del reactor
-  const instances = useMemo(() => {
-    const inst = [];
-    for (let i = 0; i < count; i++) {
-      inst.push({
-        key: `part-${i}`,
-        position: [
-          (Math.random() - 0.5) * 1.8, 
-          Math.random() * 3.5 + 0.5, 
-          (Math.random() - 0.5) * 1.8
-        ],
-        rotation: [Math.random(), Math.random(), Math.random()],
-      });
+  const crystalLattice = useMemo(() => {
+    const pos = []; let idx = 0;
+    // Redimensionado para encajar perfectamente debajo del límite del 35%
+    for(let x=0; x<6; x++) for(let y=0; y<5; y++) for(let z=0; z<6; z++) {
+      if(idx < count) { pos.push(new THREE.Vector3((x*0.6)-1.5, (y*0.25)+0.15, (z*0.6)-1.5)); idx++; }
     }
-    return inst;
+    return pos;
   }, [count]);
 
-  /**
-   * TIER GOD PHYSICS LOOP
-   * Aplicamos la Ley de los Gases Ideales: A mayor temperatura, mayor agitación molecular.
-   */
-  useFrame((state) => {
-    if (!rigidBodies.current) return;
+  const particles = useMemo(() => Array.from({ length: count }, () => ({
+    position: new THREE.Vector3((Math.random()-0.5)*4, Math.random()*2 + 0.5, (Math.random()-0.5)*4),
+    velocity: new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).normalize()
+  })), [count]);
 
-    // Calculamos la energía cinética basada en la temperatura (Kelvin)
-    const thermalAgitation = temp / 800; 
+  const dummy = useMemo(() => new THREE.Object3D(), []);
 
-    rigidBodies.current.forEach((api) => {
-      // Aplicamos impulsos aleatorios (Movimiento Browniano) para simular calor
-      api.applyImpulse({
-        x: (Math.random() - 0.5) * thermalAgitation,
-        y: (Math.random() - 0.5) * thermalAgitation,
-        z: (Math.random() - 0.5) * thermalAgitation,
-      }, true);
+  useFrame((state, delta) => {
+    if (!meshRef.current || !materialRef.current) return;
+    visualVolume.current += (volume - visualVolume.current) * 0.15;
+
+    const mat = MATERIALS[activeMaterial];
+    const currentTemp = temp || 300;
+    const baseSpeed = Math.min(4.0, Math.max(0.05, currentTemp / 100)); 
+    
+    // 🛡️ LÍMITE DE COLISIÓN SEGURO
+    const currentCeiling = Math.max(1.0, 4 * (visualVolume.current / 100) - 0.15); 
+    const radiusLimit = 2.3;
+    const liquidLevel = 0.9;
+
+    const isSolid = currentTemp <= mat.mp;
+    const isLiquid = currentTemp > mat.mp && currentTemp < mat.bp && mat.mp !== mat.bp;
+
+    const targetColor = new THREE.Color(isSolid ? mat.colorSolid : (isLiquid ? mat.colorLiquid : mat.colorGas));
+    materialRef.current.emissive.lerp(targetColor, 0.1);
+    materialRef.current.emissiveIntensity = isSolid ? 4 : (isLiquid ? 2 : (currentTemp > 2000 ? 3 : 1));
+
+    const substeps = 3;
+    const subDelta = delta / substeps;
+
+    particles.forEach((p, i) => {
+      if (isSolid) {
+        // En estado sólido, ignoran las colisiones del pistón para no generar conflictos matemáticos
+        p.position.lerp(crystalLattice[i], 0.2); 
+        p.velocity.set(0,0,0);
+      } else {
+        for(let s = 0; s < substeps; s++) {
+          if (isLiquid) {
+            p.velocity.y -= 0.5 * subDelta * 60; 
+            p.velocity.x *= 0.98; p.velocity.z *= 0.98;
+            p.velocity.x += (Math.random() - 0.5) * 0.3; p.velocity.z += (Math.random() - 0.5) * 0.3;
+          } else {
+            if (p.position.y < 0.5 && Math.random() < 0.05) p.velocity.y += Math.random() * 0.5;
+          }
+
+          p.position.addScaledVector(p.velocity, subDelta * baseSpeed * (isLiquid ? 0.2 : 2.0));
+
+          const dist2D = Math.sqrt(p.position.x * p.position.x + p.position.z * p.position.z);
+          if (dist2D > radiusLimit) {
+            const nx = p.position.x / dist2D; const nz = p.position.z / dist2D;
+            const dot = p.velocity.x * nx + p.velocity.z * nz;
+            if (dot > 0) { p.velocity.x -= 2 * dot * nx; p.velocity.z -= 2 * dot * nz; }
+            p.position.x = nx * (radiusLimit - 0.05); p.position.z = nz * (radiusLimit - 0.05);
+          }
+
+          if (isLiquid) {
+            if (p.position.y > liquidLevel) { p.position.y = liquidLevel; p.velocity.y = -Math.abs(p.velocity.y) * 0.5; }
+          } else {
+            // Rebote de Gas contra el Pistón Seguro
+            if (p.position.y > currentCeiling) { p.position.y = currentCeiling - 0.05; p.velocity.y = -Math.abs(p.velocity.y); }
+          }
+          
+          if (p.position.y < 0.1) { p.position.y = 0.1; p.velocity.y = Math.abs(p.velocity.y) * (isLiquid ? 0.3 : 1); }
+        }
+      }
+      dummy.position.copy(p.position); dummy.scale.setScalar(0.08); dummy.updateMatrix();
+      meshRef.current.setMatrixAt(i, dummy.matrix);
     });
+    meshRef.current.instanceMatrix.needsUpdate = true;
   });
 
-  /**
-   * MANEJADOR DE IMPACTOS AAA
-   * Registra datos pedagógicos y dispara el audio posicional de Cloudinary.
-   */
-  const handleCollision = useCallback((event) => {
-    const force = event.totalForceMagnitude;
-
-    // Solo procesamos colisiones significativas para optimizar el rendimiento
-    if (force > 60) {
-      // A. Feedback Auditivo: Sonido de choque dinámico 
-      const audio = new Audio(CRASH_SOUND_URL);
-      audio.volume = Math.min(force / 300, 1.0); // El volumen depende de la fuerza
-      audio.play().catch(() => {}); // Evita errores de política de autoplay
-
-      // B. Telemetría: Enviamos el impacto al SyncEngine de Learning Labs
-      reportImpact({
-        force,
-        type: 'MOLECULAR_CRASH',
-        timestamp: Date.now()
-      });
-
-      // C. Intervención IA: Si el impacto es crítico, llamamos a DeepSeek [cite: 2, 28]
-      if (force > 250) {
-        triggerAIAssistance("Inestabilidad por Energía Cinética Alta", "Critical");
-      }
-    }
-  }, [reportImpact, triggerAIAssistance]);
-
   return (
-    <group>
-      {/* CONTENEDOR FÍSICO (Vaso de precipitación invisible) */}
-      <RigidBody type="fixed" colliders={false} name="container">
-        {/* Cilindro de colisión para mantener las partículas encerradas */}
-        <CylinderCollider args={[2.1, 2.0]} position={[0, 2, 0]} restitution={1.2} friction={0} />
-        {/* Suelo del reactor */}
-        <CylinderCollider args={[0.1, 2.0]} position={[0, 0, 0]} restitution={1.2} />
-      </RigidBody>
-
-      {/* MOTOR DE INSTANCIAS (Renderizado de alta densidad) */}
-      <InstancedRigidBodies
-        ref={rigidBodies}
-        instances={instances}
-        colliders="ball"
-        restitution={1.1} // Rebote elástico industrial
-        friction={0.1}
-        onCollisionEnter={handleCollision}
-      >
-        <instancedMesh args={[null, null, count]} castShadow>
-          <sphereGeometry args={[0.08, 16, 16]} />
-          {/* Material reactivo: Brilla más intensamente con el calor  */}
-          <meshStandardMaterial 
-            roughness={0.1} 
-            metalness={0.8}
-            emissive={temp > 400 ? "#ff4400" : "#00ffff"}
-            emissiveIntensity={Math.max(0.5, temp / 150)}
-            color={temp > 400 ? "#ff8844" : "#88ffff"}
-          />
-        </instancedMesh>
-      </InstancedRigidBodies>
-    </group>
+    <instancedMesh ref={meshRef} args={[null, null, count]}>
+      <sphereGeometry args={[1, 12, 12]} />
+      <meshStandardMaterial ref={materialRef} roughness={0.1} metalness={0.9} />
+    </instancedMesh>
   );
 }
