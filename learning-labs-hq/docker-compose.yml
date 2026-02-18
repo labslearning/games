@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: learning-labs-hq_db_1
+    network_mode: host
+    environment:
+      - POSTGRES_DB=learning_labs_db
+      - POSTGRES_USER=hydra_admin
+      - POSTGRES_PASSWORD=Hydra_Secure_2026_Quantum
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: learning-labs-hq_backend_1
+    network_mode: host
+    environment:
+      - DEBUG=1
+      - DJANGO_SETTINGS_MODULE=backend_project.settings
+      - DATABASE_URL=postgres://hydra_admin:Hydra_Secure_2026_Quantum@127.0.0.1:5432/learning_labs_db
+      - DEEPSEEK_API_KEY=sk-d3e366906e1646bd9c827bd6b0e2e347
+    # TIER GOD: Sincronización en tiempo real
+    volumes:
+      - ./backend-tutor:/app
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: learning-labs-hq_frontend_1
+    network_mode: host
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
