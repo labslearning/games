@@ -1,244 +1,216 @@
-import React, { Suspense, useRef, useEffect } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stars } from '@react-three/drei';
-import Reactor3D from './components/Reactor3D';
+import { OrbitControls, Stars, Environment } from '@react-three/drei';
+import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing';
 import MolecularPhysics from './components/MolecularPhysics';
-import { useGameStore, i18n, MATERIALS } from './store/useGameStore';
+import { useGameStore, i18n, MATERIALS, audioSys } from './store/useGameStore';
 
-// 🧮 RENDERIZADOR MATEMÁTICO (Optimizado para panel lateral)
-const LiveEquation = ({ mode }) => {
-  const Var = ({ char, sub, color }) => (
-    <span style={{ color: color, margin: '0 2px', textShadow: `0 0 8px ${color}` }}>
-      {char}<sub>{sub}</sub>
-    </span>
-  );
-  
+const LiveEquation = ({ mode, p, v, t }) => {
+  const cP = "#ff0055"; const cV = "#ffea00"; const cT = "#00f2ff"; 
+  const val = (n, c) => <span style={{ color: c, fontWeight: 'bold' }}>{Number(n).toFixed(1)}</span>;
+  const Var = ({ char, sub, color }) => (<span style={{ color, margin: '0 5px', textShadow:`0 0 8px ${color}` }}>{char}<sub>{sub}</sub></span>);
   const Fraction = ({ top, bottom }) => (
     <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', verticalAlign: 'middle', margin: '0 5px' }}>
-      <div style={{ borderBottom: '2px solid rgba(255,255,255,0.4)', padding: '0 2px', marginBottom: '2px' }}>{top}</div>
-      <div style={{ padding: '0 2px', marginTop: '2px' }}>{bottom}</div>
+      <div style={{ borderBottom: '2px solid rgba(255,255,255,0.4)', padding: '0 2px' }}>{top}</div>
+      <div style={{ padding: '0 2px' }}>{bottom}</div>
     </div>
   );
 
-  const C_P = "#ff0055"; 
-  const C_V = "#ffea00"; 
-  const C_T = "#00f2ff"; 
+  const k_boyle = (p * v).toFixed(0);
+  const k_charles = (v / t).toFixed(3);
+  const k_gl = (p / t).toFixed(3);
 
   if (mode === 'FREE') return (
-    <div style={ui.mathLive}>
-      <Var char="P" color={C_P}/> · <Var char="V" color={C_V}/> = nR · <Var char="T" color={C_T}/>
+    <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', fontSize:'20px', fontWeight:'bold'}}>
+      <div><Var char="P" color={cP}/> · <Var char="V" color={cV}/> = nR · <Var char="T" color={cT}/></div>
+      <div style={{fontSize:'16px', color:'#aaa'}}>{val(p, cP)} · {val(v, cV)} = k · {val(t, cT)}</div>
     </div>
   );
   if (mode === 'BOYLE') return (
-    <div style={ui.mathLive}>
-      <Var char="P" sub="1" color={C_P}/> · <Var char="V" sub="1" color={C_V}/> = <Var char="P" sub="2" color={C_P}/> · <Var char="V" sub="2" color={C_V}/>
+    <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', fontSize:'20px', fontWeight:'bold'}}>
+      <div><Var char="P" sub="1" color={cP}/> · <Var char="V" sub="1" color={cV}/> = <Var char="P" sub="2" color={cP}/> · <Var char="V" sub="2" color={cV}/></div>
+      <div style={{fontSize:'16px', color:'#aaa'}}>{val(p, cP)} · {val(v, cV)} = {k_boyle} (k)</div>
     </div>
   );
   if (mode === 'CHARLES') return (
-    <div style={ui.mathLive}>
-      <Fraction top={<Var char="V" sub="1" color={C_V}/>} bottom={<Var char="T" sub="1" color={C_T}/>} /> = 
-      <Fraction top={<Var char="V" sub="2" color={C_V}/>} bottom={<Var char="T" sub="2" color={C_T}/>} />
+    <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', fontSize:'20px', fontWeight:'bold'}}>
+      <div><Fraction top={<Var char="V" sub="1" color={cV}/>} bottom={<Var char="T" sub="1" color={cT}/>} /> = <Fraction top={<Var char="V" sub="2" color={cV}/>} bottom={<Var char="T" sub="2" color={cT}/>} /></div>
+      <div style={{fontSize:'16px', color:'#aaa'}}><Fraction top={val(v, cV)} bottom={val(t, cT)} /> = {k_charles} (k)</div>
     </div>
   );
   if (mode === 'GAY_LUSSAC') return (
-    <div style={ui.mathLive}>
-      <Fraction top={<Var char="P" sub="1" color={C_P}/>} bottom={<Var char="T" sub="1" color={C_T}/>} /> = 
-      <Fraction top={<Var char="P" sub="2" color={C_P}/>} bottom={<Var char="T" sub="2" color={C_T}/>} />
+    <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', fontSize:'20px', fontWeight:'bold'}}>
+      <div><Fraction top={<Var char="P" sub="1" color={cP}/>} bottom={<Var char="T" sub="1" color={cT}/>} /> = <Fraction top={<Var char="P" sub="2" color={cP}/>} bottom={<Var char="T" sub="2" color={cT}/>} /></div>
+      <div style={{fontSize:'16px', color:'#aaa'}}><Fraction top={val(p, cP)} bottom={val(t, cT)} /> = {k_gl} (k)</div>
     </div>
   );
+  return null;
 };
 
 export default function App() {
-  const { 
-    appState, language, setLanguage, startGame, resetProgress,
-    temp, volume, pressure, isCritical, inventory, activeMaterial, setMaterial,
-    activeMode, setMode, updatePhysics, aiMessage
-  } = useGameStore();
-  
-  const t = language ? i18n[language] : i18n.es;
+  const { appState, temp, volume, pressure, phaseID, isCritical, activeMaterial, setMaterial, activeMode, setMode, updatePhysics, language, setLanguage, startGame, resetProgress, activeQuiz, answerQuizQuestion, quizFeedback, closeQuiz, score, triggerExercise, exampleSession, loadExampleScenario, exitExample } = useGameStore();
   const mat = MATERIALS[activeMaterial];
-  const audioRef = useRef(null);
+  const t_i18n = i18n[language] || i18n.es;
+  const t = t_i18n.ui;
+  const lesson = t_i18n.lessons[activeMode];
+  const examples = t_i18n.examples[activeMode];
+  const droneRef = useRef(null);
 
-  // 🎧 SONIDO DUAL AAA
   useEffect(() => {
-    if (appState === 'PLAYING' && audioRef.current) {
-      audioRef.current.play().catch(e => {});
-      audioRef.current.playbackRate = Math.max(0.3, temp / 1000);
-      audioRef.current.volume = isCritical ? 0.9 : 0.3;
+    if (appState === 'PLAYING' && droneRef.current) {
+      if(activeQuiz) { droneRef.current.pause(); return; }
+      droneRef.current.play().catch(()=>{});
+      droneRef.current.playbackRate = Math.max(0.5, temp / 2000);
+      droneRef.current.volume = isCritical ? 0.8 : 0.2;
     }
-  }, [appState, temp, isCritical]);
+  }, [appState, temp, isCritical, activeQuiz]);
 
-  const sublimates = mat.mp === mat.bp;
-
-  // 🌍 PANTALLAS DE INICIO
-  if (appState === 'LANG_SELECT') {
-    return (
-      <div style={ui.screenGame}>
-        <div style={ui.vignette} /><div style={ui.hexBackground} />
-        <div style={ui.centerBoxGame}>
-          <div style={ui.systemBadgeGame}>SYS_BOOT_SEQUENCE_V_OMEGA</div>
-          <h1 style={ui.titleGame}>LEARNING <span style={{color:'#fff'}}>LABS</span></h1>
-          <h3 style={ui.subtitleGame}>// {i18n.es.selectLang}</h3>
-          <div style={ui.btnGridGame}>
-            {[ { id: 'es', label: 'ESPAÑOL', flag: '🇪🇸' }, { id: 'en', label: 'ENGLISH', flag: '🇬🇧' }, { id: 'fr', label: 'FRANÇAIS', flag: '🇫🇷' }, { id: 'de', label: 'DEUTSCH', flag: '🇩🇪' } ].map(lang => (
-              <button key={lang.id} onClick={() => setLanguage(lang.id)} style={ui.cyberBtn}>
-                <span style={{marginRight: '10px'}}>{lang.flag}</span> {lang.label}
-              </button>
-            ))}
-          </div>
-        </div>
+  if (appState === 'LANG_SELECT') return (
+    <div style={ui.screenGame}><div style={ui.vignette} /><div style={ui.hexBackground} />
+      <div style={ui.centerBoxGame}>
+        <h1 style={ui.titleGame}>LEARNING <span style={{color:'#fff'}}>LABS</span></h1>
+        <div style={ui.btnGridGame}>{[{ id:'es', flag:'🇪🇸' }, { id:'en', flag:'🇬🇧' }, { id:'fr', flag:'🇫🇷' }, { id:'de', flag:'🇩🇪' }].map(l => <button key={l.id} onClick={()=>setLanguage(l.id)} style={ui.cyberBtn}><span style={{marginRight:'10px'}}>{l.flag}</span> {i18n[l.id].ui.lang}</button>)}</div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (appState === 'GAME_SELECT') {
-    return (
-      <div style={ui.screenGame}>
-        <div style={ui.hexBackground} />
-        <button onClick={resetProgress} style={ui.resetBtnGame}>{t.reset}</button>
-        <div style={ui.centerBoxGame}>
-          <div style={ui.systemBadgeGame}>ACCESS: {language.toUpperCase()}</div>
-          <h1 style={ui.titleGame}>{t.selectGame}</h1>
-          <button onClick={() => startGame('chemistry')} style={ui.solidCyberBtn}>{t.gameChem}</button>
-        </div>
-      </div>
-    );
-  }
+  if (appState === 'GAME_SELECT') return (
+    <div style={ui.screenGame}><div style={ui.hexBackground} /><button onClick={resetProgress} style={ui.resetBtnGame}>⚙️ BACK</button>
+      <div style={ui.centerBoxGame}><h1 style={ui.titleGame}>{t.selectGame}</h1><button onClick={startGame} style={ui.solidCyberBtn}>{t.gameChem}</button></div>
+    </div>
+  );
 
-  // 🎮 EL SIMULADOR PRINCIPAL (HUD COCKPIT)
   return (
     <div style={ui.screen}>
-      <audio ref={audioRef} src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364035/drone_sound_yyqqnv.wav" loop />
-      <div style={{ ...ui.criticalOverlay, opacity: isCritical ? 1 : 0 }} />
+      <audio ref={droneRef} src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364035/drone_sound_yyqqnv.wav" loop />
+      <audio id="snd-crash" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/crash_ebp5po.wav" />
+      <audio id="snd-error" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/error.wav" />
+      <audio id="snd-success" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/success.wav" />
+      <audio id="snd-heat" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/heat.wav" />
+      <audio id="snd-cool" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/cool.wav" />
+      <audio id="snd-quiz" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/quiz.wav" />
+      
+      <div style={{...ui.criticalOverlay, opacity: isCritical ? 1 : 0}} />
       <button onClick={resetProgress} style={ui.resetBtnGame}>{t.reset}</button>
 
-      {/* ⬅️ PANEL IZQUIERDO: Materiales y Pokedex */}
-      <div style={ui.leftPanel}>
-        <div style={ui.sectionBox}>
-          <h3 style={ui.panelTitle}>// {t.inventory.split(' ')[0]} (MAT)</h3>
-          <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
-            {Object.values(MATERIALS).map(m => (
-              <button key={m.id} onClick={() => setMaterial(m.id)} style={activeMaterial === m.id ? ui.matBtnActive : ui.matBtn}>{m.name}</button>
-            ))}
+      {/* 🛑 MODAL DE IA TUTOR (Z-INDEX ALTO) */}
+      {activeQuiz && (
+        <div style={ui.quizOverlay}>
+          <div style={ui.quizBox}>
+            <h2 style={{color:'#00f2ff', margin:0, letterSpacing:'2px'}}>{activeQuiz.title}</h2>
+            <p style={{fontSize:'22px', margin:'30px 0', lineHeight:'1.5'}}>{activeQuiz.question}</p>
+            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'15px', marginBottom:'20px'}}>
+              {activeQuiz.options.map((opt, i) => (
+                <button key={i} onClick={() => answerQuizQuestion(opt)} style={{...ui.quizBtn, opacity: quizFeedback?.type === 'success' ? 0.3 : 1}} disabled={quizFeedback?.type === 'success'}>{opt.text}</button>
+              ))}
+            </div>
+            {quizFeedback && (
+              <div style={{ padding: '20px', background: quizFeedback.type === 'success' ? 'rgba(0,255,0,0.1)' : 'rgba(255,0,85,0.1)', border: `1px solid ${quizFeedback.type === 'success' ? '#0f0' : '#ff0055'}`, color: quizFeedback.type === 'success' ? '#0f0' : '#ff0055', fontSize: '18px', lineHeight: '1.6' }}>
+                <strong>{quizFeedback.type === 'success' ? t.correct : t.error}</strong> {quizFeedback.text}
+                {quizFeedback.type === 'success' && (<div style={{marginTop: '20px'}}><button onClick={closeQuiz} style={ui.solidCyberBtn}>{t.continue}</button></div>)}
+              </div>
+            )}
           </div>
         </div>
+      )}
 
+      {/* PANEL IZQUIERDO */}
+      <div style={ui.leftPanel}>
         <div style={ui.sectionBox}>
-          <h3 style={ui.panelTitle}>// ESTADOS</h3>
-          <div style={ui.pokeItem(inventory.includes(`${mat.id}_SOLID`))}>🧊 <div><div style={ui.pokeText}>SÓLIDO</div><div style={ui.pokeSub}>{`<${mat.mp}K`}</div></div></div>
-          {!sublimates && <div style={ui.pokeItem(inventory.includes(`${mat.id}_LIQUID`))}>💧 <div><div style={ui.pokeText}>LÍQUIDO</div><div style={ui.pokeSub}>{`<${mat.bp}K`}</div></div></div>}
-          <div style={ui.pokeItem(inventory.includes(`${mat.id}_GAS`))}>☁️ <div><div style={ui.pokeText}>GAS</div><div style={ui.pokeSub}>{`>${mat.bp}K`}</div></div></div>
+          <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>{Object.values(MATERIALS).map(m => <button key={m.id} onClick={() => setMaterial(m.id)} style={activeMaterial === m.id ? ui.matBtnActive : ui.matBtn}>{m.name}</button>)}</div>
+        </div>
+        <div style={{...ui.sectionBox, background:'rgba(0,15,30,0.8)', borderLeft:'3px solid #00f2ff'}}>
+          <div style={ui.dataRow}><span>{t.mass}</span><span style={{color:'#00f2ff'}}>{mat.mass}</span></div>
+          <div style={ui.dataRow}><span>{t.type}</span><span style={{color:'#ffea00'}}>{mat.type}</span></div>
         </div>
       </div>
 
-      {/* ➡️ PANEL DERECHO: Telemetría y Tutor IA */}
+      {/* PANEL DERECHO: ECUACIÓN Y BOTÓN GIGANTE IA */}
       <div style={ui.rightPanel}>
-         <div style={ui.sectionBox}>
-           <h3 style={ui.panelTitle}>// MODO FÍSICO</h3>
-           <div style={ui.modeGrid}>
-             {['FREE', 'BOYLE', 'CHARLES', 'GAY_LUSSAC'].map(mode => (
-               <button key={mode} onClick={() => setMode(mode)} style={activeMode === mode ? ui.modeBtnActive : ui.modeBtn}>
-                 {t[`mode${mode.charAt(0) + mode.slice(1).toLowerCase().replace('_l', 'L')}`] || mode}
-               </button>
-             ))}
-           </div>
-         </div>
+        <div style={{...ui.sectionBox, borderLeft:'4px solid #ffea00', background:'rgba(50,40,0,0.8)'}}><h3 style={{...ui.panelTitle, color:'#ffea00', fontSize:'14px'}}>🏆 SCORE: {score} PTS</h3></div>
+        
+        <div style={ui.sectionBox}><h3 style={ui.panelTitle}>// {t.classMode}</h3>
+          <div style={ui.modeGrid}>{['FREE', 'BOYLE', 'CHARLES', 'GAY_LUSSAC'].map(m => <button key={m} onClick={()=>setMode(m)} style={activeMode===m ? ui.modeBtnA : ui.modeBtn}>{t[`mode${m.charAt(0)+m.slice(1).toLowerCase().replace('_l','L')}`] || m}</button>)}</div>
+          <div style={{marginTop:'15px', fontSize:'11px', color:'#ccc', lineHeight:'1.5'}}><strong style={{color:'#00f2ff'}}>{lesson.title}</strong><br/><span style={{color:'#ffea00'}}>{t.goal}:</span> {lesson.goal}<br/><span style={{color:'#00f2ff'}}>{t.idea}:</span> {lesson.idea}</div>
+        </div>
 
-         <div style={{...ui.sectionBox, borderLeft: '3px solid #00f2ff'}}>
-           <h3 style={ui.panelTitle}>// DEEPSEEK IA</h3>
-           <p style={ui.aiText}>{aiMessage}</p>
-         </div>
+        <div style={{...ui.sectionBox, textAlign:'center'}}>
+          <LiveEquation mode={activeMode} p={pressure} v={volume} t={temp} />
+        </div>
 
-         <div style={{...ui.sectionBox, borderLeft: '3px solid #ffea00'}}>
-            <h3 style={ui.panelTitle}>// ECUACIÓN EN VIVO</h3>
-            <div style={{textAlign: 'center', padding: '10px 0'}}>
-              <LiveEquation mode={activeMode} />
-              <div style={ui.mathDesc}>{t[`math${activeMode.charAt(0) + activeMode.slice(1).toLowerCase().replace('_l', 'L')}`]}</div>
-            </div>
-         </div>
+        {/* 🔥 BOTÓN GIGANTE FOSFORESCENTE DE PREGUNTAS IA 🔥 */}
+        <button onClick={triggerExercise} style={ui.iaButton}>{t.generate}</button>
       </div>
 
-      {/* 🌌 MOTOR 3D (Despejado en el Centro) */}
+      {/* MOTOR 3D */}
       <Canvas camera={{ position: [0, 4, 15], fov: 45 }}>
-        <color attach="background" args={['#010204']} />
-        <Stars count={6000} factor={5} fade speed={1} />
-        <Suspense fallback={null}><Reactor3D /><MolecularPhysics count={150} /></Suspense>
-        {/* maxPolarAngle evita que el usuario mire por debajo del suelo */}
+        <color attach="background" args={['#010204']} /><Environment preset="night" /><ambientLight intensity={0.2} /><pointLight position={[0, 5, 0]} intensity={3} color="#00f2ff" /><Stars count={6000} factor={5} fade speed={1} />
+        <Suspense fallback={null}>
+          <group position={[0, -2, 0]}>
+            <mesh position={[0, 2, 0]}><cylinderGeometry args={[2.5, 2.5, 4, 64]} /><meshPhysicalMaterial transparent opacity={0.15} color="#00f2ff" metalness={1} roughness={0} side={2}/></mesh>
+            <mesh position={[0, -0.1, 0]}><cylinderGeometry args={[2.6, 2.8, 0.4, 64]} /><meshStandardMaterial color="#050505" /></mesh>
+            <MolecularPhysics count={250} />
+          </group>
+        </Suspense>
+        <EffectComposer><Bloom luminanceThreshold={1} mipmapBlur intensity={2.0} />{isCritical && <ChromaticAberration offset={[0.01, 0.01]} />}</EffectComposer>
         <OrbitControls makeDefault enablePan={false} maxPolarAngle={Math.PI / 1.8} />
       </Canvas>
 
-      {/* ⬇️ PANEL INFERIOR: Controles de Alta Precisión */}
+      {/* CONTROLES TACTICOS */}
       <div style={ui.controlPanel}>
-         <div style={{...ui.controlGroup, opacity: activeMode==='BOYLE'?0.2:1, pointerEvents: activeMode==='BOYLE'?'none':'auto'}}>
-           <div style={ui.controlLabel('#00f2ff')}>INYECCIÓN TÉRMICA</div>
-           <div style={{display:'flex', gap:'5px'}}><button onClick={() => updatePhysics('TEMP', 50)} style={ui.actionBtn('#ff0055')}>+50K</button><button onClick={() => updatePhysics('TEMP', 10)} style={ui.actionBtnSmall('#ff0055')}>+10</button><button onClick={() => updatePhysics('TEMP', 5)} style={ui.actionBtnMicro('#ff0055')}>+5</button></div>
-           <div style={{display:'flex', gap:'5px'}}><button onClick={() => updatePhysics('TEMP', -50)} style={ui.actionBtn('#00f2ff')}>-50K</button><button onClick={() => updatePhysics('TEMP', -10)} style={ui.actionBtnSmall('#00f2ff')}>-10</button><button onClick={() => updatePhysics('TEMP', -5)} style={ui.actionBtnMicro('#00f2ff')}>-5</button></div>
+         <div style={{...ui.controlGroup, opacity: (activeMode==='BOYLE')?0.2:1, pointerEvents: (activeMode==='BOYLE')?'none':'auto'}}>
+           <div style={ui.controlLabel('#00f2ff')}>{t.temp}</div>
+           <div style={{display:'flex', gap:'5px'}}><button onClick={() => updatePhysics('TEMP', 50)} style={ui.actionBtn('#ff0055')}>+50</button><button onClick={() => updatePhysics('TEMP', -50)} style={ui.actionBtn('#00f2ff')}>-50</button></div>
          </div>
-
          <div style={ui.hud(isCritical)}>
-            <div style={ui.hudVal(false, '#00f2ff')}>{temp}</div><div style={ui.hudLabel}>{t.tempLabel}</div>
-            <div style={ui.hudVal(false, '#ffea00')}>{volume}</div><div style={ui.hudLabel}>{t.volLabel}</div>
-            <div style={ui.hudLine(isCritical)} />
-            <div style={ui.hudVal(isCritical, '#ff0055')}>{pressure.toFixed(0)}</div><div style={ui.hudLabel}>{t.pressLabel}</div>
+            <div style={ui.hudVal(false, '#00f2ff')}>{temp}K</div>
+            <div style={ui.hudVal(isCritical, '#ff0055')}>{pressure.toFixed(1)} PSI</div>
+            <div style={ui.hudVal(false, '#ffea00')}>{volume}%</div>
          </div>
-
+         <div style={{...ui.controlGroup, opacity: (activeMode==='CHARLES')?0.2:1, pointerEvents: (activeMode==='CHARLES')?'none':'auto'}}>
+           <div style={ui.controlLabel('#ffea00')}>{t.vol}</div>
+           <div style={{display:'flex', gap:'5px'}}><button onClick={() => updatePhysics('VOL', 10)} style={ui.actionBtn('#ffea00')}>+10</button><button onClick={() => updatePhysics('VOL', -10)} style={ui.actionBtn('#ffea00')}>-10</button></div>
+         </div>
          <div style={{...ui.controlGroup, opacity: (activeMode==='CHARLES'||activeMode==='GAY_LUSSAC')?0.2:1, pointerEvents: (activeMode==='CHARLES'||activeMode==='GAY_LUSSAC')?'none':'auto'}}>
-           <div style={ui.controlLabel('#ffea00')}>PISTÓN MECÁNICO</div>
-           <div style={{display:'flex', gap:'5px'}}><button onClick={() => updatePhysics('VOL', 10)} style={ui.actionBtn('#ffea00')}>+10%</button><button onClick={() => updatePhysics('VOL', 1)} style={ui.actionBtnSmall('#ffea00')}>+1%</button></div>
-           <div style={{display:'flex', gap:'5px'}}><button onClick={() => updatePhysics('VOL', -10)} style={ui.actionBtn('#ffea00')}>-10%</button><button onClick={() => updatePhysics('VOL', -1)} style={ui.actionBtnSmall('#ffea00')}>-1%</button></div>
+           <div style={ui.controlLabel('#ff0055')}>{t.press}</div>
+           <div style={{display:'flex', gap:'5px'}}><button onClick={() => updatePhysics('PRESS', 10)} style={ui.actionBtn('#ff0055')}>+10</button><button onClick={() => updatePhysics('PRESS', -10)} style={ui.actionBtn('#ff0055')}>-10</button></div>
          </div>
       </div>
     </div>
   );
 }
 
-// 🎨 ESTILOS UI TIER GOD (COCKPIT LAYOUT)
 const ui = {
   screenGame: { width:'100vw', height:'100vh', backgroundColor:'#010204', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', fontFamily:'Orbitron, sans-serif', position:'relative', overflow:'hidden' },
-  hexBackground: { position:'absolute', inset:0, backgroundImage:'radial-gradient(circle at center, rgba(0,242,255,0.05) 0%, transparent 60%), linear-gradient(0deg, transparent 24%, rgba(0,242,255,0.03) 25%, rgba(0,242,255,0.03) 26%, transparent 27%, transparent 74%, rgba(0,242,255,0.03) 75%, rgba(0,242,255,0.03) 76%, transparent 77%, transparent)', backgroundSize:'40px 40px' },
+  hexBackground: { position:'absolute', inset:0, backgroundImage:'radial-gradient(circle at center, rgba(0,242,255,0.05) 0%, transparent 60%)', backgroundSize:'40px 40px' },
   vignette: { position:'absolute', inset:0, boxShadow:'inset 0 0 250px rgba(0,0,0,0.95)', zIndex:2 },
   centerBoxGame: { zIndex:10, display:'flex', flexDirection:'column', alignItems:'center', backdropFilter:'blur(8px)', padding:'50px', background:'rgba(0,5,15,0.7)', border:'1px solid rgba(0,242,255,0.2)', borderRadius:'4px', boxShadow:'0 0 50px rgba(0,0,0,0.8)' },
-  systemBadgeGame: { color:'#00f2ff', border:'1px solid #00f2ff', padding:'5px 15px', fontSize:'10px', letterSpacing:'4px', marginBottom:'20px', background:'rgba(0,242,255,0.1)', textTransform:'uppercase' },
-  titleGame: { color:'#00f2ff', fontSize:'65px', letterSpacing:'8px', textAlign:'center', margin:'0 0 10px 0', textShadow:'0 0 20px rgba(0,242,255,0.5)', fontWeight:900 },
-  subtitleGame: { color:'#666', letterSpacing:'3px', fontSize:'14px', marginBottom:'40px' },
+  titleGame: { color:'#00f2ff', fontSize:'65px', letterSpacing:'8px', textAlign:'center', margin:'0 0 30px 0', textShadow:'0 0 20px rgba(0,242,255,0.5)', fontWeight:900 },
   btnGridGame: { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'20px', width:'100%' },
-  cyberBtn: { padding:'20px 40px', background:'rgba(0,10,20,0.8)', border:'1px solid #005577', color:'#00f2ff', cursor:'pointer', fontSize:'16px', fontFamily:'Orbitron', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center', transition:'0.2s', clipPath:'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)' },
-  solidCyberBtn: { padding:'25px 50px', background:'linear-gradient(45deg, rgba(0,242,255,0.3), rgba(0,0,0,0.8))', borderLeft:'4px solid #00f2ff', borderTop:'none', borderRight:'none', borderBottom:'none', color:'#fff', cursor:'pointer', fontSize:'22px', fontFamily:'Orbitron', fontWeight:'bold', clipPath:'polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px)', width:'100%' },
-  resetBtnGame: { position:'absolute', top:25, left:25, zIndex:100, padding:'10px 20px', background:'rgba(0,0,0,0.5)', border:'1px solid #555', color:'#aaa', cursor:'pointer', fontFamily:'Orbitron', clipPath:'polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px)', transition: '0.2s' },
-  
+  cyberBtn: { padding:'20px 40px', background:'rgba(0,10,20,0.8)', border:'1px solid #005577', color:'#00f2ff', cursor:'pointer', fontSize:'16px', fontFamily:'Orbitron', fontWeight:'bold', transition:'0.2s' },
+  solidCyberBtn: { padding:'15px 40px', background:'linear-gradient(45deg, rgba(0,242,255,0.3), rgba(0,0,0,0.8))', borderLeft:'4px solid #00f2ff', color:'#fff', cursor:'pointer', fontSize:'18px', fontFamily:'Orbitron', fontWeight:'bold', width:'100%', margin:'0 auto', display:'block' },
+  resetBtnGame: { position:'absolute', top:25, left:25, zIndex:100, padding:'10px 20px', background:'rgba(0,0,0,0.5)', border:'1px solid #ff4444', color:'#ff4444', cursor:'pointer', fontFamily:'Orbitron' },
   screen: { width:'100vw', height:'100vh', background:'#010204', fontFamily:'Orbitron', overflow:'hidden', position:'relative' },
   criticalOverlay: { position:'absolute', inset:0, boxShadow:'inset 0 0 200px rgba(255,0,85,0.4)', pointerEvents:'none', zIndex:99, transition:'0.3s' },
-  
-  // 🔲 NUEVO DISEÑO LATERAL (COCKPIT)
-  leftPanel: { position:'absolute', top:'80px', left:'30px', zIndex:50, display:'flex', flexDirection:'column', gap:'20px', width:'220px' },
-  rightPanel: { position:'absolute', top:'80px', right:'30px', zIndex:50, display:'flex', flexDirection:'column', gap:'20px', width:'300px' },
-  sectionBox: { background:'rgba(0,10,20,0.7)', border:'1px solid rgba(0,85,119,0.5)', padding:'15px', backdropFilter:'blur(8px)', clipPath:'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)' },
+  leftPanel: { position:'absolute', top:'80px', left:'30px', zIndex:50, display:'flex', flexDirection:'column', gap:'20px', width:'220px', maxHeight:'80vh', overflowY:'auto' },
+  rightPanel: { position:'absolute', top:'80px', right:'30px', zIndex:50, display:'flex', flexDirection:'column', gap:'15px', width:'320px', maxHeight:'80vh', overflowY:'auto' },
+  sectionBox: { background:'rgba(0,10,20,0.7)', border:'1px solid rgba(0,85,119,0.5)', padding:'15px', backdropFilter:'blur(8px)' },
   panelTitle: { color:'#4488aa', margin:'0 0 15px 0', fontSize:'10px', letterSpacing:'3px' },
-  
-  matBtn: { padding:'12px', background:'rgba(0,0,0,0.5)', color:'#00f2ff', border:'1px solid #005577', cursor:'pointer', fontFamily:'Orbitron', fontSize:'11px', textAlign:'left', transition:'0.2s' },
-  matBtnActive: { padding:'12px', background:'rgba(0,242,255,0.15)', color:'#fff', borderLeft:'3px solid #00f2ff', borderTop:'1px solid #00f2ff', borderRight:'1px solid #00f2ff', borderBottom:'1px solid #00f2ff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'11px', fontWeight:'bold', boxShadow:'0 0 10px rgba(0,242,255,0.2)' },
-  
-  pokeItem: (unlocked) => ({ display:'flex', alignItems:'center', gap:'12px', padding:'10px', background: unlocked?'rgba(0,242,255,0.08)':'rgba(255,255,255,0.02)', borderLeft:`2px solid ${unlocked?'#00f2ff':'#333'}`, marginBottom:'5px', opacity:unlocked?1:0.3 }),
-  pokeText: { color:'#fff', fontSize:'11px', fontWeight:'bold', letterSpacing:'1px' },
-  pokeSub: { color:'#666', fontSize:'9px' },
-
+  matBtn: { padding:'12px', background:'rgba(0,0,0,0.5)', color:'#00f2ff', border:'1px solid #005577', cursor:'pointer', fontFamily:'Orbitron', fontSize:'11px', textAlign:'left' },
+  matBtnActive: { padding:'12px', background:'rgba(0,242,255,0.15)', color:'#fff', borderLeft:'3px solid #00f2ff', borderTop:'1px solid #00f2ff', borderRight:'1px solid #00f2ff', borderBottom:'1px solid #00f2ff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'11px', fontWeight:'bold' },
+  dataRow: { display:'flex', justifyContent:'space-between', fontSize:'11px', marginBottom:'5px', color:'#fff' },
   modeGrid: { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' },
   modeBtn: { padding:'10px 5px', background:'rgba(0,0,0,0.5)', color:'#888', border:'1px solid #333', cursor:'pointer', fontFamily:'Orbitron', fontSize:'10px' },
-  modeBtnActive: { padding:'10px 5px', background:'rgba(255,234,0,0.1)', color:'#ffea00', border:'1px solid #ffea00', cursor:'pointer', fontFamily:'Orbitron', fontSize:'10px', fontWeight:'bold', boxShadow:'inset 0 0 10px rgba(255,234,0,0.1)' },
-  
-  aiText: { margin:0, color:'#ddd', fontSize:'12px', lineHeight:'1.6' },
-  mathLive: { fontSize:'20px', color:'#fff', fontFamily:'"Courier New", monospace', fontWeight:'bold', letterSpacing:'1px' },
-  mathDesc: { marginTop:'10px', color:'#666', fontSize:'10px' },
-
+  modeBtnA: { padding:'10px 5px', background:'rgba(255,234,0,0.1)', color:'#ffea00', border:'1px solid #ffea00', cursor:'pointer', fontFamily:'Orbitron', fontSize:'10px', fontWeight:'bold' },
+  mathLive: { fontSize:'24px', color:'#fff', fontFamily:'"Courier New", monospace', fontWeight:'bold', letterSpacing:'1px' },
+  iaButton: { width:'100%', padding:'15px', background:'linear-gradient(45deg, #7b2cbf, #b5179e)', border:'2px solid #f72585', color:'#fff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'14px', fontWeight:'bold', marginTop:'5px', boxShadow:'0 0 15px rgba(247, 37, 133, 0.5)' },
   controlPanel: { position:'absolute', bottom:'30px', left:'50%', transform:'translateX(-50%)', zIndex:10, display:'flex', alignItems:'center', gap:'25px' },
-  controlGroup: { display:'flex', flexDirection:'column', gap:'8px', transition:'0.3s' },
+  controlGroup: { display:'flex', flexDirection:'column', gap:'8px' },
   controlLabel: (color) => ({ fontSize: '10px', color: color, letterSpacing: '2px', textAlign: 'center', marginBottom:'-2px', textShadow: `0 0 5px ${color}` }),
-  actionBtn: (color) => ({ padding:'12px 20px', background:`rgba(${color==='#ff0055'?'255,0,85':(color==='#00f2ff'?'0,242,255':'255,234,0')}, 0.1)`, border:`2px solid ${color}`, color:color, cursor:'pointer', fontWeight:'bold', fontFamily:'Orbitron', clipPath:'polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px)' }),
-  actionBtnSmall: (color) => ({ padding:'12px 15px', background:`rgba(${color==='#ff0055'?'255,0,85':(color==='#00f2ff'?'0,242,255':'255,234,0')}, 0.1)`, border:`1px solid ${color}`, color:color, cursor:'pointer', fontFamily:'Orbitron', clipPath:'polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px)' }),
-  actionBtnMicro: (color) => ({ padding:'12px 10px', background:`rgba(${color==='#ff0055'?'255,0,85':(color==='#00f2ff'?'0,242,255':'255,234,0')}, 0.1)`, border:`1px solid ${color}`, color:color, cursor:'pointer', fontFamily:'Orbitron', fontSize:'10px', clipPath:'polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px)' }),
-  
-  hud: (isCrit) => ({ background:'rgba(0,5,15,0.8)', padding:'15px 35px', border:`2px solid ${isCrit?'#ff0055':'#00f2ff'}`, textAlign:'center', minWidth:'160px', boxShadow: isCrit?'0 0 50px rgba(255,0,85,0.6)':'0 0 20px rgba(0,242,255,0.1)', clipPath:'polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px)', backdropFilter:'blur(5px)' }),
-  hudVal: (isCrit, baseColor) => ({ fontSize:'28px', fontWeight:'bold', color: isCrit ? '#ff0055' : baseColor, textShadow: `0 0 10px ${isCrit ? '#ff0055' : baseColor}` }),
-  hudLabel: { fontSize:'9px', color:'#666', letterSpacing:'2px', marginBottom:'5px' },
-  hudLine: (isCrit) => ({ width:'100%', height:'2px', background: isCrit?'#ff0055':'rgba(0,242,255,0.3)', margin:'8px 0' })
+  actionBtn: (color) => ({ padding:'12px 20px', background:`rgba(${color==='#ff0055'?'255,0,85':(color==='#00f2ff'?'0,242,255':'255,234,0')}, 0.1)`, border:`2px solid ${color}`, color:color, cursor:'pointer', fontWeight:'bold', fontFamily:'Orbitron' }),
+  hud: (isCrit) => ({ background:'rgba(0,5,15,0.8)', padding:'15px 35px', border:`2px solid ${isCrit?'#ff0055':'#00f2ff'}`, textAlign:'center', minWidth:'140px', backdropFilter:'blur(5px)' }),
+  hudVal: (isCrit, baseColor) => ({ fontSize:'22px', fontWeight:'bold', color: isCrit ? '#ff0055' : baseColor, margin: '5px 0' }),
+  quizOverlay: { position:'absolute', inset:0, background:'rgba(0,5,10,0.95)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(15px)' },
+  quizBox: { background:'rgba(0,10,20,0.9)', border:'1px solid #00f2ff', padding:'50px', maxWidth:'1000px', width:'90%', textAlign:'center', boxShadow:'0 0 100px rgba(0,242,255,0.2)' },
+  quizBtn: { padding:'25px', background:'rgba(255,255,255,0.05)', border:'1px solid #555', color:'#fff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'16px', textAlign:'left', transition:'0.3s' }
 };
