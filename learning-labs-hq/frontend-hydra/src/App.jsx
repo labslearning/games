@@ -48,7 +48,7 @@ const LiveEquation = ({ mode, p, v, t }) => {
 };
 
 export default function App() {
-  const { appState, temp, volume, pressure, phaseID, isCritical, activeMaterial, setMaterial, activeMode, setMode, updatePhysics, language, setLanguage, startGame, resetProgress, activeQuiz, answerQuizQuestion, quizFeedback, closeQuiz, score, triggerExercise, exampleSession, loadExampleScenario, exitExample } = useGameStore();
+  const { appState, temp, volume, pressure, phaseID, isCritical, activeMaterial, setMaterial, activeMode, setMode, updatePhysics, language, setLanguage, startGame, resetProgress, activeQuiz, answerQuizQuestion, quizFeedback, clearFeedback, closeQuiz, score, triggerExercise, exampleSession, loadExampleScenario, exitExample } = useGameStore();
   const mat = MATERIALS[activeMaterial];
   const t_i18n = i18n[language] || i18n.es;
   const t = t_i18n.ui;
@@ -83,31 +83,42 @@ export default function App() {
   return (
     <div style={ui.screen}>
       <audio ref={droneRef} src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364035/drone_sound_yyqqnv.wav" loop />
-      <audio id="snd-crash" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/crash_ebp5po.wav" />
-      <audio id="snd-error" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/error.wav" />
-      <audio id="snd-success" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/success.wav" />
-      <audio id="snd-heat" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/heat.wav" />
-      <audio id="snd-cool" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/cool.wav" />
-      <audio id="snd-quiz" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/quiz.wav" />
+      <audio id="crash-sound" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/crash_ebp5po.wav" />
+      <audio id="error-sound" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/error.wav" />
+      <audio id="success-sound" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/success.wav" />
+      <audio id="quiz-sound" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/quiz.wav" />
       
       <div style={{...ui.criticalOverlay, opacity: isCritical ? 1 : 0}} />
       <button onClick={resetProgress} style={ui.resetBtnGame}>{t.reset}</button>
 
-      {/* 🛑 MODAL DE IA TUTOR (Z-INDEX ALTO) */}
+      {/* 🛑 MODAL DE IA TUTOR ESTRICTO (ESTUDIANTE NO AVANZA SI NO APRENDE) */}
       {activeQuiz && (
         <div style={ui.quizOverlay}>
           <div style={ui.quizBox}>
             <h2 style={{color:'#00f2ff', margin:0, letterSpacing:'2px'}}>{activeQuiz.title}</h2>
             <p style={{fontSize:'22px', margin:'30px 0', lineHeight:'1.5'}}>{activeQuiz.question}</p>
-            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'15px', marginBottom:'20px'}}>
-              {activeQuiz.options.map((opt, i) => (
-                <button key={i} onClick={() => answerQuizQuestion(opt)} style={{...ui.quizBtn, opacity: quizFeedback?.type === 'success' ? 0.3 : 1}} disabled={quizFeedback?.type === 'success'}>{opt.text}</button>
-              ))}
-            </div>
+            
+            {/* Si NO hay feedback, mostramos las opciones para que elija. Si se equivocó, LAS OCULTAMOS */}
+            {!quizFeedback && (
+              <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'15px', marginBottom:'20px'}}>
+                {activeQuiz.options.map((opt, i) => (
+                  <button key={i} onClick={() => answerQuizQuestion(opt)} style={ui.quizBtn}>{opt.text}</button>
+                ))}
+              </div>
+            )}
+
+            {/* CAJA DE ENSEÑANZA: Explica por qué está bien o mal */}
             {quizFeedback && (
-              <div style={{ padding: '20px', background: quizFeedback.type === 'success' ? 'rgba(0,255,0,0.1)' : 'rgba(255,0,85,0.1)', border: `1px solid ${quizFeedback.type === 'success' ? '#0f0' : '#ff0055'}`, color: quizFeedback.type === 'success' ? '#0f0' : '#ff0055', fontSize: '18px', lineHeight: '1.6' }}>
-                <strong>{quizFeedback.type === 'success' ? t.correct : t.error}</strong> {quizFeedback.text}
-                {quizFeedback.type === 'success' && (<div style={{marginTop: '20px'}}><button onClick={closeQuiz} style={ui.solidCyberBtn}>{t.continue}</button></div>)}
+              <div style={{ padding: '30px', background: quizFeedback.type === 'success' ? 'rgba(0,255,0,0.1)' : 'rgba(255,0,85,0.1)', border: `2px solid ${quizFeedback.type === 'success' ? '#0f0' : '#ff0055'}`, color: quizFeedback.type === 'success' ? '#0f0' : '#ff0055', fontSize: '18px', lineHeight: '1.6', borderRadius: '8px' }}>
+                <h3 style={{marginTop: 0, fontSize: '24px'}}>{quizFeedback.type === 'success' ? t.correct : t.error}</h3>
+                <p style={{color: '#fff', fontSize: '20px', margin: '20px 0'}}>{quizFeedback.text}</p>
+                
+                {/* BOTONES DE DECISIÓN: Continuar (si acierto) o Reintentar (si error) */}
+                {quizFeedback.type === 'success' ? (
+                  <button onClick={closeQuiz} style={{...ui.solidCyberBtn, width: '100%'}}>{t.continue}</button>
+                ) : (
+                  <button onClick={clearFeedback} style={{...ui.cyberBtn, width: '100%', borderColor: '#ff0055', color: '#ff0055'}}>{t.tryAgain}</button>
+                )}
               </div>
             )}
           </div>
@@ -125,7 +136,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* PANEL DERECHO: ECUACIÓN Y BOTÓN GIGANTE IA */}
+      {/* PANEL DERECHO */}
       <div style={ui.rightPanel}>
         <div style={{...ui.sectionBox, borderLeft:'4px solid #ffea00', background:'rgba(50,40,0,0.8)'}}><h3 style={{...ui.panelTitle, color:'#ffea00', fontSize:'14px'}}>🏆 SCORE: {score} PTS</h3></div>
         
@@ -138,11 +149,10 @@ export default function App() {
           <LiveEquation mode={activeMode} p={pressure} v={volume} t={temp} />
         </div>
 
-        {/* 🔥 BOTÓN GIGANTE FOSFORESCENTE DE PREGUNTAS IA 🔥 */}
+        {/* 🔥 BOTÓN GIGANTE IA 🔥 */}
         <button onClick={triggerExercise} style={ui.iaButton}>{t.generate}</button>
       </div>
 
-      {/* MOTOR 3D */}
       <Canvas camera={{ position: [0, 4, 15], fov: 45 }}>
         <color attach="background" args={['#010204']} /><Environment preset="night" /><ambientLight intensity={0.2} /><pointLight position={[0, 5, 0]} intensity={3} color="#00f2ff" /><Stars count={6000} factor={5} fade speed={1} />
         <Suspense fallback={null}>
@@ -156,7 +166,6 @@ export default function App() {
         <OrbitControls makeDefault enablePan={false} maxPolarAngle={Math.PI / 1.8} />
       </Canvas>
 
-      {/* CONTROLES TACTICOS */}
       <div style={ui.controlPanel}>
          <div style={{...ui.controlGroup, opacity: (activeMode==='BOYLE')?0.2:1, pointerEvents: (activeMode==='BOYLE')?'none':'auto'}}>
            <div style={ui.controlLabel('#00f2ff')}>{t.temp}</div>
