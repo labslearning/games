@@ -1,19 +1,21 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useGameStore, MATERIALS } from '../store/useGameStore';
+import { useGameStore } from '../store/useGameStore';
+import { MATERIALS } from '../data/materials';
 
-export default function MolecularPhysics({ count = 200 }) {
+export default function MolecularPhysics({ count = 250 }) {
   const meshRef = useRef(); const materialRef = useRef(); const pistonRef = useRef();
   const { temp, volume, activeMaterial, phaseID, activeQuiz } = useGameStore();
   const visualVolume = useRef(volume);
 
   const mat = MATERIALS[activeMaterial] || MATERIALS['H2O'];
+  const pScale = mat.radius * 0.07; // Escala atómica real
 
   const crystalLattice = useMemo(() => {
     const pos = []; let idx = 0;
-    for(let x=0; x<6; x++) for(let y=0; y<6; y++) for(let z=0; z<6; z++) {
-      if(idx < count) { pos.push(new THREE.Vector3((x*0.5)-1.25, (y*0.2)+0.15, (z*0.5)-1.25)); idx++; }
+    for(let x=0; x<7; x++) for(let y=0; y<7; y++) for(let z=0; z<6; z++) {
+      if(idx < count) { pos.push(new THREE.Vector3((x*0.4)-1.2, (y*0.2)+0.15, (z*0.4)-1.2)); idx++; }
     }
     return pos;
   }, [count]);
@@ -33,14 +35,15 @@ export default function MolecularPhysics({ count = 200 }) {
     if (pistonRef.current) pistonRef.current.position.y = currentCeiling + 0.2; 
 
     const currentTemp = temp || 300;
-    const isSolid = phaseID === 'solid'; const isLiquid = phaseID === 'liquid';
+    const isSolid = phaseID === 'solid'; const isLiquid = phaseID === 'liquid'; const isPlasma = phaseID === 'plasma';
 
-    const targetColor = new THREE.Color(isSolid ? mat.colorS : (isLiquid ? mat.colorL : mat.colorG));
+    // COLOR Y BRILLO: Plasma es blanco radiactivo
+    const targetColor = new THREE.Color(isPlasma ? '#ffffff' : (isSolid ? mat.colorS : (isLiquid ? mat.colorL : mat.colorG)));
     materialRef.current.emissive.lerp(targetColor, 0.1);
-    materialRef.current.emissiveIntensity = isSolid ? 0.5 : (isLiquid ? 1.5 : (currentTemp > 2000 ? 4 : 2));
+    materialRef.current.emissiveIntensity = isPlasma ? 8.0 : (isSolid ? 0.5 : (isLiquid ? 1.5 : (currentTemp > 2000 ? 4 : 2)));
 
-    const baseSpeed = Math.min(8.0, Math.max(0.05, currentTemp / 120)); 
-    const substeps = 5; const subDelta = Math.min(delta, 0.1) / substeps; const radiusLimit = 2.3;
+    const baseSpeed = isPlasma ? 20.0 : Math.min(10.0, Math.max(0.05, currentTemp / 120)); 
+    const substeps = isPlasma ? 8 : 5; const subDelta = Math.min(delta, 0.1) / substeps; const radiusLimit = 2.3;
 
     particles.forEach((p, i) => {
       if (!activeQuiz) {
@@ -51,7 +54,12 @@ export default function MolecularPhysics({ count = 200 }) {
             if (isLiquid) {
               p.velocity.y -= 0.5 * subDelta * 50; 
               p.velocity.x += (Math.random() - 0.5) * 0.5; p.velocity.z += (Math.random() - 0.5) * 0.5;
+            } else if (isPlasma) {
+              p.velocity.x += (Math.random() - 0.5) * 4.0; 
+              p.velocity.y += (Math.random() - 0.5) * 4.0; 
+              p.velocity.z += (Math.random() - 0.5) * 4.0;
             }
+
             p.position.addScaledVector(p.velocity, subDelta * baseSpeed * (isLiquid ? 0.3 : 1.5));
 
             const dist2D = Math.sqrt(p.position.x * p.position.x + p.position.z * p.position.z);
@@ -67,7 +75,7 @@ export default function MolecularPhysics({ count = 200 }) {
           }
         }
       }
-      dummy.position.copy(p.position); dummy.scale.setScalar(0.08); dummy.updateMatrix();
+      dummy.position.copy(p.position); dummy.scale.setScalar(pScale); dummy.updateMatrix();
       meshRef.current.setMatrixAt(i, dummy.matrix);
     });
     meshRef.current.instanceMatrix.needsUpdate = true;
@@ -78,7 +86,7 @@ export default function MolecularPhysics({ count = 200 }) {
       <group ref={pistonRef}>
          <mesh position={[0, 2, 0]}><cylinderGeometry args={[0.2, 0.2, 4]} /><meshStandardMaterial color="#444" metalness={1} /></mesh>
          <mesh position={[0, 0, 0]}><cylinderGeometry args={[2.45, 2.45, 0.4, 64]} /><meshStandardMaterial color="#111" metalness={1} /></mesh>
-         <mesh position={[0, -0.2, 0]}><cylinderGeometry args={[2.4, 2.4, 0.05, 64]} /><meshStandardMaterial color="#00f2ff" emissive="#00f2ff" emissiveIntensity={2} /></mesh>
+         <mesh position={[0, -0.2, 0]}><cylinderGeometry args={[2.4, 2.4, 0.05, 64]} /><meshStandardMaterial color={phaseID==='plasma'?'#ffffff':'#00f2ff'} emissive={phaseID==='plasma'?'#ffffff':'#00f2ff'} emissiveIntensity={phaseID==='plasma'?5:2} /></mesh>
       </group>
       <instancedMesh ref={meshRef} args={[null, null, count]}>
         <sphereGeometry args={[1, 16, 16]} />
