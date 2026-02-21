@@ -52,7 +52,7 @@ const calculatePressure = (t, v, phase) => { if (phase === 'plasma') return (300
 export const useGameStore = create(
   persist(
     (set, get) => ({
-      appState: 'LANG_SELECT', language: 'es', activeMaterial: 'O2', activeMode: 'FREE',
+      appState: 'LANG_SELECT', language: 'es', activeGame: null, activeMaterial: 'O2', activeMode: 'FREE',
       temp: 300, volume: 100, pressure: 14.7, phaseID: 'gas', isCritical: false,
       score: 0, interactionCount: 0, activeQuiz: null, quizFeedback: null, exampleSession: null,
       searchTerm: '', filterCategory: 'All', isGeneratingQuiz: false,
@@ -60,8 +60,17 @@ export const useGameStore = create(
       setSearchTerm: (term) => set({ searchTerm: term }),
       setFilterCategory: (cat) => { audioSys.playUI(); set({ filterCategory: cat }); },
       setLanguage: (lang) => { audioSys.playUI(); set({ language: lang, appState: 'GAME_SELECT' }); },
-      startGame: () => { audioSys.playUI(); set({ appState: 'PLAYING', activeMode: 'FREE', score: 0, interactionCount: 0, exampleSession: null }); },
-      resetProgress: () => { set({ appState: 'LANG_SELECT', temp: 300, volume: 100, pressure: 14.7, activeMode: 'FREE', activeQuiz: null, quizFeedback: null, exampleSession: null, interactionCount: 0, score: 0, searchTerm: '', filterCategory: 'All', isGeneratingQuiz: false }); },
+      
+      // 🔥 FIX CIRUJANO: Ahora guarda en estado a qué juego entraste (Ej: 'GAS_LAWS' o 'REDOX_LAB')
+      startGame: (gameId) => { 
+        audioSys.playUI(); 
+        set({ appState: 'PLAYING', activeGame: gameId, activeMode: 'FREE', score: 0, interactionCount: 0, exampleSession: null }); 
+      },
+      
+      // 🔥 FIX CIRUJANO: Ahora limpia 'activeGame' para devolverte al menú de forma segura
+      resetProgress: () => { 
+        set({ appState: 'GAME_SELECT', activeGame: null, temp: 300, volume: 100, pressure: 14.7, activeMode: 'FREE', activeQuiz: null, quizFeedback: null, exampleSession: null, interactionCount: 0, score: 0, searchTerm: '', filterCategory: 'All', isGeneratingQuiz: false }); 
+      },
       
       setMaterial: (matId) => { 
         audioSys.playUI(); const mat = MATERIALS[matId] || MATERIALS['H2O']; const p = getPhase(300, mat);
@@ -196,8 +205,8 @@ export const useGameStore = create(
         let newCount = state.interactionCount + 1;
         set({ temp: t, volume: v, pressure: p, phaseID: newPhase, isCritical: p >= 1500, exampleSession: exSession, interactionCount: newCount });
 
-        // 🧠 CADA 3 CLICS SALTA LA IA EXACTAMENTE
-        if (newCount % 3 === 0 && !exSession) {
+        // 🧠 IA A LOS 6 CLICS (INTACTO)
+        if (newCount % 6 === 0 && !exSession) {
            get().triggerExercise();
         }
       },
@@ -215,6 +224,8 @@ export const useGameStore = create(
 
       clearFeedback: () => { audioSys.playUI(); set({ quizFeedback: null }); },
       closeQuiz: () => { audioSys.playUI(); set({ activeQuiz: null, quizFeedback: null }); }
-    }), { name: 'll-omega-master-v5' }
+    }), 
+    // Mantenemos el nombre de persistencia para limpiar cualquier viejo caché corrompido
+    { name: 'll-omega-master-limpio-v2' }
   )
 );

@@ -6,6 +6,12 @@ import MolecularPhysics from './components/MolecularPhysics';
 import { useGameStore, i18n, audioSys } from './store/useGameStore';
 import { MATERIALS } from './data/materials';
 
+// 📦 IMPORTAMOS TUS 4 JUEGOS ("Cartuchos")
+import GasLaws from './games/chemistry/GasLaws';
+import RedoxLab from './games/chemistry/RedoxLab';
+import RedoxBalancer from './games/chemistry/RedoxBalancer';
+import GasTheory from './games/chemistry/GasTheory'; // <-- NUEVO CARTUCHO INYECTADO
+
 const LiveEquation = ({ mode, p, v, t }) => {
   const cP = "#ff0055"; const cV = "#ffea00"; const cT = "#00f2ff"; 
   const val = (n, c) => <span style={{ color: c, fontWeight: 'bold' }}>{Number(n).toFixed(1)}</span>;
@@ -49,7 +55,7 @@ const LiveEquation = ({ mode, p, v, t }) => {
 };
 
 export default function App() {
-  const { appState, temp, volume, pressure, phaseID, isCritical, activeMaterial, setMaterial, activeMode, setMode, updatePhysics, language, setLanguage, startGame, resetProgress, activeQuiz, answerQuizQuestion, quizFeedback, clearFeedback, closeQuiz, score, triggerExercise, exampleSession, loadExampleScenario, exitExample, searchTerm, setSearchTerm, filterCategory, setFilterCategory, isGeneratingQuiz } = useGameStore();
+  const { appState, activeGame, temp, volume, pressure, phaseID, isCritical, activeMaterial, setMaterial, activeMode, setMode, updatePhysics, language, setLanguage, startGame, resetProgress, activeQuiz, answerQuizQuestion, quizFeedback, clearFeedback, closeQuiz, score, triggerExercise, exampleSession, loadExampleScenario, exitExample, searchTerm, setSearchTerm, filterCategory, setFilterCategory, isGeneratingQuiz } = useGameStore();
   const mat = MATERIALS[activeMaterial] || MATERIALS['H2O'];
   const t_i18n = i18n[language] || i18n.es;
   const t = t_i18n.ui;
@@ -57,10 +63,10 @@ export default function App() {
   const examples = t_i18n.examples[activeMode];
   const droneRef = useRef(null);
 
-  // 🔥 FIX DE AUDIO: Se pausa automáticamente si no estamos en PLAYING
+  // 🔥 FIX DE AUDIO: El sonido se detiene si no estás jugando O si estás en Redox/Theory
   useEffect(() => {
     if (droneRef.current) {
-      if (appState === 'PLAYING' && !activeQuiz) {
+      if (appState === 'PLAYING' && !activeQuiz && (!activeGame || activeGame === 'GAS_LAWS')) {
         droneRef.current.play().catch(()=>{});
         droneRef.current.playbackRate = Math.max(0.5, temp / 5000);
         droneRef.current.volume = isCritical ? 0.8 : 0.2;
@@ -68,7 +74,7 @@ export default function App() {
         droneRef.current.pause();
       }
     }
-  }, [appState, temp, isCritical, activeQuiz]);
+  }, [appState, temp, isCritical, activeQuiz, activeGame]);
 
   const filteredMaterials = Object.values(MATERIALS).filter(m => {
     const matchesSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.symbol.toLowerCase().includes(searchTerm.toLowerCase());
@@ -93,16 +99,49 @@ export default function App() {
         </div>
       )}
 
+      {/* 🎮 PANTALLA 2: LOBBY DE SELECCIÓN DE JUEGOS (AHORA CON 4 TARJETAS) */}
       {appState === 'GAME_SELECT' && (
         <div style={ui.screenGame}><div style={ui.hexBackground} /><button onClick={resetProgress} style={ui.resetBtnGame}>⚙️ BACK</button>
-          <div style={ui.centerBoxGame}><h1 style={ui.titleGame}>CATÁLOGO: 150 MATERIALES</h1><button onClick={startGame} style={ui.solidCyberBtn}>{t.gameChem}</button></div>
+          <div style={{...ui.centerBoxGame, width: '90%', maxWidth: '1200px'}}>
+            <h1 style={ui.titleGame}>CATÁLOGO DE SIMULADORES</h1>
+            
+            {/* <-- GRID ACTUALIZADO A 2 COLUMNAS Y 4 ELEMENTOS --> */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', width: '100%', marginTop: '20px' }}>
+              
+              {/* TARJETA JUEGO 1: GAS LAWS (Original) */}
+              <div style={ui.gameCard} onClick={() => startGame('GAS_LAWS')}>
+                <h2 style={{color: '#00f2ff', margin: '0 0 10px 0'}}>🧪 LEYES DE GASES</h2>
+                <p style={{color: '#aaa', fontSize: '14px', margin: 0}}>Termodinámica, 150 elementos, Plasma y Presión.</p>
+              </div>
+
+              {/* <-- NUEVO JUEGO: GAS THEORY MASTER --> */}
+              <div style={{...ui.gameCard, border: '1px solid #00ff88', background: 'rgba(0, 30, 15, 0.8)', boxShadow: '0 0 20px rgba(0,255,136,0.2)', position: 'relative'}} onClick={() => startGame('GAS_THEORY')}>
+                <div style={{position:'absolute', top:'-10px', right:'-10px', background:'#00ff88', color:'#000', padding:'2px 8px', fontSize:'10px', fontWeight:'bold', borderRadius:'4px'}}>NUEVO</div>
+                <h2 style={{color: '#00ff88', margin: '0 0 10px 0'}}>📚 GAS THEORY MASTER</h2>
+                <p style={{color: '#aaa', fontSize: '14px', margin: 0}}>Campaña Guiada: Cinética, Boyle y Charles.</p>
+              </div>
+
+              {/* TARJETA JUEGO 2: REDOX LAB */}
+              <div style={{...ui.gameCard, border: '1px solid #ff0055', background: 'rgba(30, 0, 10, 0.8)', boxShadow: '0 0 20px rgba(255,0,85,0.2)'}} onClick={() => startGame('REDOX_LAB')}>
+                <h2 style={{color: '#ff0055', margin: '0 0 10px 0'}}>⚡ QUÍMICA REDOX LAB</h2>
+                <p style={{color: '#aaa', fontSize: '14px', margin: 0}}>Mecánicas de balanceo y transferencia de electrones.</p>
+              </div>
+
+              {/* TARJETA JUEGO 3: REDOX BALANCER */}
+              <div style={{...ui.gameCard, border: '1px solid #ffea00', background: 'rgba(30, 25, 0, 0.8)', boxShadow: '0 0 20px rgba(255,234,0,0.2)'}} onClick={() => startGame('REDOX_BALANCER')}>
+                <h2 style={{color: '#ffea00', margin: '0 0 10px 0'}}>⚖️ REDOX BALANCER</h2>
+                <p style={{color: '#aaa', fontSize: '14px', margin: 0}}>Simulador avanzado de balanceo por cargas.</p>
+              </div>
+
+            </div>
+          </div>
         </div>
       )}
 
       {appState === 'PLAYING' && (
         <div style={ui.screen}>
           <div style={{...ui.criticalOverlay, opacity: isCritical ? 1 : 0}} />
-          <button onClick={resetProgress} style={ui.resetBtnGame}>{t.reset}</button>
+          <button onClick={resetProgress} style={{...ui.resetBtnGame, zIndex: 9999}}>{t.reset}</button>
 
           {/* 🛑 MODAL DE IA TUTOR ESTRICTO */}
           {activeQuiz && (
@@ -146,121 +185,132 @@ export default function App() {
             </div>
           )}
 
-          {/* ⬅️ PANEL IZQUIERDO: REDISEÑADO PARA NO SUPERPONERSE */}
-          <div style={ui.leftPanel}>
-            <div style={{...ui.sectionBox, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0}}>
-              <input type="text" placeholder={t.search} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={ui.searchInput} />
-              <div style={{display:'flex', gap:'5px', marginTop:'10px', flexShrink: 0}}>
-                <button onClick={()=>setFilterCategory('All')} style={filterCategory==='All'?ui.pillA:ui.pill}>{t.filterAll}</button>
-                <button onClick={()=>setFilterCategory('Elemento')} style={filterCategory==='Elemento'?ui.pillA:ui.pill}>{t.filterElem}</button>
-                <button onClick={()=>setFilterCategory('Compuesto')} style={filterCategory==='Compuesto'?ui.pillA:ui.pill}>{t.filterComp}</button>
-              </div>
-              
-              {/* SCROLL INTERNO PARA LA LISTA DE MATERIALES */}
-              <div style={{flex: 1, overflowY: 'auto', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '5px', paddingRight: '5px'}}>
-                {filteredMaterials.map(m => (
-                  <button key={m.id} onClick={() => setMaterial(m.id)} style={activeMaterial === m.id ? ui.matBtnActive : ui.matBtn}>
-                    <span style={{fontWeight:'bold', width:'40px', display:'inline-block'}}>{m.symbol}</span> {m.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <div style={{...ui.sectionBox, background:'rgba(0,15,30,0.8)', borderLeft:'3px solid #00f2ff', flexShrink: 0}}>
-              <h3 style={ui.panelTitle}>// {mat.symbol} ({t[phaseID]?.toUpperCase() || phaseID.toUpperCase()})</h3>
-              <div style={ui.dataRow}><span>{t.atomicNum}</span><span style={{color:'#ffea00'}}>{mat.atomicNum}</span></div>
-              <div style={ui.dataRow}><span>{t.mass}</span><span style={{color:'#ffea00'}}>{mat.mass} g/mol</span></div>
-              <div style={ui.dataRow}><span>{t.eConfig}</span><span style={{color:'#00f2ff', fontSize:'9px'}}>{mat.eConfig}</span></div>
-              <div style={ui.dataRow}><span>{t.density}</span><span style={{color:'#00f2ff'}}>{mat.density} g/cm³</span></div>
-            </div>
-          </div>
-
-          {/* ➡️ PANEL DERECHO (MISIONES Y BOTÓN IA) */}
-          <div style={ui.rightPanel}>
-            <div style={{...ui.sectionBox, borderLeft:'4px solid #ffea00', background:'rgba(50,40,0,0.8)', flexShrink: 0}}><h3 style={{...ui.panelTitle, color:'#ffea00', fontSize:'14px'}}>🏆 SCORE: {score} PTS</h3></div>
-            
-            <div style={{...ui.sectionBox, flexShrink: 0}}><h3 style={ui.panelTitle}>// {t.classMode || "LEYES"}</h3>
-              <div style={ui.modeGrid}>{['FREE', 'BOYLE', 'CHARLES', 'GAY_LUSSAC'].map(m => <button key={m} onClick={()=>setMode(m)} style={activeMode===m ? ui.modeBtnA : ui.modeBtn}>{t[`mode${m.charAt(0)+m.slice(1).toLowerCase().replace('_l','L')}`] || m}</button>)}</div>
-              <div style={{marginTop:'15px', fontSize:'11px', color:'#ccc', lineHeight:'1.5'}}><strong style={{color:'#00f2ff'}}>{lesson.title}</strong><br/><span style={{color:'#ffea00'}}>{t.goal}:</span> {lesson.goal}<br/><span style={{color:'#00f2ff'}}>{t.idea}:</span> {lesson.idea}</div>
-            </div>
-
-            {/* 🔬 MISIÓN (LAB DE EJEMPLOS) - Con Scroll interno si crece mucho */}
-            {activeMode !== 'FREE' && (
-              <div style={{...ui.sectionBox, borderLeft:'3px solid #ff0055', background:'rgba(30,0,10,0.8)', flexShrink: 0, maxHeight: '25vh', overflowY: 'auto'}}>
-                <h3 style={{...ui.panelTitle, color:'#ff0055'}}>{t.labTitle}</h3>
-                {!exampleSession && examples?.map((ex, idx) => (
-                  <button key={idx} onClick={() => loadExampleScenario(activeMode, idx)} style={{...ui.solidCyberBtn, width:'100%', fontSize:'12px', padding:'10px', marginTop:'5px', background:'linear-gradient(45deg, #ff0055, #880022)'}}>{t.startLab}: {ex.title}</button>
-                ))}
-                {exampleSession && (
-                  <div style={{marginTop:'10px', fontSize:'11px', color:'#ccc', lineHeight:'1.5'}}>
-                    <strong style={{color:'#ff0055'}}>{exampleSession.title}</strong><p style={{margin:'5px 0', color:'#fff'}}>{exampleSession.prompt}</p>
-                    <ul style={{paddingLeft:'15px', color:'#ffea00'}}>{exampleSession.steps.map((step, i) => <li key={i}>{step}</li>)}</ul>
-                    {exampleSession.completed ? (<div style={{padding:'10px', background:'rgba(0,255,0,0.2)', color:'#0f0', border:'1px solid #0f0', textAlign:'center', marginTop:'10px'}}>✅ {t.stepDone} (+200 PTS)</div>) : (<div style={{padding:'5px', textAlign:'center', color:'#ff0055'}}>...</div>)}
-                    <button onClick={exitExample} style={{...ui.cyberBtn, padding:'5px', fontSize:'10px', width:'100%', marginTop:'10px'}}>{t.exitLab}</button>
+          {/* <-- SWITCH DE JUEGOS ACTUALIZADO A 4 ESTADOS --> */}
+          {activeGame === 'REDOX_LAB' ? (
+             <RedoxLab />
+          ) : activeGame === 'REDOX_BALANCER' ? (
+             <RedoxBalancer />
+          ) : activeGame === 'GAS_THEORY' ? (
+             <GasTheory />
+          ) : (
+             <>
+                {/* ⬅️ PANEL IZQUIERDO: REDISEÑADO CON FLEX ESTRICTO PARA EVITAR OVERLAPS */}
+                <div style={ui.leftPanel}>
+                  <div style={{...ui.sectionBox, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0}}>
+                    <input type="text" placeholder={t.search} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={ui.searchInput} />
+                    <div style={{display:'flex', gap:'5px', marginTop:'10px', flexShrink: 0}}>
+                      <button onClick={()=>setFilterCategory('All')} style={filterCategory==='All'?ui.pillA:ui.pill}>{t.filterAll}</button>
+                      <button onClick={()=>setFilterCategory('Elemento')} style={filterCategory==='Elemento'?ui.pillA:ui.pill}>{t.filterElem}</button>
+                      <button onClick={()=>setFilterCategory('Compuesto')} style={filterCategory==='Compuesto'?ui.pillA:ui.pill}>{t.filterComp}</button>
+                    </div>
+                    <div style={{flex: 1, overflowY: 'auto', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '5px', paddingRight: '5px'}}>
+                      {filteredMaterials.map(m => (
+                        <button key={m.id} onClick={() => setMaterial(m.id)} style={activeMaterial === m.id ? ui.matBtnActive : ui.matBtn}>
+                          <span style={{fontWeight:'bold', width:'40px', display:'inline-block'}}>{m.symbol}</span> {m.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                )}
-              </div>
-            )}
+                  
+                  <div style={{...ui.sectionBox, background:'rgba(0,15,30,0.8)', borderLeft:'3px solid #00f2ff', flexShrink: 0}}>
+                    <h3 style={ui.panelTitle}>// {mat.symbol} ({t[phaseID]?.toUpperCase() || phaseID.toUpperCase()})</h3>
+                    <div style={ui.dataRow}><span>{t.atomicNum}</span><span style={{color:'#ffea00'}}>{mat.atomicNum}</span></div>
+                    <div style={ui.dataRow}><span>{t.mass}</span><span style={{color:'#ffea00'}}>{mat.mass} g/mol</span></div>
+                    <div style={ui.dataRow}><span>{t.eConfig}</span><span style={{color:'#00f2ff', fontSize:'9px'}}>{mat.eConfig}</span></div>
+                    <div style={ui.dataRow}><span>{t.density}</span><span style={{color:'#00f2ff'}}>{mat.density} g/cm³</span></div>
+                  </div>
+                </div>
 
-            <div style={{...ui.sectionBox, textAlign:'center', flexShrink: 0}}>
-              <LiveEquation mode={activeMode} p={pressure} v={volume} t={temp} />
-            </div>
+                {/* ➡️ PANEL DERECHO: ALTURA CONTROLADA */}
+                <div style={ui.rightPanel}>
+                  <div style={{...ui.sectionBox, borderLeft:'4px solid #ffea00', background:'rgba(50,40,0,0.8)', flexShrink: 0}}><h3 style={{...ui.panelTitle, color:'#ffea00', fontSize:'14px', margin:0}}>🏆 SCORE: {score} PTS</h3></div>
+                  
+                  <div style={{...ui.sectionBox, flexShrink: 0}}><h3 style={ui.panelTitle}>// {t.classMode || "LEYES"}</h3>
+                    <div style={ui.modeGrid}>{['FREE', 'BOYLE', 'CHARLES', 'GAY_LUSSAC'].map(m => <button key={m} onClick={()=>setMode(m)} style={activeMode===m ? ui.modeBtnA : ui.modeBtn}>{t[`mode${m.charAt(0)+m.slice(1).toLowerCase().replace('_l','L')}`] || m}</button>)}</div>
+                    <div style={{marginTop:'15px', fontSize:'11px', color:'#ccc', lineHeight:'1.5'}}><strong style={{color:'#00f2ff'}}>{lesson.title}</strong><br/><span style={{color:'#ffea00'}}>{t.goal}:</span> {lesson.goal}<br/><span style={{color:'#00f2ff'}}>{t.idea}:</span> {lesson.idea}</div>
+                  </div>
 
-            {/* 🔥 BOTÓN GIGANTE IA ASÍNCRONO 🔥 */}
-            <button onClick={triggerExercise} disabled={isGeneratingQuiz} style={{...ui.iaButton, opacity: isGeneratingQuiz ? 0.5 : 1, flexShrink: 0}}>
-              {isGeneratingQuiz ? t.loadingAI : t.generate}
-            </button>
-          </div>
+                  {/* 🔬 MISIÓN (LAB DE EJEMPLOS) */}
+                  {activeMode !== 'FREE' && (
+                    <div style={{...ui.sectionBox, borderLeft:'3px solid #ff0055', background:'rgba(30,0,10,0.8)', flexShrink: 0, maxHeight: '25vh', overflowY: 'auto'}}>
+                      <h3 style={{...ui.panelTitle, color:'#ff0055'}}>{t.labTitle}</h3>
+                      {!exampleSession && examples?.map((ex, idx) => (
+                        <button key={idx} onClick={() => loadExampleScenario(activeMode, idx)} style={{...ui.solidCyberBtn, width:'100%', fontSize:'12px', padding:'10px', marginTop:'5px', background:'linear-gradient(45deg, #ff0055, #880022)'}}>{t.startLab}: {ex.title}</button>
+                      ))}
+                      {exampleSession && (
+                        <div style={{marginTop:'10px', fontSize:'11px', color:'#ccc', lineHeight:'1.5'}}>
+                          <strong style={{color:'#ff0055'}}>{exampleSession.title}</strong><p style={{margin:'5px 0', color:'#fff'}}>{exampleSession.prompt}</p>
+                          <ul style={{paddingLeft:'15px', color:'#ffea00'}}>{exampleSession.steps.map((step, i) => <li key={i}>{step}</li>)}</ul>
+                          {exampleSession.completed ? (<div style={{padding:'10px', background:'rgba(0,255,0,0.2)', color:'#0f0', border:'1px solid #0f0', textAlign:'center', marginTop:'10px'}}>✅ {t.stepDone} (+200 PTS)</div>) : (<div style={{padding:'5px', textAlign:'center', color:'#ff0055'}}>...</div>)}
+                          <button onClick={exitExample} style={{...ui.cyberBtn, padding:'5px', fontSize:'10px', width:'100%', marginTop:'10px'}}>{t.exitLab}</button>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-          <Canvas camera={{ position: [0, 4, 15], fov: 45 }}>
-            <color attach="background" args={['#010204']} /><Environment preset="night" /><ambientLight intensity={0.2} /><pointLight position={[0, 5, 0]} intensity={phaseID==='plasma'?10:3} color={phaseID==='plasma'?'#ffffff':'#00f2ff'} /><Stars count={6000} factor={5} fade speed={1} />
-            <Suspense fallback={null}>
-              <group position={[0, -2, 0]}>
-                <mesh position={[0, 2, 0]}><cylinderGeometry args={[2.5, 2.5, 4, 64]} /><meshPhysicalMaterial transparent opacity={0.15} color="#00f2ff" metalness={1} roughness={0} side={2}/></mesh>
-                <mesh position={[0, -0.1, 0]}><cylinderGeometry args={[2.6, 2.8, 0.4, 64]} /><meshStandardMaterial color="#050505" /></mesh>
-                <MolecularPhysics count={250} />
-              </group>
-            </Suspense>
-            <EffectComposer><Bloom luminanceThreshold={phaseID==='plasma'?0.5:1} mipmapBlur intensity={phaseID==='plasma'?3.0:2.0} />{isCritical && <ChromaticAberration offset={[0.01, 0.01]} />}</EffectComposer>
-            <OrbitControls makeDefault enablePan={false} maxPolarAngle={Math.PI / 1.8} />
-          </Canvas>
+                  <div style={{...ui.sectionBox, textAlign:'center', flexShrink: 0}}>
+                    <LiveEquation mode={activeMode} p={pressure} v={volume} t={temp} />
+                  </div>
 
-          {/* ⬇️ PANEL DE CONTROLES INFERIOR: Estilizado como un Dashboard central */}
-          <div style={ui.controlPanel}>
-             <div style={{...ui.controlGroup, opacity: (activeMode==='BOYLE')?0.2:1, pointerEvents: (activeMode==='BOYLE')?'none':'auto'}}>
-               <div style={ui.controlLabel('#00f2ff')}>{t.temp}</div>
-               <div style={{display:'flex', gap:'5px'}}>
-                 <button onClick={() => updatePhysics('TEMP', 500)} style={ui.actionBtn('#ff0055')}>+500</button>
-                 <button onClick={() => updatePhysics('TEMP', 50)} style={ui.actionBtn('#ff0055')}>+50</button>
-                 <button onClick={() => updatePhysics('TEMP', -500)} style={ui.actionBtn('#00f2ff')}>-500</button>
-               </div>
-             </div>
-             <div style={ui.hud(isCritical, phaseID)}>
-                <div style={ui.hudVal(false, phaseID==='plasma'?'#fff':'#00f2ff')}>{temp}K</div>
-                <div style={ui.hudVal(isCritical, '#ff0055')}>{pressure.toFixed(1)} PSI</div>
-                <div style={ui.hudVal(false, '#ffea00')}>{volume}%</div>
-             </div>
-             <div style={{...ui.controlGroup, opacity: (activeMode==='CHARLES')?0.2:1, pointerEvents: (activeMode==='CHARLES')?'none':'auto'}}>
-               <div style={ui.controlLabel('#ffea00')}>{t.vol}</div>
-               <div style={{display:'flex', gap:'5px'}}>
-                 <button onClick={() => updatePhysics('VOL', 10)} style={ui.actionBtn('#ffea00')}>+10</button>
-                 <button onClick={() => updatePhysics('VOL', -10)} style={ui.actionBtn('#ffea00')}>-10</button>
-               </div>
-             </div>
-             <div style={{...ui.controlGroup, opacity: (activeMode==='CHARLES'||activeMode==='GAY_LUSSAC')?0.2:1, pointerEvents: (activeMode==='CHARLES'||activeMode==='GAY_LUSSAC')?'none':'auto'}}>
-               <div style={ui.controlLabel('#ff0055')}>{t.press}</div>
-               <div style={{display:'flex', gap:'5px'}}>
-                 <button onClick={() => updatePhysics('PRESS', 10)} style={ui.actionBtn('#ff0055')}>+10</button>
-                 <button onClick={() => updatePhysics('PRESS', -10)} style={ui.actionBtn('#ff0055')}>-10</button>
-               </div>
-             </div>
-          </div>
+                  {/* 🔥 BOTÓN GIGANTE IA ASÍNCRONO 🔥 */}
+                  <button onClick={triggerExercise} disabled={isGeneratingQuiz} style={{...ui.iaButton, opacity: isGeneratingQuiz ? 0.5 : 1, flexShrink: 0}}>
+                    {isGeneratingQuiz ? t.loadingAI : t.generate}
+                  </button>
+                </div>
+
+                <Canvas camera={{ position: [0, 4, 15], fov: 45 }}>
+                  <color attach="background" args={['#010204']} /><Environment preset="night" /><ambientLight intensity={0.2} /><pointLight position={[0, 5, 0]} intensity={phaseID==='plasma'?10:3} color={phaseID==='plasma'?'#ffffff':'#00f2ff'} /><Stars count={6000} factor={5} fade speed={1} />
+                  <Suspense fallback={null}>
+                    <group position={[0, -2, 0]}>
+                      <mesh position={[0, 2, 0]}><cylinderGeometry args={[2.5, 2.5, 4, 64]} /><meshPhysicalMaterial transparent opacity={0.15} color="#00f2ff" metalness={1} roughness={0} side={2}/></mesh>
+                      <mesh position={[0, -0.1, 0]}><cylinderGeometry args={[2.6, 2.8, 0.4, 64]} /><meshStandardMaterial color="#050505" /></mesh>
+                      <MolecularPhysics count={250} />
+                    </group>
+                  </Suspense>
+                  <EffectComposer><Bloom luminanceThreshold={phaseID==='plasma'?0.5:1} mipmapBlur intensity={phaseID==='plasma'?3.0:2.0} />{isCritical && <ChromaticAberration offset={[0.01, 0.01]} />}</EffectComposer>
+                  <OrbitControls makeDefault enablePan={false} maxPolarAngle={Math.PI / 1.8} />
+                </Canvas>
+
+                {/* ⬇️ PANEL DE CONTROLES INFERIOR MEJORADO */}
+                <div style={ui.controlPanel}>
+                   <div style={{...ui.controlGroup, opacity: (activeMode==='BOYLE')?0.2:1, pointerEvents: (activeMode==='BOYLE')?'none':'auto'}}>
+                     <div style={ui.controlLabel('#00f2ff')}>{t.temp}</div>
+                     <div style={{display:'flex', gap:'5px'}}>
+                       <button onClick={() => updatePhysics('TEMP', 500)} style={ui.actionBtn('#ff0055')}>+500</button>
+                       <button onClick={() => updatePhysics('TEMP', 50)} style={ui.actionBtn('#ff0055')}>+50</button>
+                       <button onClick={() => updatePhysics('TEMP', -500)} style={ui.actionBtn('#00f2ff')}>-500</button>
+                     </div>
+                   </div>
+                   <div style={ui.hud(isCritical, phaseID)}>
+                      <div style={ui.hudVal(false, phaseID==='plasma'?'#fff':'#00f2ff')}>{temp}K</div>
+                      <div style={ui.hudVal(isCritical, '#ff0055')}>{pressure.toFixed(1)} PSI</div>
+                      <div style={ui.hudVal(false, '#ffea00')}>{volume}%</div>
+                   </div>
+                   <div style={{...ui.controlGroup, opacity: (activeMode==='CHARLES')?0.2:1, pointerEvents: (activeMode==='CHARLES')?'none':'auto'}}>
+                     <div style={ui.controlLabel('#ffea00')}>{t.vol}</div>
+                     <div style={{display:'flex', gap:'5px'}}>
+                       <button onClick={() => updatePhysics('VOL', 10)} style={ui.actionBtn('#ffea00')}>+10</button>
+                       <button onClick={() => updatePhysics('VOL', -10)} style={ui.actionBtn('#ffea00')}>-10</button>
+                     </div>
+                   </div>
+                   <div style={{...ui.controlGroup, opacity: (activeMode==='CHARLES'||activeMode==='GAY_LUSSAC')?0.2:1, pointerEvents: (activeMode==='CHARLES'||activeMode==='GAY_LUSSAC')?'none':'auto'}}>
+                     <div style={ui.controlLabel('#ff0055')}>{t.press}</div>
+                     <div style={{display:'flex', gap:'5px'}}>
+                       <button onClick={() => updatePhysics('PRESS', 10)} style={ui.actionBtn('#ff0055')}>+10</button>
+                       <button onClick={() => updatePhysics('PRESS', -10)} style={ui.actionBtn('#ff0055')}>-10</button>
+                     </div>
+                   </div>
+                </div>
+             </>
+          )}
+
         </div>
       )}
     </>
   );
 }
 
+// 🎨 DICCIONARIO DE ESTILOS BLINDADO
 const ui = {
   screenGame: { width:'100vw', height:'100vh', backgroundColor:'#010204', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', fontFamily:'Orbitron, sans-serif', position:'relative', overflow:'hidden' },
   hexBackground: { position:'absolute', inset:0, backgroundImage:'radial-gradient(circle at center, rgba(0,242,255,0.05) 0%, transparent 60%)', backgroundSize:'40px 40px' },
@@ -274,7 +324,6 @@ const ui = {
   screen: { width:'100vw', height:'100vh', background:'#010204', fontFamily:'Orbitron', overflow:'hidden', position:'relative' },
   criticalOverlay: { position:'absolute', inset:0, boxShadow:'inset 0 0 200px rgba(255,0,85,0.4)', pointerEvents:'none', zIndex:99, transition:'0.3s' },
   
-  // 🔥 FIX DE OVERLAP: Altura máxima de los paneles calculada para no chocar con los controles de abajo.
   leftPanel: { position:'absolute', top:'80px', left:'30px', zIndex:50, display:'flex', flexDirection:'column', gap:'15px', width:'280px', height:'calc(100vh - 180px)' },
   rightPanel: { position:'absolute', top:'80px', right:'30px', zIndex:50, display:'flex', flexDirection:'column', gap:'15px', width:'300px', maxHeight:'calc(100vh - 180px)', overflowY:'auto' },
   
@@ -292,15 +341,17 @@ const ui = {
   mathLive: { fontSize:'24px', color:'#fff', fontFamily:'"Courier New", monospace', fontWeight:'bold', letterSpacing:'1px' },
   iaButton: { width:'100%', padding:'15px', background:'linear-gradient(45deg, #7b2cbf, #b5179e)', border:'2px solid #f72585', color:'#fff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'14px', fontWeight:'bold', marginTop:'5px', boxShadow:'0 0 15px rgba(247, 37, 133, 0.5)' },
   
-  // 🔥 PANEL CENTRAL FLOTANTE (ESTILO COCKPIT DE NAVE)
   controlPanel: { position:'absolute', bottom:'20px', left:'50%', transform:'translateX(-50%)', zIndex:10, display:'flex', alignItems:'center', gap:'20px', background:'rgba(0,5,15,0.85)', padding:'15px 30px', borderRadius:'10px', border:'1px solid #00f2ff', boxShadow:'0 0 20px rgba(0,242,255,0.15)', backdropFilter:'blur(5px)' },
   
   controlGroup: { display:'flex', flexDirection:'column', gap:'8px' },
-  controlLabel: (color) => ({ fontSize: '10px', color: color, letterSpacing: '2px', textAlign: 'center', marginBottom:'-2px', textShadow: `0 0 5px ${color}` }),
+  controlLabel: (color) => ({ fontSize: '10px', color: color, letterSpacing: '2px', textAlign: 'center', margin: 0, textShadow: `0 0 5px ${color}` }),
   actionBtn: (color) => ({ padding:'12px 15px', background:`rgba(${color==='#ff0055'?'255,0,85':(color==='#00f2ff'?'0,242,255':'255,234,0')}, 0.1)`, border:`2px solid ${color}`, color:color, cursor:'pointer', fontWeight:'bold', fontFamily:'Orbitron' }),
   hud: (isCrit, phase) => ({ background:'rgba(0,0,0,0.6)', padding:'10px 30px', border:`2px solid ${phase==='plasma'?'#fff':(isCrit?'#ff0055':'#00f2ff')}`, textAlign:'center', minWidth:'120px', borderRadius:'5px', boxShadow: phase==='plasma'?'0 0 30px #fff':'' }),
   hudVal: (isCrit, baseColor) => ({ fontSize:'22px', fontWeight:'bold', color: isCrit ? '#ff0055' : baseColor, margin: '5px 0', textShadow:`0 0 10px ${baseColor}` }),
   quizOverlay: { position:'absolute', inset:0, background:'rgba(0,5,10,0.95)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(15px)' },
   quizBox: { background:'rgba(0,10,20,0.9)', border:'1px solid #00f2ff', padding:'50px', maxWidth:'1000px', width:'90%', maxHeight:'90vh', overflowY:'auto', textAlign:'center', boxShadow:'0 0 100px rgba(0,242,255,0.2)' },
-  quizBtn: { padding:'25px', background:'rgba(255,255,255,0.05)', border:'1px solid #555', color:'#fff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'16px', textAlign:'left', transition:'0.3s' }
+  quizBtn: { padding:'25px', background:'rgba(255,255,255,0.05)', border:'1px solid #555', color:'#fff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'16px', textAlign:'left', transition:'0.3s' },
+  
+  // Estilo de las 4 Tarjetas
+  gameCard: { background: 'rgba(0,15,30,0.8)', border: '1px solid #00f2ff', padding: '30px', borderRadius: '8px', cursor: 'pointer', transition: '0.3s', textAlign: 'center' }
 };
