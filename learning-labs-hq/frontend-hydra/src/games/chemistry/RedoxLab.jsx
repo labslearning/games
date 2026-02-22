@@ -6,18 +6,23 @@ import * as THREE from 'three';
 import { useGameStore } from '../../store/useGameStore';
 
 /* ============================================================
-   📱 HOOK DE RESPONSIVIDAD 3D (MOBILE FIRST)
+   📱 HOOK DE RESPONSIVIDAD 3D (MOBILE FIRST + LANDSCAPE)
 ============================================================ */
 function useMobile() {
-  const [isMobile, setIsMobile] = useState(false);
+  const [deviceState, setDeviceState] = useState({ isMobile: false, isLandscape: false });
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const checkDevice = () => {
+      setDeviceState({
+        isMobile: window.innerWidth <= 768,
+        isLandscape: window.innerWidth > window.innerHeight
+      });
+    };
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
   }, []);
-  return isMobile;
+  return deviceState;
 }
 
 /* ============================================================
@@ -60,7 +65,7 @@ class SafeAudioEngine {
   success() { this._play('sine', 440, 880, 0.4, 0.2); setTimeout(()=>this._play('sine', 880, 1760, 0.5, 0.2), 150); }
   error() { this._play('sawtooth', 150, 50, 0.4, 0.3); }
   valve() { this._play('noise', 1500, 200, 0.15, 0.05); } 
-  rumble(intensity) { this._play('sawtooth', 60, 40, 0.2, intensity * 0.5); } // Terremoto térmico
+  rumble(intensity) { this._play('sawtooth', 60, 40, 0.2, intensity * 0.5); } 
 }
 const sfx = new SafeAudioEngine();
 
@@ -210,7 +215,7 @@ const HolographicEquation = ({ core, isStable }) => {
   );
 };
 
-const AtomicCore = React.memo(({ core, hitPulse, isMobile }) => {
+const AtomicCore = React.memo(({ core, hitPulse, isMobile, isLandscape }) => {
   const groupRef = useRef();
   const meshRef = useRef();
   const isStable = core.currentCharge === core.target;
@@ -267,7 +272,7 @@ const AtomicCore = React.memo(({ core, hitPulse, isMobile }) => {
    🎮 5. MÁQUINA DE ESTADOS PRINCIPAL
 ============================================================ */
 export default function RedoxLab() {
-  const isMobile = useMobile(); // 🔥 Inyección del Hook de Responsividad
+  const { isMobile, isLandscape } = useMobile(); // 🔥 Hook avanzado de Responsividad
   const { language, resetProgress } = useGameStore(); 
   
   const safeLang = I18N[language] ? language : 'es';
@@ -282,13 +287,23 @@ export default function RedoxLab() {
   const [hitPulse, setHitPulse] = useState(false);
   const [mastery, setMastery] = useState(0);
   const [microClassActive, setMicroClassActive] = useState(false);
+  
+  // 🔥 FIX BUG "SE QUEDA PEGADO": Estado para mostrar visualmente que fue correcto
+  const [isCorrectAnswer, setIsCorrectAnswer] = useState(false); 
 
   const config = MISSIONS_CONFIG[missionIdx];
-  const qData = dict.questions[missionIdx];
+  const qData = dict.questions[missionIdx]; // <-- Seguro, ya no dará crash en RedoxLab.
+
+  // 🛑 PROTECCIÓN DE MEMORIA
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
 
   const handleBack = () => {
     window.speechSynthesis?.cancel();
-    window.location.href = '/'; 
+    resetProgress(); // Retorno limpio al menú
   };
 
   const handleStartBoot = () => {
@@ -306,6 +321,8 @@ export default function RedoxLab() {
     }
     setMissionIdx(idx);
     setCores(nextConfig.cores.map(c => ({ ...c, currentCharge: c.start })));
+    setIsCorrectAnswer(false);
+    setMicroClassActive(false);
     setPhase("THEORY");
     safeSpeak(dict.theory[idx], langCode);
   };
@@ -333,6 +350,7 @@ export default function RedoxLab() {
     tool === 'reduce' ? sfx.laser() : sfx.extract();
 
     setTimeout(() => {
+      if (!isMounted.current) return;
       setLaserActive(false);
       setHitPulse(true);
       sfx.impact();
@@ -340,7 +358,7 @@ export default function RedoxLab() {
         if (config.isGalvanic) return i === 0 ? { ...c, currentCharge: c.currentCharge + 1 } : { ...c, currentCharge: c.currentCharge - 1 };
         return { ...c, currentCharge: c.currentCharge + (c.type === "reduce" ? -1 : 1) };
       }));
-      setTimeout(() => setHitPulse(false), 200);
+      setTimeout(() => { if (isMounted.current) setHitPulse(false); }, 200);
     }, 400); 
   };
 
@@ -353,9 +371,15 @@ export default function RedoxLab() {
   const handleAnswer = (idx) => {
     if (idx === qData.correct) {
       sfx.success();
+      setIsCorrectAnswer(true); // Evita el "congelamiento visual"
       safeSpeak(dict.ui.aiCorrect, langCode);
       setMastery(m => m + 50);
-      setTimeout(() => setPhase("EXECUTION"), 2000);
+      setTimeout(() => {
+        if (isMounted.current) {
+          setPhase("EXECUTION");
+          setIsCorrectAnswer(false);
+        }
+      }, 2000);
     } else {
       sfx.error();
       setMicroClassActive(true);
@@ -380,7 +404,8 @@ export default function RedoxLab() {
     <div className="screen-container" style={ui.centerScreen}>
       <div className="glitch-text" style={ui.glitchText}>PROTOCOLO NANO-CORE V16</div>
       <h1 className="title-glow" style={ui.titleGlow}>{dict.ui.title}</h1>
-      <button className="btn-hex" style={ui.btnHex('#00f2ff')} onClick={handleStartBoot}>{dict.ui.start}</button>
+      <button className="btn-hex" style={ui.btnHex(isMobile, '#00f2ff')} onClick={handleStartBoot}>{dict.ui.start}</button>
+      <button className="btn-ghost" style={ui.btnGhost} onClick={handleBack}>{dict.ui.btnBack}</button>
     </div>
   );
 
@@ -389,7 +414,7 @@ export default function RedoxLab() {
     <div className="screen-container" style={ui.centerScreen}>
       <h1 className="title-glow" style={{...ui.titleGlow, color: '#0f0', textShadow: '0 0 50px #0f0'}}>{dict.ui.winTitle}</h1>
       <p style={{color:'#fff', fontSize:'clamp(20px, 5vw, 30px)', fontFamily:'Orbitron', margin:'30px 0'}}>{dict.ui.exp}: {mastery}</p>
-      <button className="btn-hex" style={ui.btnHex('#0f0')} onClick={handleBack}>{dict.ui.btnBack}</button>
+      <button className="btn-hex" style={ui.btnHex(isMobile, '#0f0')} onClick={handleBack}>{dict.ui.btnBack}</button>
     </div>
   );
 
@@ -403,15 +428,23 @@ export default function RedoxLab() {
         )}
       </div>
 
-      {/* 🖥️ TOP HUD CIBERNÉTICO */}
-      <div className="top-hud" style={ui.topHud}>
-        <div className="badge" style={ui.badge}>{dict.ui.exp} {levelIdx + 1} / {d.levels.length}</div>
-        <h2 style={{color:'#00f2ff', margin:'10px 0', fontSize:'clamp(24px, 6vw, 40px)', letterSpacing:'clamp(2px, 1vw, 6px)', textShadow:'0 0 20px rgba(0,242,255,0.8)'}}>{lvl.name}</h2>
-        {phase === "EXECUTION" && (
-          <div className="target-msg" style={{background: 'rgba(255,234,0,0.15)', border: '2px solid #ffea00', padding: 'clamp(8px, 2vw, 12px) clamp(15px, 4vw, 30px)', borderRadius: '10px', color:'#ffea00', fontWeight: '900', display:'inline-block', fontSize:'clamp(12px, 3vw, 18px)', letterSpacing:'clamp(1px, 0.5vw, 2px)', boxShadow:'0 0 20px rgba(255,234,0,0.4)', marginTop: '5px'}}>
-            ⚡ {dict.ui.targetMsg} {lvl.targetText} a {lvl.cond} {lvl.targetVal}
+      {/* 🖥️ TOP HUD CIBERNÉTICO (Arreglado para RedoxLab) */}
+      <div className="top-hud" style={ui.topHud(isMobile, isLandscape)}>
+        <div className="nano-glass" style={ui.glassCard(isMobile, isLandscape)}>
+          <h1 className="nano-glass-title" style={ui.title}>{dict.ui.title}</h1>
+          <div style={ui.badge}>{dict.ui.level} {config.id} / 10 {config.isGalvanic && " (BOSS)"}</div>
+          <div style={{color:'#ffea00', fontSize:'clamp(14px, 3vw, 18px)', marginTop:'10px', fontWeight:'bold'}}>{dict.ui.exp}: {mastery}</div>
+          
+          <div className="nano-stats" style={ui.statsContainer}>
+            {cores.map((c, i) => (
+              <div key={i} className="nano-stat-box" style={ui.statBox(c.color)}>
+                <div style={{color:c.color, fontSize:'clamp(14px, 4vw, 18px)', fontWeight:'bold'}}>{config.isGalvanic ? c.symbol : dict.elements[missionIdx]}</div>
+                <div style={{color:'#aaa', fontSize:'clamp(10px, 3vw, 12px)'}}>{dict.ui.target}: {c.target}</div>
+                <div style={ui.statNumber(c.color)}>{c.currentCharge > 0 ? `+${c.currentCharge}` : c.currentCharge}</div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
 
       {/* 📖 FASE 0: TEORÍA */}
@@ -419,8 +452,8 @@ export default function RedoxLab() {
         <div className="modal-bg" style={ui.overlay}>
           <div className="glass-modal" style={ui.dialogBox('#00f2ff')}>
             <h2 style={{color: '#00f2ff', letterSpacing:'clamp(2px, 1vw, 6px)', borderBottom: '2px solid #00f2ff55', paddingBottom: '15px', fontSize:'clamp(20px, 6vw, 35px)', margin: '0'}}>{dict.ui.theoryTitle}</h2>
-            <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', lineHeight:'1.5', margin: 'clamp(20px, 4vh, 40px) 0'}}>{dict.theory[missionIdx]}</p>
-            <button className="btn-solid" style={ui.nextBtn('#00f2ff')} onClick={() => { setPhase("DIAGNOSIS"); safeSpeak(config.isGalvanic ? dict.ai.boss : dict.ai.start, langCode); }}>{dict.ui.theoryBtn}</button>
+            <p style={{color:'#fff', fontSize:'clamp(16px, 4vw, 28px)', lineHeight:'1.7', margin:'clamp(20px, 4vh, 40px) 0'}}>{dict.theory[missionIdx]}</p>
+            <button className="btn-solid" style={ui.nextBtn(isMobile, '#00f2ff')} onClick={() => { setPhase("DIAGNOSIS"); safeSpeak(config.isGalvanic ? dict.ai.boss : dict.ai.start, langCode); }}>{dict.ui.theoryBtn}</button>
           </div>
         </div>
       )}
@@ -432,19 +465,19 @@ export default function RedoxLab() {
             <h2 style={{color: config.isGalvanic ? '#ff0055' : '#ffea00', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: `2px solid ${config.isGalvanic ? '#ff005555' : '#ffea0055'}`, paddingBottom: '15px'}}>{dict.ui.diagTitle}</h2>
             {!config.isGalvanic ? (
               <div style={{display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px'}}>
-                <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', margin: 0}}>{dict.elements[missionIdx]} {dict.ui.diagQ1} <b style={{color:'#ffea00'}}>{cores[0]?.start}</b> {dict.ui.diagQ2} <b style={{color:'#0f0'}}>{cores[0]?.target}</b>.</p>
-                <p style={{color:'#aaa', fontSize:'clamp(14px, 4vw, 20px)', margin: 0}}>{dict.ui.diagQ3}</p>
-                <div className="nano-btn-group" style={ui.btnGroup}>
-                  <button className="btn-opt" style={ui.actionBtn('#00f2ff')} onClick={() => handlePrediction("reduce")}>{dict.ui.btnGain}</button>
-                  <button className="btn-opt" style={ui.actionBtn('#ff0055')} onClick={() => handlePrediction("oxidize")}>{dict.ui.btnLose}</button>
+                <p style={{color:'#fff', fontSize:'clamp(16px, 4vw, 24px)', margin: 0}}>{dict.elements[missionIdx]} {dict.ui.diagQ1} <b style={{color:'#ffea00'}}>{cores[0]?.start}</b> {dict.ui.diagQ2} <b style={{color:'#0f0'}}>{cores[0]?.target}</b>.</p>
+                <p style={{color:'#aaa', fontSize:'clamp(14px, 3.5vw, 20px)', margin: 0}}>{dict.ui.diagQ3}</p>
+                <div className="nano-btn-group" style={{...ui.btnGroup, flexDirection: isMobile ? 'column' : 'row'}}>
+                  <button className="btn-opt" style={ui.actionBtn(isMobile, '#00f2ff')} onClick={() => handlePrediction("reduce")}>{dict.ui.btnGain}</button>
+                  <button className="btn-opt" style={ui.actionBtn(isMobile, '#ff0055')} onClick={() => handlePrediction("oxidize")}>{dict.ui.btnLose}</button>
                 </div>
               </div>
             ) : (
               <div style={{display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px'}}>
-                <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', margin: 0}}>{dict.ui.diagGalvanic}</p>
-                <div className="nano-btn-group" style={ui.btnGroup}>
-                  <button className="btn-opt" style={ui.actionBtn('#00ff88')} onClick={() => handlePrediction("zn_cu")}>{dict.ui.btnZnCu}</button>
-                  <button className="btn-opt" style={ui.actionBtn('#ff0055')} onClick={() => handlePrediction("cu_zn")}>{dict.ui.btnCuZn}</button>
+                <p style={{color:'#fff', fontSize:'clamp(16px, 4vw, 24px)', margin: 0}}>{dict.ui.diagGalvanic}</p>
+                <div className="nano-btn-group" style={{...ui.btnGroup, flexDirection: isMobile ? 'column' : 'row'}}>
+                  <button className="btn-opt" style={ui.actionBtn(isMobile, '#00ff88')} onClick={() => handlePrediction("zn_cu")}>{dict.ui.btnZnCu}</button>
+                  <button className="btn-opt" style={ui.actionBtn(isMobile, '#ff0055')} onClick={() => handlePrediction("cu_zn")}>{dict.ui.btnCuZn}</button>
                 </div>
               </div>
             )}
@@ -458,34 +491,48 @@ export default function RedoxLab() {
           <div className="glass-modal" style={ui.dialogBox('#ff00ff')}>
             <h2 style={{color:'#ff00ff', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: '2px solid #ff00ff55', paddingBottom: '15px'}}>{microClassActive ? dict.ui.microClassTitle : dict.ui.btnAI}</h2>
             {!microClassActive ? (
-              <div style={{marginTop: '20px'}}>
-                <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', margin: 0, fontWeight: 'bold'}}>{qData.q}</p>
-                <div className="nano-grid" style={ui.gridOptions}>
-                  {qData.options.map((opt, i) => (
-                    <button key={i} className="btn-opt" style={ui.actionBtn('#ff00ff')} onClick={() => handleAnswer(i)}>{opt}</button>
-                  ))}
+              isCorrectAnswer ? (
+                <div style={{marginTop:'40px'}}>
+                  <h2 style={{color:'#0f0', fontSize:'clamp(24px, 6vw, 40px)', textShadow:'0 0 20px #0f0'}}>✅ {dict.ui.aiCorrect}</h2>
                 </div>
-              </div>
+              ) : (
+                <div style={{marginTop: '20px'}}>
+                  <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', margin: 0, fontWeight: 'bold'}}>{qData.q}</p>
+                  <div className="nano-grid" style={ui.gridOptions(isMobile)}>
+                    {qData.options.map((opt, i) => (
+                      <button key={i} className="btn-opt" style={ui.actionBtn(isMobile, '#ff00ff')} onClick={() => handleAnswer(i)}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
+              )
             ) : (
               <div style={{marginTop: '20px'}}>
                 <p style={{color:'#ffea00', fontSize:'clamp(16px, 4.5vw, 22px)', lineHeight:'1.5', margin: 0}}>{qData.micro}</p>
-                <button className="btn-solid" style={ui.nextBtn('#0f0')} onClick={() => { setPhase("EXECUTION"); setMicroClassActive(false); }}>{dict.ui.btnContinue}</button>
+                <button className="btn-solid" style={ui.nextBtn(isMobile, '#0f0')} onClick={() => { setPhase("EXECUTION"); setMicroClassActive(false); }}>{dict.ui.btnContinue}</button>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* 🎯 FASE 2: EJECUCIÓN */}
+      {/* 🎯 FASE 2: EJECUCIÓN (CONTROLES INFERIORES) */}
       {phase === "EXECUTION" && !isStable && (
-        <div className="dock-panel" style={ui.bottomCenter}>
+        <div className="dock-panel" style={{
+           ...ui.bottomCenter, 
+           flexDirection: isMobile && !isLandscape ? 'column' : 'row', 
+           width: isMobile ? '100vw' : 'auto', 
+           bottom: isMobile ? '0' : '50px',
+           borderRadius: isMobile ? '20px 20px 0 0' : '30px',
+           padding: isMobile ? '20px 15px max(15px, env(safe-area-inset-bottom))' : '50px 80px',
+           gap: isMobile ? '15px' : '80px'
+        }}>
           {!config.isGalvanic ? (
-            <div className="nano-btn-group" style={ui.btnGroup}>
-              <button className="check-btn" style={ui.fireBtn('#00f2ff')} onClick={() => handleFire("reduce")} disabled={laserActive}>{dict.ui.btnInject}</button>
-              <button className="check-btn" style={ui.fireBtn('#ff0055')} onClick={() => handleFire("oxidize")} disabled={laserActive}>{dict.ui.btnExtract}</button>
+            <div className="nano-btn-group" style={{...ui.btnGroup, flexDirection: isMobile ? 'column' : 'row', margin: 0}}>
+              <button className="check-btn" style={ui.fireBtn(isMobile, '#00f2ff')} onClick={() => handleFire("reduce")} disabled={laserActive}>{dict.ui.btnInject}</button>
+              <button className="check-btn" style={ui.fireBtn(isMobile, '#ff0055')} onClick={() => handleFire("oxidize")} disabled={laserActive}>{dict.ui.btnExtract}</button>
             </div>
           ) : (
-            <button className="check-btn" style={ui.fireBtn('#ffea00')} onClick={() => handleFire("transfer")} disabled={laserActive}>{dict.ui.btnTransfer}</button>
+            <button className="check-btn" style={ui.fireBtn(isMobile, '#ffea00')} onClick={() => handleFire("transfer")} disabled={laserActive}>{dict.ui.btnTransfer}</button>
           )}
         </div>
       )}
@@ -494,69 +541,43 @@ export default function RedoxLab() {
       {phase === "SYNTHESIS" && (
         <div className="modal-bg" style={ui.overlay}>
           <div className="glass-modal" style={ui.dialogBox('#0f0')}>
-            <h2 style={{color:'#0f0', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: '2px solid #0f05', paddingBottom: '15px'}}>{dict.ui.synthTitle}</h2>
+            <h2 style={{color:'#0f0', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 5vw, 35px)', margin: 0, borderBottom: '2px solid #0f05', paddingBottom: '15px'}}>{dict.ui.synthTitle}</h2>
             <p style={{fontSize:'clamp(16px, 4.5vw, 26px)', lineHeight:'1.7', margin:'clamp(20px, 4vh, 40px) 0', color: '#fff', fontWeight:'bold'}}>{dict.realWorld[missionIdx]}</p>
-            <button className="btn-solid" style={ui.nextBtn('#0f0')} onClick={() => loadMission(missionIdx + 1)}>{dict.ui.btnNext}</button>
+            <button className="btn-solid" style={ui.nextBtn(isMobile, '#0f0')} onClick={() => loadMission(missionIdx + 1)}>{dict.ui.btnNext}</button>
           </div>
         </div>
       )}
 
       {/* 🌌 MOTOR 3D PROFUNDO (CÁMARA Y VECTORES DINÁMICOS) */}
       <div style={{position:'absolute', inset:0, zIndex:1, pointerEvents:'none'}}>
-        {/* 🔥 FIX CÁMARA MOBILE: Si es movil la alejamos a 28 para que se vea todo en vertical y nada se tape */}
-        <Canvas camera={{position:[0, 2, isMobile ? 28 : 16], fov:45}}>
+        {/* 🔥 FIX CÁMARA MOBILE: Se aleja a 28 (Vertical) o 18 (Horizontal) en móviles para que nada se tape */}
+        <Canvas camera={{position:[0, 2, isMobile ? (isLandscape ? 18 : 28) : 16], fov:45}}>
           <color attach="background" args={['#000308']} />
           <Stars count={5000} factor={4} fade />
           <ambientLight intensity={0.8} />
           
           <Suspense fallback={null}>
-            {/* 🔥 TELEMETRÍA MÓVIL: En celular, el dash flota ARRIBA del pistón y se alinea horizontalmente */}
-            {isMobile && phase === "EXECUTION" && (
-              <Html position={[0, 6.8, 0]} center zIndexRange={[100, 0]}>
-                <div className="telemetry-panel" style={{
-                  background: isCritical ? 'rgba(255,0,0,0.2)' : 'rgba(0,10,25,0.85)', 
-                  border: `1px solid ${isCritical ? '#ff0000' : '#00f2ff55'}`,
-                  borderRadius: '12px', color: '#fff', fontFamily: 'Orbitron',
-                  backdropFilter: 'blur(15px)', 
-                  boxShadow: `0 0 40px ${isCritical ? '#ff0000' : '#00f2ff'}44`,
-                  animation: isCritical ? 'glitch-anim 0.2s infinite' : 'none'
-                }}>
-                  <div className="tel-body" style={{display: 'flex', flexDirection: 'row', gap: '20px', alignItems: 'center', justifyContent: 'center'}}>
-                    <div style={{ color: isHot ? '#ff0055' : '#0f0', textShadow:'0 0 10px currentColor' }}>
-                      T:{temp.toFixed(0)}<span> K</span>
-                    </div>
-                    <div style={{ color: '#00f2ff', textShadow:'0 0 10px currentColor' }}>
-                      V:{vol.toFixed(1)}<span> L</span>
-                    </div>
-                    <div style={{ color: isCritical ? '#ff0000' : '#ffea00', textShadow:'0 0 10px currentColor' }}>
-                      P:{pressure.toFixed(2)}<span> atm</span>
-                    </div>
-                  </div>
-                </div>
-              </Html>
-            )}
-
             {cores.map((c, i) => {
-              // Si es Batería (Jefe) y es Celular, apilamos los núcleos verticalmente para que quepan
+              // Si es Batería (Jefe) y es Celular Horizontal, se acomodan de lado
               let pos = c.pos || [0, 0, 0];
-              if (config.isGalvanic && isMobile) {
-                pos = i === 0 ? [0, 3.5, 0] : [0, -3.5, 0];
+              if (config.isGalvanic && isMobile && !isLandscape) {
+                pos = i === 0 ? [0, 3.5, 0] : [0, -3.5, 0]; // Apilados verticalmente si el móvil está parado
               }
-              return <AtomicCore key={i} core={{...c, pos}} hitPulse={hitPulse} isMobile={isMobile}/>
+              return <AtomicCore key={i} core={{...c, pos}} hitPulse={hitPulse} isMobile={isMobile} isLandscape={isLandscape}/>
             })}
             
-            {/* Láser Vertical en Móvil, Horizontal en PC */}
+            {/* Láser Vertical en Móvil (Portrait), Horizontal en PC o Landscape */}
             {laserActive && (
-              <mesh rotation={[0, 0, (config.isGalvanic && isMobile) ? 0 : Math.PI / 2]}>
-                <cylinderGeometry args={[0.2, 0.2, (config.isGalvanic && isMobile) ? 8 : 20, 8]} />
+              <mesh rotation={[0, 0, (config.isGalvanic && isMobile && !isLandscape) ? 0 : Math.PI / 2]}>
+                <cylinderGeometry args={[0.2, 0.2, (config.isGalvanic && isMobile && !isLandscape) ? 8 : 20, 8]} />
                 <meshBasicMaterial color={laserColor} transparent opacity={0.6} />
               </mesh>
             )}
             
             {/* Cable de Batería Vertical en Móvil, Horizontal en PC */}
             {config.isGalvanic && (
-              <mesh rotation={[0, 0, isMobile ? 0 : Math.PI / 2]}>
-                 <cylinderGeometry args={[0.08, 0.08, isMobile ? 8 : 9, 16]} />
+              <mesh rotation={[0, 0, (isMobile && !isLandscape) ? 0 : Math.PI / 2]}>
+                 <cylinderGeometry args={[0.08, 0.08, (isMobile && !isLandscape) ? 8 : 9, 16]} />
                  <meshStandardMaterial color="#444" metalness={0.9} roughness={0.1} />
                </mesh>
             )}
@@ -583,26 +604,31 @@ const ui = {
   titleComplete: { color: '#0f0', fontSize: '60px', letterSpacing: '8px', textShadow: '0 0 40px #0f0', margin: 0, textAlign: 'center' },
   titleGlow: { color:'#00f2ff', fontSize:'80px', letterSpacing:'15px', textShadow:'0 0 60px rgba(0, 242, 255, 0.8)', margin:'0 0 30px 0', textAlign: 'center', fontWeight: '900' },
   glitchText: { color: '#00f2ff', fontSize: '24px', letterSpacing: '25px', marginBottom: '0px', fontWeight: 'bold' },
-  btnHex: (c) => ({ padding:'30px 80px', background:`linear-gradient(45deg, rgba(0,0,0,0.9), ${c}33)`, border:`3px solid ${c}`, color:c, fontSize:'26px', fontWeight:'900', cursor:'pointer', borderRadius:'15px', fontFamily:'Orbitron', transition:'all 0.3s ease', boxShadow: `0 0 30px ${c}55`, letterSpacing: '4px' }),
+  btnHex: (isMobile, c) => ({ padding:'30px 80px', background:`linear-gradient(45deg, rgba(0,0,0,0.9), ${c}33)`, border:`3px solid ${c}`, color:c, fontSize:'26px', fontWeight:'900', cursor:'pointer', borderRadius:'15px', fontFamily:'Orbitron', transition:'all 0.3s ease', boxShadow: `0 0 30px ${c}55`, letterSpacing: '4px' }),
   btnGhost: { marginTop:'30px', padding:'15px 50px', background:'transparent', border:'2px solid #555', color:'#aaa', fontSize:'18px', cursor:'pointer', borderRadius:'10px', fontFamily:'Orbitron', transition:'0.3s', fontWeight: 'bold', letterSpacing: '2px' },
   
   topControls: { position: 'absolute', top: '30px', left: '0', width: '100%', padding: '0 30px', boxSizing: 'border-box', display: 'flex', justifyContent: 'space-between', zIndex: 500, pointerEvents: 'none' },
   backBtn: { position: 'absolute', top: '40px', left: '40px', padding: '15px 35px', background: 'rgba(255,0,85,0.15)', border: '2px solid #ff0055', color: '#ff0055', cursor: 'pointer', borderRadius: '10px', fontFamily: 'Orbitron', fontWeight: '900', backdropFilter: 'blur(8px)', letterSpacing: '2px', transition: '0.3s', pointerEvents: 'auto', zIndex: 500, boxShadow: '0 0 20px rgba(255,0,85,0.3)' },
   aiBtn: { position: 'absolute', top: '40px', right: '40px', padding: '15px 30px', background: 'rgba(255,0,255,0.15)', border: '2px solid #ff00ff', color: '#ff00ff', cursor: 'pointer', borderRadius: '10px', fontFamily: 'Orbitron', fontWeight: '900', backdropFilter: 'blur(10px)', letterSpacing: '1px', transition: '0.3s', pointerEvents: 'auto', zIndex: 500 },
 
-  topHud: { position: 'absolute', top: '40px', left: '50%', transform: 'translateX(-50%)', zIndex: 100, textAlign: 'center', width: '100%', pointerEvents: 'none' },
-  badge: { background: '#00f2ff', color: '#000', padding: '10px 25px', borderRadius: '8px', display: 'inline-block', fontSize: '18px', fontWeight: '900', letterSpacing: '3px', boxShadow: '0 0 20px #00f2ff' },
+  topHud: (isMobile, isLandscape) => ({ position:'absolute', top: isMobile ? (isLandscape ? '10px' : 'max(15px, env(safe-area-inset-top))') : 'max(70px, calc(env(safe-area-inset-top) + 60px))', left:'50%', transform: 'translateX(-50%)', zIndex:100, textAlign: 'center', width: '95%', maxWidth: '800px', pointerEvents:'none' }),
+  glassCard: (isMobile, isLandscape) => ({ background: 'rgba(0,10,25,0.85)', border: '2px solid #00f2ff', padding: 'clamp(10px, 3vw, 30px)', borderRadius: '15px', backdropFilter: 'blur(15px)', boxShadow: '0 0 40px rgba(0,242,255,0.2)', width: '100%', textAlign: 'center', display: isMobile && !isLandscape ? 'none' : 'flex', flexDirection: 'column', alignItems: 'center' }),
+  title: { color: '#fff', margin: 0, fontSize: 'clamp(20px, 4vw, 28px)', letterSpacing: '3px' },
+  badge: { display: 'inline-block', marginTop: '10px', padding: 'clamp(5px, 1vw, 8px) clamp(10px, 2vw, 20px)', background: '#ff0055', color: '#fff', fontSize: 'clamp(12px, 2vw, 14px)', fontWeight: 'bold', borderRadius: '5px' },
+  statsContainer: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '10px', marginTop: '15px', width: '100%' },
+  statBox: (c) => ({ background: 'rgba(0,0,0,0.6)', border: `2px solid ${c}`, borderRadius: '8px', padding: '10px 5px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }),
+  statNumber: (c) => ({ fontSize: 'clamp(24px, 7vw, 45px)', fontWeight: '900', color: c, textShadow: `0 0 15px ${c}`, marginTop: '5px' }),
 
   overlay: { position: 'absolute', inset: 0, background: 'rgba(0,5,15,0.92)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(30px)', pointerEvents: 'auto' },
   dialogBox: (c) => ({ border: `3px solid ${c}`, background: 'rgba(0,15,30,0.85)', padding: '80px', borderRadius: '35px', textAlign: 'center', width: '90%', maxWidth: '1200px', boxShadow: `0 0 100px ${c}55`, backdropFilter: 'blur(15px)' }),
   
   btnGroup: { display: 'flex', flexDirection: 'row', gap: '30px', justifyContent: 'center', width: '100%', marginTop: '30px' },
-  gridOptions: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '35px', width: '100%', marginTop: '50px' },
-  actionBtn: (c) => ({ padding: '30px', background: 'rgba(255,255,255,0.03)', border: `2px solid #555`, color: '#fff', fontSize: '24px', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', transition: '0.2s', borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }),
-  nextBtn: (c) => ({ padding: '30px 90px', background: c, border: 'none', color: '#000', fontSize: '26px', fontWeight: '900', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '15px', boxShadow: `0 0 50px ${c}88`, width: 'auto', marginTop: '60px', letterSpacing: '4px' }),
+  gridOptions: (isMobile) => ({ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px', width: '100%', marginTop: '20px' }),
+  actionBtn: (isMobile, c) => ({ padding: '15px 10px', background: 'rgba(0,0,0,0.8)', border: `2px solid ${c}`, color: c, fontSize: 'clamp(14px, 4vw, 18px)', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', transition: '0.2s', borderRadius: '10px', minHeight: '55px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', boxSizing: 'border-box' }),
+  nextBtn: (isMobile, c) => ({ padding: '15px 20px', background: c, border: 'none', color: '#000', fontSize: 'clamp(16px, 4.5vw, 22px)', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '10px', boxShadow: `0 0 30px ${c}`, width: '100%', minHeight: '60px', marginTop: '15px' }),
   
   bottomCenter: { position: 'absolute', bottom: '50px', left: '50%', transform: 'translateX(-50%)', zIndex: 150, pointerEvents: 'auto', display: 'flex', flexDirection: 'row', gap: '80px', background: 'rgba(0,15,30,0.9)', padding: '50px 80px', borderRadius: '30px', border: '2px solid #00f2ff', boxShadow: '0 30px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,242,255,0.1)', backdropFilter: 'blur(25px)' },
-  fireBtn: (c) => ({ padding: '30px 60px', background: '#00f2ff', border: 'none', color: '#000', fontSize: '24px', fontWeight: '900', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '15px', boxShadow: `0 0 40px rgba(0, 242, 255, 0.8)`, letterSpacing: '3px' }),
+  fireBtn: (isMobile, c) => ({ padding: '15px 20px', background: 'rgba(0,0,0,0.95)', border: `3px solid ${c}`, color: c, fontSize: 'clamp(16px, 4.5vw, 24px)', fontWeight: '900', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '30px', boxShadow: `0 0 40px ${c}66`, letterSpacing: '2px', width: '100%', minHeight: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }),
   
   flash: { position: 'absolute', inset: 0, background: 'rgba(255,0,0,0.15)', pointerEvents: 'none', zIndex: 99, mixBlendMode: 'overlay' }
 };
@@ -639,25 +665,29 @@ if (typeof document !== 'undefined' && !document.getElementById("gas-theory-mobi
       /* Botones y HUD Superior */
       .back-btn { top: max(10px, env(safe-area-inset-top)) !important; left: 10px !important; padding: 10px 15px !important; font-size: 12px !important; z-index: 9999 !important; }
       .ai-btn { top: max(10px, env(safe-area-inset-top)) !important; right: 10px !important; padding: 10px 15px !important; font-size: 12px !important; z-index: 9999 !important; }
+      
       .top-hud { top: max(55px, calc(env(safe-area-inset-top) + 45px)) !important; width: 95% !important; padding: 0 !important; }
       .top-hud h2 { font-size: 22px !important; letter-spacing: 2px !important; margin: 5px 0 !important; }
       .badge { font-size: 12px !important; padding: 5px 15px !important; }
-      .target-msg { font-size: 12px !important; padding: 8px 10px !important; margin-top: 5px !important; display: block !important; }
 
-      /* Telemetría (Dash 3D) en Móvil (Se vuelve una fila horizontal plana y delgada) */
-      .telemetry-panel {
-         width: auto !important;
-         min-width: 280px !important;
-         padding: 10px 15px !important;
-         border-top: 4px solid currentColor !important;
-         transform: scale(0.9) !important;
-         box-sizing: border-box !important;
-      }
-      .tel-body { flex-direction: row !important; gap: 20px !important; justify-content: center !important; align-items: center !important; }
-      .tel-body > div { font-size: 18px !important; text-align: center; display: flex; flex-direction: column; align-items: center; }
-      .tel-body span { font-size: 10px !important; margin-top: 2px; }
+      /* Modales Scrollables */
+      .modal-bg { padding: 15px !important; box-sizing: border-box !important; align-items: flex-start !important; padding-top: max(40px, env(safe-area-inset-top)) !important; }
+      .glass-modal { padding: 25px 20px !important; border-radius: 20px !important; max-height: 85dvh !important; overflow-y: auto !important; width: 100% !important; box-sizing: border-box !important; margin-bottom: env(safe-area-inset-bottom) !important; }
+      .glass-modal h2 { font-size: 20px !important; letter-spacing: 2px !important; padding-bottom: 10px !important; }
+      .glass-modal p { font-size: 16px !important; margin: 15px 0 !important; line-height: 1.5 !important; }
+      
+      .grid-opts { grid-template-columns: 1fr !important; gap: 10px !important; margin-top: 20px !important; }
+      .btn-opt { padding: 15px !important; font-size: 14px !important; border-radius: 10px !important; min-height: 55px !important; width: 100% !important; box-sizing: border-box !important; }
+      .btn-solid { padding: 15px !important; font-size: 16px !important; width: 100% !important; margin-top: 20px !important; border-radius: 10px !important; }
+      
+      .nano-btn-group { flex-direction: column !important; width: 100% !important; gap: 10px !important; margin-top: 0 !important; }
+      .check-btn { width: 100% !important; padding: 15px !important; font-size: 16px !important; letter-spacing: 2px !important; border-radius: 10px !important; }
+    }
 
-      /* Dock Inferior (Controles) */
+    /* ========================================= */
+    /* 📱 MODO CELULAR PANTALLA VERTICAL         */
+    /* ========================================= */
+    @media (max-width: 768px) and (orientation: portrait) {
       .dock-panel {
          bottom: 0 !important;
          left: 0 !important;
@@ -672,24 +702,19 @@ if (typeof document !== 'undefined' && !document.getElementById("gas-theory-mobi
          border-right: none !important;
          box-sizing: border-box !important;
       }
-      .btn-group { flex-direction: column !important; width: 100% !important; gap: 10px !important; margin-top: 0 !important; }
-      .check-btn { width: 100% !important; padding: 15px !important; font-size: 16px !important; letter-spacing: 2px !important; border-radius: 10px !important; }
-
-      /* Modales Scrollables */
-      .modal-bg { padding: 15px !important; box-sizing: border-box !important; align-items: flex-start !important; padding-top: max(40px, env(safe-area-inset-top)) !important; }
-      .glass-modal { padding: 25px 20px !important; border-radius: 20px !important; max-height: 85dvh !important; overflow-y: auto !important; width: 100% !important; box-sizing: border-box !important; margin-bottom: env(safe-area-inset-bottom) !important; }
-      .glass-modal h2 { font-size: 20px !important; letter-spacing: 2px !important; padding-bottom: 10px !important; }
-      .glass-modal p { font-size: 16px !important; margin: 15px 0 !important; line-height: 1.5 !important; }
-      
-      .grid-opts { grid-template-columns: 1fr !important; gap: 10px !important; margin-top: 20px !important; }
-      .btn-opt { padding: 15px !important; font-size: 14px !important; border-radius: 10px !important; min-height: 55px !important; }
-      .btn-solid { padding: 15px !important; font-size: 16px !important; width: 100% !important; margin-top: 20px !important; border-radius: 10px !important; }
     }
 
-    /* Mini-ajuste para teléfonos extremadamente pequeños (iPhone SE) */
-    @media (max-width: 380px) {
-      .telemetry-panel { transform: scale(0.75) !important; min-width: 240px !important; }
-      .title-glow { font-size: 32px !important; }
+    /* ========================================= */
+    /* 📱 MODO CELULAR PANTALLA HORIZONTAL       */
+    /* ========================================= */
+    @media (max-width: 900px) and (orientation: landscape) {
+      .dock-panel { 
+         padding: 10px !important; 
+         border-radius: 15px !important; 
+         bottom: 5px !important; 
+         border: 1px solid #00f2ff !important; 
+         background: rgba(0,5,15,0.7) !important; 
+      }
     }
   `;
   document.head.appendChild(styleSheet);
