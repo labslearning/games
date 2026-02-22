@@ -7,11 +7,37 @@ import * as THREE from 'three';
 import { useGameStore } from '../../store/useGameStore';
 
 /* ============================================================
-   🔊 1. MOTOR DE AUDIO SCI-FI TIER-GOD (MÚLTIPLES CAPAS)
+   📱 HOOK DE RESPONSIVIDAD 3D (MOBILE FIRST)
 ============================================================ */
-class ThermoAudio {
+function useMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  return isMobile;
+}
+
+/* ============================================================
+    1. MOTOR DE AUDIO Y VOZ SEGURO
+============================================================ */
+const safeSpeak = (text, langCode) => {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel(); 
+  setTimeout(() => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = langCode;
+    utterance.rate = 1.05;
+    window.speechSynthesis.speak(utterance);
+  }, 50);
+};
+
+class SafeAudioEngine {
   constructor() { this.ctx = null; }
-  init() {
+  init() { 
     if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (this.ctx.state === 'suspended') this.ctx.resume();
   }
@@ -27,34 +53,20 @@ class ThermoAudio {
       gain.gain.setValueAtTime(vol, this.ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
       osc.start(); osc.stop(this.ctx.currentTime + dur);
-    } catch(e) {}
+    } catch(e) {} 
   }
-  click() { this._play('sine', 800, 400, 0.1, 0.1); }
-  success() { this._play('sine', 440, 880, 0.5, 0.2); setTimeout(()=>this._play('square', 880, 1760, 0.6, 0.15), 150); }
-  error() { this._play('sawtooth', 150, 40, 0.6, 0.3); setTimeout(()=>this._play('square', 100, 30, 0.4, 0.2), 100); }
+  laser() { this._play('square', 1200, 100, 0.3, 0.2); }
+  extract() { this._play('sawtooth', 200, 1200, 0.4, 0.2); }
+  impact() { this._play('sine', 150, 40, 0.4, 0.5); }
+  success() { this._play('sine', 440, 880, 0.4, 0.2); setTimeout(()=>this._play('sine', 880, 1760, 0.5, 0.2), 150); }
+  error() { this._play('sawtooth', 150, 50, 0.4, 0.3); }
   valve() { this._play('noise', 1500, 200, 0.15, 0.05); } 
-  rumble(intensity) { this._play('sawtooth', 60, 40, 0.2, intensity * 0.5); } // Terremoto térmico
+  rumble(intensity) { this._play('sawtooth', 60, 40, 0.2, intensity * 0.5); }
 }
-const sfx = new ThermoAudio();
-
-const triggerVoice = (text, langCode) => {
-  if (!('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  setTimeout(() => {
-    if (window.location.pathname !== '/' && window.location.pathname !== '') {
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = langCode; 
-        u.rate = 1.05;
-        u.pitch = 1.0;
-        u.onend = () => { window.speechSynthesis.cancel(); };
-        u.onerror = () => { window.speechSynthesis.cancel(); };
-        window.speechSynthesis.speak(u);
-    }
-  }, 50);
-};
+const sfx = new SafeAudioEngine();
 
 /* ============================================================
-   🌍 2. MATRIZ PEDAGÓGICA TOTAL (4 IDIOMAS - 10 NIVELES)
+   🌍 2. DICCIONARIO GLOBAL 100% TRADUCIDO (CERO FALLBACKS)
 ============================================================ */
 const DICT = {
   es: {
@@ -497,7 +509,7 @@ const ui = {
   
   dockPanel: { position:'absolute', bottom:'max(20px, env(safe-area-inset-bottom))', left:'50%', transform:'translateX(-50%)', zIndex:150, background:'rgba(0,15,30,0.9)', padding:'clamp(20px, 4vw, 50px) clamp(20px, 5vw, 80px)', borderRadius:'clamp(15px, 4vw, 30px)', border:'2px solid #00f2ff', textAlign:'center', display:'flex', alignItems:'center', justifyContent: 'center', gap:'clamp(20px, 4vw, 80px)', pointerEvents:'auto', backdropFilter: 'blur(25px)', boxShadow: '0 30px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,242,255,0.1)', width: '95%', maxWidth: '900px', flexWrap: 'wrap', boxSizing: 'border-box' },
   sliderContainer: { display:'flex', flexDirection:'column', alignItems:'center', width:'100%', flex: '1 1 250px' },
-  cyberSlider: (c) => ({ width:'100%', cursor:'pointer', accentColor: c, height: '16px', borderRadius: '8px', outline: 'none', background: 'rgba(255,255,255,0.15)', boxShadow: `0 0 15px ${c}66` }),
+  cyberSlider: (c) => ({ width:'100%', cursor:'pointer', accentColor: c, height: '20px', borderRadius: '8px', outline: 'none', background: 'rgba(255,255,255,0.15)', boxShadow: `0 0 15px ${c}66` }),
   checkBtn: { padding:'clamp(15px, 4vw, 30px) clamp(20px, 5vw, 60px)', background:'#00f2ff', border:'none', color:'#000', fontWeight:'900', fontSize:'clamp(16px, 4vw, 24px)', borderRadius:'15px', cursor:'pointer', fontFamily:'Orbitron', boxShadow:'0 0 40px rgba(0, 242, 255, 0.8)', letterSpacing: 'clamp(1px, 1vw, 3px)', flex: '1 1 200px', minHeight: '60px' },
   
   modalBg: { position:'absolute', inset:0, zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,5,15,0.92)', backdropFilter:'blur(30px)', pointerEvents:'auto', padding: 'clamp(15px, 4vw, 30px)', boxSizing: 'border-box' },
@@ -520,11 +532,16 @@ styleSheet.innerText = `
     100% { transform: translate(0) }
   }
   
-  /* Ajuste responsivo de emergencia para el panel 3D en pantallas de menos de 400px (iPhone SE, etc) */
-  @media (max-width: 450px) {
+  /* Ajuste responsivo de emergencia para el panel holográfico 3D en móviles */
+  @media (max-width: 768px) {
     .telemetry-panel {
-      transform: scale(0.85);
-      transform-origin: left top;
+      transform: translate(-100px, 60px) scale(0.85) !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .telemetry-panel {
+      transform: translate(-120px, 70px) scale(0.7) !important;
     }
   }
   
