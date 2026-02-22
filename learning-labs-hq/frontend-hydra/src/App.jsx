@@ -27,6 +27,16 @@ function useMobile() {
   return isMobile;
 }
 
+/* ============================================================
+   🌍 TRADUCCIONES DEL CATÁLOGO DE JUEGOS
+============================================================ */
+const CATALOG = {
+  es: { title: "CATÁLOGO DE SIMULADORES", back: "⬅ VOLVER", games: { gasLaws: { t: "🧪 LEYES DE GASES", d: "Termodinámica, 150 elementos, Plasma y Presión." }, gasTheory: { t: "📚 GAS THEORY MASTER", d: "Campaña Guiada: Cinética, Boyle y Charles." }, redoxLab: { t: "⚡ QUÍMICA REDOX LAB", d: "Mecánicas de balanceo y transferencia de electrones." }, redoxBalancer: { t: "⚖️ REDOX BALANCER", d: "Simulador avanzado de balanceo por cargas." }, new: "NUEVO" } },
+  en: { title: "SIMULATOR CATALOG", back: "⬅ BACK", games: { gasLaws: { t: "🧪 GAS LAWS", d: "Thermodynamics, 150 elements, Plasma and Pressure." }, gasTheory: { t: "📚 GAS THEORY MASTER", d: "Guided Campaign: Kinetics, Boyle and Charles." }, redoxLab: { t: "⚡ REDOX CHEMISTRY LAB", d: "Balancing mechanics and electron transfer." }, redoxBalancer: { t: "⚖️ REDOX BALANCER", d: "Advanced charge balancing simulator." }, new: "NEW" } },
+  fr: { title: "CATALOGUE DES SIMULATEURS", back: "⬅ RETOUR", games: { gasLaws: { t: "🧪 LOIS DES GAZ", d: "Thermodynamique, 150 éléments, Plasma et Pression." }, gasTheory: { t: "📚 GAS THEORY MASTER", d: "Campagne Guidée : Cinétique, Boyle et Charles." }, redoxLab: { t: "⚡ LABO CHIMIE REDOX", d: "Mécaniques d'équilibrage et transfert d'électrons." }, redoxBalancer: { t: "⚖️ ÉQUILIBREUR REDOX", d: "Simulateur avancé d'équilibrage des charges." }, new: "NOUVEAU" } },
+  de: { title: "SIMULATORKATALOG", back: "⬅ ZURÜCK", games: { gasLaws: { t: "🧪 GASGESETZE", d: "Thermodynamik, 150 Elemente, Plasma und Druck." }, gasTheory: { t: "📚 GAS THEORY MASTER", d: "Geführte Kampagne: Kinetik, Boyle und Charles." }, redoxLab: { t: "⚡ REDOX-CHEMIE-LABOR", d: "Ausgleichsmechanik und Elektronentransfer." }, redoxBalancer: { t: "⚖️ REDOX-BALANCER", d: "Fortschrittlicher Ladungsausgleichssimulator." }, new: "NEU" } }
+};
+
 const LiveEquation = ({ mode, p, v, t }) => {
   const cP = "#ff0055"; const cV = "#ffea00"; const cT = "#00f2ff"; 
   const val = (n, c) => <span style={{ color: c, fontWeight: 'bold' }}>{Number(n).toFixed(1)}</span>;
@@ -74,7 +84,10 @@ export default function App() {
   
   const { appState, activeGame, temp, volume, pressure, phaseID, isCritical, activeMaterial, setMaterial, activeMode, setMode, updatePhysics, language, setLanguage, startGame, resetProgress, activeQuiz, answerQuizQuestion, quizFeedback, clearFeedback, closeQuiz, score, triggerExercise, exampleSession, loadExampleScenario, exitExample, searchTerm, setSearchTerm, filterCategory, setFilterCategory, isGeneratingQuiz } = useGameStore();
   const mat = MATERIALS[activeMaterial] || MATERIALS['H2O'];
+  
   const t_i18n = i18n[language] || i18n.es;
+  const cat = CATALOG[language] || CATALOG.es; // Diccionario del Catálogo
+  
   const t = t_i18n.ui;
   const lesson = t_i18n.lessons[activeMode];
   const examples = t_i18n.examples[activeMode];
@@ -117,31 +130,33 @@ export default function App() {
 
       {appState === 'GAME_SELECT' && (
         <div style={ui.screenGame}><div style={ui.hexBackground} />
-          {/* 🔥 FIX: Cambiamos el reload por el cambio de estado directo */}
-          <button onClick={() => useGameStore.setState({ appState: 'LANG_SELECT' })} style={ui.resetBtnGame}>⬅ BACK</button>
+          {/* 🔥 Botón BACK Dinámico (No recarga la página) */}
+          <button onClick={() => useGameStore.setState({ appState: 'LANG_SELECT' })} style={ui.resetBtnGame}>{cat.back}</button>
           <div style={{...ui.centerBoxGame, width: '95%', maxWidth: '1200px'}}>
-            <h1 style={ui.titleGame}>CATÁLOGO DE SIMULADORES</h1>
+            <h1 style={ui.titleGame}>{cat.title}</h1>
             <div style={ui.gameGrid}>
+              
               <div style={ui.gameCard} onClick={() => startGame('GAS_LAWS')}>
-                <h2 style={{color: '#00f2ff', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>🧪 LEYES DE GASES</h2>
-                <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>Termodinámica, 150 elementos, Plasma y Presión.</p>
+                <h2 style={{color: '#00f2ff', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.gasLaws.t}</h2>
+                <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.gasLaws.d}</p>
               </div>
 
               <div style={{...ui.gameCard, border: '1px solid #00ff88', background: 'rgba(0, 30, 15, 0.8)', boxShadow: '0 0 20px rgba(0,255,136,0.2)', position: 'relative'}} onClick={() => startGame('GAS_THEORY')}>
-                <div style={{position:'absolute', top:'-10px', right:'-10px', background:'#00ff88', color:'#000', padding:'4px 10px', fontSize:'12px', fontWeight:'bold', borderRadius:'4px'}}>NUEVO</div>
-                <h2 style={{color: '#00ff88', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>📚 GAS THEORY MASTER</h2>
-                <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>Campaña Guiada: Cinética, Boyle y Charles.</p>
+                <div style={{position:'absolute', top:'-10px', right:'-10px', background:'#00ff88', color:'#000', padding:'4px 10px', fontSize:'12px', fontWeight:'bold', borderRadius:'4px'}}>{cat.games.new}</div>
+                <h2 style={{color: '#00ff88', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.gasTheory.t}</h2>
+                <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.gasTheory.d}</p>
               </div>
 
               <div style={{...ui.gameCard, border: '1px solid #ff0055', background: 'rgba(30, 0, 10, 0.8)', boxShadow: '0 0 20px rgba(255,0,85,0.2)'}} onClick={() => startGame('REDOX_LAB')}>
-                <h2 style={{color: '#ff0055', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>⚡ QUÍMICA REDOX LAB</h2>
-                <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>Mecánicas de balanceo y transferencia de electrones.</p>
+                <h2 style={{color: '#ff0055', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.redoxLab.t}</h2>
+                <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.redoxLab.d}</p>
               </div>
 
               <div style={{...ui.gameCard, border: '1px solid #ffea00', background: 'rgba(30, 25, 0, 0.8)', boxShadow: '0 0 20px rgba(255,234,0,0.2)'}} onClick={() => startGame('REDOX_BALANCER')}>
-                <h2 style={{color: '#ffea00', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>⚖️ REDOX BALANCER</h2>
-                <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>Simulador avanzado de balanceo por cargas.</p>
+                <h2 style={{color: '#ffea00', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.redoxBalancer.t}</h2>
+                <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.redoxBalancer.d}</p>
               </div>
+
             </div>
           </div>
         </div>
@@ -199,55 +214,63 @@ export default function App() {
              <GasTheory />
           ) : (
              <>
-                {/* ⬅️ PANEL IZQUIERDO: Adaptado para Mobile */}
+                {/* ⬅️ PANEL IZQUIERDO: Materiales (Se vuelve horizontal en móvil) */}
                 <div className="game-panel-left" style={ui.leftPanel(isMobile)}>
-                  <div className="material-selector-box" style={{...ui.sectionBox, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0}}>
-                    <input type="text" placeholder={t.search} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={ui.searchInput} />
-                    <div className="filter-buttons" style={{display:'flex', gap:'5px', marginTop:'10px', flexShrink: 0, overflowX: 'auto', paddingBottom: '5px'}}>
-                      <button onClick={()=>setFilterCategory('All')} style={filterCategory==='All'?ui.pillA:ui.pill}>{t.filterAll}</button>
-                      <button onClick={()=>setFilterCategory('Elemento')} style={filterCategory==='Elemento'?ui.pillA:ui.pill}>{t.filterElem}</button>
-                      <button onClick={()=>setFilterCategory('Compuesto')} style={filterCategory==='Compuesto'?ui.pillA:ui.pill}>{t.filterComp}</button>
+                  <div className="material-selector-box" style={{...ui.sectionBox, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, pointerEvents: 'auto'}}>
+                    
+                    <div className="search-filter-wrap" style={{display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '10px', alignItems: 'center'}}>
+                      <input type="text" placeholder={t.search} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={ui.searchInput(isMobile)} />
+                      <div className="filter-buttons" style={{display:'flex', gap:'5px', flexShrink: 0, overflowX: 'auto', width: isMobile ? 'auto' : '100%'}}>
+                        <button onClick={()=>setFilterCategory('All')} style={filterCategory==='All'?ui.pillA:ui.pill}>{t.filterAll}</button>
+                        <button onClick={()=>setFilterCategory('Elemento')} style={filterCategory==='Elemento'?ui.pillA:ui.pill}>{t.filterElem}</button>
+                        <button onClick={()=>setFilterCategory('Compuesto')} style={filterCategory==='Compuesto'?ui.pillA:ui.pill}>{t.filterComp}</button>
+                      </div>
                     </div>
                     
-                    {/* Lista de materiales (Scroll vertical en PC, Horizontal en Móvil) */}
-                    <div className="materials-list" style={{flex: 1, overflowY: isMobile ? 'hidden' : 'auto', overflowX: isMobile ? 'auto' : 'hidden', marginTop: '10px', display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '5px', paddingRight: isMobile ? '0' : '5px', paddingBottom: isMobile ? '5px' : '0'}}>
+                    {/* Lista de materiales horizontal en móvil, vertical en PC */}
+                    <div className="materials-list" style={{flex: 1, overflowY: isMobile ? 'hidden' : 'auto', overflowX: isMobile ? 'auto' : 'hidden', marginTop: '10px', display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '8px', paddingBottom: isMobile ? '10px' : '0'}}>
                       {filteredMaterials.map(m => (
                         <button key={m.id} className="mat-btn-item" onClick={() => setMaterial(m.id)} style={activeMaterial === m.id ? ui.matBtnActive(isMobile) : ui.matBtn(isMobile)}>
-                          <span style={{fontWeight:'bold', width: isMobile ? 'auto' : '40px', display:'inline-block', marginRight: isMobile ? '5px' : '0'}}>{m.symbol}</span> 
+                          <span style={{fontWeight:'bold', width: isMobile ? 'auto' : '40px', display:'inline-block', marginRight: isMobile ? '0' : '5px', fontSize: isMobile ? '18px' : 'inherit'}}>{m.symbol}</span> 
                           {!isMobile && m.name}
                         </button>
                       ))}
                     </div>
+
                   </div>
                   
-                  {/* Stats del elemento seleccionado */}
-                  <div className="element-stats-box" style={{...ui.sectionBox, background:'rgba(0,15,30,0.8)', borderLeft:'3px solid #00f2ff', flexShrink: 0}}>
-                    <h3 style={ui.panelTitle}>// {mat.symbol} ({t[phaseID]?.toUpperCase() || phaseID.toUpperCase()})</h3>
-                    <div className="stats-row-group" style={{display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: isMobile ? '10px' : '0', overflowX: isMobile ? 'auto' : 'visible'}}>
-                        <div style={ui.dataRow(isMobile)}><span>{t.atomicNum}</span><span style={{color:'#ffea00'}}>{mat.atomicNum}</span></div>
-                        <div style={ui.dataRow(isMobile)}><span>{t.mass}</span><span style={{color:'#ffea00'}}>{mat.mass}</span></div>
-                        {!isMobile && <div style={ui.dataRow(isMobile)}><span>{t.eConfig}</span><span style={{color:'#00f2ff', fontSize:'9px'}}>{mat.eConfig}</span></div>}
-                        <div style={ui.dataRow(isMobile)}><span>{t.density}</span><span style={{color:'#00f2ff'}}>{mat.density}</span></div>
+                  {/* Stats del elemento seleccionado (Solo PC para ahorrar espacio en móvil) */}
+                  {!isMobile && (
+                    <div className="element-stats-box" style={{...ui.sectionBox, background:'rgba(0,15,30,0.8)', borderLeft:'3px solid #00f2ff', flexShrink: 0, pointerEvents: 'auto'}}>
+                      <h3 style={ui.panelTitle}>// {mat.symbol} ({t[phaseID]?.toUpperCase() || phaseID.toUpperCase()})</h3>
+                      <div className="stats-row-group" style={{display: 'flex', flexDirection: 'column'}}>
+                          <div style={ui.dataRow(isMobile)}><span>{t.atomicNum}</span><span style={{color:'#ffea00'}}>{mat.atomicNum}</span></div>
+                          <div style={ui.dataRow(isMobile)}><span>{t.mass}</span><span style={{color:'#ffea00'}}>{mat.mass}</span></div>
+                          <div style={ui.dataRow(isMobile)}><span>{t.eConfig}</span><span style={{color:'#00f2ff', fontSize:'9px'}}>{mat.eConfig}</span></div>
+                          <div style={ui.dataRow(isMobile)}><span>{t.density}</span><span style={{color:'#00f2ff'}}>{mat.density}</span></div>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
-                {/* ➡️ PANEL DERECHO: Adaptado para Mobile */}
+                {/* ➡️ PANEL DERECHO: Modos y Ecuación (Se mueve abajo en móvil) */}
                 <div className="game-panel-right" style={ui.rightPanel(isMobile)}>
-                  <div className="score-box" style={{...ui.sectionBox, borderLeft:'4px solid #ffea00', background:'rgba(50,40,0,0.8)', flexShrink: 0}}><h3 style={{...ui.panelTitle, color:'#ffea00', fontSize:'clamp(12px, 2.5vw, 14px)', margin:0}}>🏆 SCORE: {score} PTS</h3></div>
+                  <div className="score-box" style={{...ui.sectionBox, borderLeft:'4px solid #ffea00', background:'rgba(50,40,0,0.8)', flexShrink: 0, pointerEvents: 'auto'}}>
+                    <h3 style={{...ui.panelTitle, color:'#ffea00', fontSize:'clamp(12px, 2.5vw, 14px)', margin:0}}>🏆 SCORE: {score} PTS</h3>
+                  </div>
                   
-                  <div className="mode-selector-box" style={{...ui.sectionBox, flexShrink: 0}}><h3 style={ui.panelTitle}>// {t.classMode || "LEYES"}</h3>
+                  <div className="mode-selector-box" style={{...ui.sectionBox, flexShrink: 0, pointerEvents: 'auto'}}>
+                    <h3 style={ui.panelTitle}>// {t.classMode || "LEYES"}</h3>
                     <div style={ui.modeGrid(isMobile)}>
                       {['FREE', 'BOYLE', 'CHARLES', 'GAY_LUSSAC'].map(m => <button key={m} onClick={()=>setMode(m)} style={activeMode===m ? ui.modeBtnA : ui.modeBtn}>{t[`mode${m.charAt(0)+m.slice(1).toLowerCase().replace('_l','L')}`] || m}</button>)}
                     </div>
-                    {/* Explicación de la ley, oculta en celular para ahorrar espacio si no es necesaria */}
                     {!isMobile && (
                       <div style={{marginTop:'15px', fontSize:'11px', color:'#ccc', lineHeight:'1.5'}}><strong style={{color:'#00f2ff'}}>{lesson.title}</strong><br/><span style={{color:'#ffea00'}}>{t.goal}:</span> {lesson.goal}<br/><span style={{color:'#00f2ff'}}>{t.idea}:</span> {lesson.idea}</div>
                     )}
                   </div>
 
                   {activeMode !== 'FREE' && !isMobile && (
-                    <div style={{...ui.sectionBox, borderLeft:'3px solid #ff0055', background:'rgba(30,0,10,0.8)', flexShrink: 0, maxHeight: '25vh', overflowY: 'auto'}}>
+                    <div style={{...ui.sectionBox, borderLeft:'3px solid #ff0055', background:'rgba(30,0,10,0.8)', flexShrink: 0, maxHeight: '25vh', overflowY: 'auto', pointerEvents: 'auto'}}>
                       <h3 style={{...ui.panelTitle, color:'#ff0055'}}>{t.labTitle}</h3>
                       {!exampleSession && examples?.map((ex, idx) => (
                         <button key={idx} onClick={() => loadExampleScenario(activeMode, idx)} style={{...ui.solidCyberBtn, width:'100%', fontSize:'12px', padding:'10px', marginTop:'5px', background:'linear-gradient(45deg, #ff0055, #880022)'}}>{t.startLab}: {ex.title}</button>
@@ -263,11 +286,11 @@ export default function App() {
                     </div>
                   )}
 
-                  <div className="equation-box" style={{...ui.sectionBox, textAlign:'center', flexShrink: 0}}>
+                  <div className="equation-box" style={{...ui.sectionBox, textAlign:'center', flexShrink: 0, pointerEvents: 'auto'}}>
                     <LiveEquation mode={activeMode} p={pressure} v={volume} t={temp} />
                   </div>
 
-                  <button className="generate-quiz-btn" onClick={triggerExercise} disabled={isGeneratingQuiz} style={{...ui.iaButton, opacity: isGeneratingQuiz ? 0.5 : 1, flexShrink: 0}}>
+                  <button className="generate-quiz-btn" onClick={triggerExercise} disabled={isGeneratingQuiz} style={{...ui.iaButton, opacity: isGeneratingQuiz ? 0.5 : 1, flexShrink: 0, pointerEvents: 'auto'}}>
                     {isGeneratingQuiz ? t.loadingAI : t.generate}
                   </button>
                 </div>
@@ -347,29 +370,29 @@ const ui = {
   
   resetBtnGame: { position:'absolute', top: 'max(10px, env(safe-area-inset-top))', left: 'clamp(10px, 3vw, 25px)', zIndex:100, padding:'clamp(8px, 2vw, 10px) clamp(15px, 4vw, 20px)', background:'rgba(0,0,0,0.5)', border:'1px solid #ff4444', color:'white', cursor:'pointer', fontFamily:'Orbitron', fontSize: 'clamp(12px, 3vw, 16px)', borderRadius: '8px', minHeight: '40px' },
   
-  screen: { width:'100vw', height:'100dvh', background:'#010204', fontFamily:'Orbitron', overflow:'hidden', position:'relative' },
+  screen: { width:'100vw', height:'100dvh', background:'#010204', fontFamily:'Orbitron', overflow:'hidden', position:'relative', pointerEvents: 'auto' },
   criticalOverlay: { position:'absolute', inset:0, boxShadow:'inset 0 0 200px rgba(255,0,85,0.4)', pointerEvents:'none', zIndex:99, transition:'0.3s' },
   
-  // Paneles Laterales Flexibles
-  leftPanel: (isMobile) => ({ position:'absolute', top: isMobile ? 'max(60px, calc(env(safe-area-inset-top) + 50px))' : '80px', left: isMobile ? '50%' : '30px', transform: isMobile ? 'translateX(-50%)' : 'none', zIndex:50, display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap:'10px', width: isMobile ? '95%' : 'clamp(200px, 25vw, 280px)', height: isMobile ? 'auto' : 'calc(100vh - 180px)', maxHeight: isMobile ? '18vh' : 'auto' }),
-  rightPanel: (isMobile) => ({ position:'absolute', top: isMobile ? 'auto' : '80px', bottom: isMobile ? 'calc(clamp(90px, 15vh, 120px) + env(safe-area-inset-bottom))' : 'auto', right: isMobile ? 'auto' : '30px', left: isMobile ? '50%' : 'auto', transform: isMobile ? 'translateX(-50%)' : 'none', zIndex:50, display: 'flex', flexDirection: isMobile ? 'row' : 'column', flexWrap: isMobile ? 'wrap' : 'nowrap', justifyContent: 'center', gap:'10px', width: isMobile ? '95%' : 'clamp(220px, 28vw, 300px)', maxHeight: isMobile ? 'auto' : 'calc(100vh - 180px)', overflowY: isMobile ? 'visible' : 'auto' }),
+  // Paneles Laterales Flexibles (pointerEvents: none en el contenedor principal para no bloquear la cámara)
+  leftPanel: (isMobile) => ({ position:'absolute', top: isMobile ? 'max(60px, calc(env(safe-area-inset-top) + 50px))' : '80px', left: isMobile ? '10px' : '30px', right: isMobile ? '10px' : 'auto', zIndex:50, display: 'flex', flexDirection: isMobile ? 'column' : 'column', gap:'10px', width: isMobile ? 'auto' : 'clamp(200px, 25vw, 280px)', height: isMobile ? 'auto' : 'calc(100vh - 180px)', pointerEvents: 'none' }),
+  rightPanel: (isMobile) => ({ position:'absolute', top: isMobile ? 'auto' : '80px', bottom: isMobile ? 'calc(clamp(90px, 15vh, 120px) + env(safe-area-inset-bottom))' : 'auto', right: isMobile ? '10px' : '30px', left: isMobile ? '10px' : 'auto', zIndex:50, display: 'flex', flexDirection: isMobile ? 'row' : 'column', flexWrap: isMobile ? 'wrap' : 'nowrap', justifyContent: 'space-around', gap:'10px', width: isMobile ? 'auto' : 'clamp(220px, 28vw, 300px)', maxHeight: isMobile ? 'auto' : 'calc(100vh - 180px)', pointerEvents: 'none' }),
   
   sectionBox: { background:'rgba(0,10,20,0.7)', border:'1px solid rgba(0,85,119,0.5)', padding:'clamp(8px, 2vw, 15px)', backdropFilter:'blur(8px)', borderRadius: '10px' },
   panelTitle: { color:'#4488aa', margin:'0 0 10px 0', fontSize:'clamp(10px, 2vw, 12px)', letterSpacing:'2px' },
-  searchInput: { width:'100%', padding:'10px', background:'rgba(0,0,0,0.5)', border:'1px solid #00f2ff', color:'#fff', fontFamily:'Orbitron', outline:'none', boxSizing:'border-box', flexShrink: 0, borderRadius: '6px' },
-  pill: { flex:1, padding:'6px', fontSize:'clamp(10px, 2vw, 11px)', background:'transparent', color:'#888', border:'1px solid #333', cursor:'pointer', fontFamily:'Orbitron', borderRadius: '4px', whiteSpace: 'nowrap' },
-  pillA: { flex:1, padding:'6px', fontSize:'clamp(10px, 2vw, 11px)', background:'rgba(0,242,255,0.2)', color:'#fff', border:'1px solid #00f2ff', cursor:'pointer', fontFamily:'Orbitron', borderRadius: '4px', whiteSpace: 'nowrap' },
-  matBtn: (isMobile) => ({ padding:'10px', background:'rgba(0,0,0,0.5)', color:'#00f2ff', border:'1px solid #005577', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(12px, 2.5vw, 14px)', textAlign:'center', borderRadius: '6px', minWidth: isMobile ? '60px' : '100%', flexShrink: 0 }),
-  matBtnActive: (isMobile) => ({ padding:'10px', background:'rgba(0,242,255,0.15)', color:'#fff', border:'2px solid #00f2ff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(12px, 2.5vw, 14px)', fontWeight:'bold', textAlign:'center', borderRadius: '6px', minWidth: isMobile ? '60px' : '100%', flexShrink: 0 }),
+  searchInput: (isMobile) => ({ width: isMobile ? 'auto' : '100%', flex: isMobile ? '1' : 'none', padding:'10px', background:'rgba(0,0,0,0.5)', border:'1px solid #00f2ff', color:'#fff', fontFamily:'Orbitron', outline:'none', boxSizing:'border-box', borderRadius: '6px' }),
+  pill: { flex:1, padding:'8px 6px', fontSize:'clamp(10px, 2vw, 11px)', background:'transparent', color:'#888', border:'1px solid #333', cursor:'pointer', fontFamily:'Orbitron', borderRadius: '4px', whiteSpace: 'nowrap' },
+  pillA: { flex:1, padding:'8px 6px', fontSize:'clamp(10px, 2vw, 11px)', background:'rgba(0,242,255,0.2)', color:'#fff', border:'1px solid #00f2ff', cursor:'pointer', fontFamily:'Orbitron', borderRadius: '4px', whiteSpace: 'nowrap' },
+  matBtn: (isMobile) => ({ padding:'12px 10px', background:'rgba(0,0,0,0.5)', color:'#00f2ff', border:'1px solid #005577', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(12px, 2.5vw, 14px)', textAlign:'center', borderRadius: '6px', minWidth: isMobile ? '70px' : '100%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }),
+  matBtnActive: (isMobile) => ({ padding:'12px 10px', background:'rgba(0,242,255,0.15)', color:'#fff', border:'2px solid #00f2ff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(12px, 2.5vw, 14px)', fontWeight:'bold', textAlign:'center', borderRadius: '6px', minWidth: isMobile ? '70px' : '100%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }),
   dataRow: (isMobile) => ({ display:'flex', justifyContent:'space-between', alignItems: 'center', gap: '5px', fontSize:'clamp(10px, 2vw, 12px)', marginBottom: isMobile ? '0' : '8px', color:'#fff', borderBottom: isMobile ? 'none' : '1px solid rgba(255,255,255,0.1)', paddingBottom: isMobile ? '0' : '4px', whiteSpace: 'nowrap', padding: isMobile ? '5px 10px' : '0', background: isMobile ? 'rgba(0,0,0,0.4)' : 'transparent', borderRadius: isMobile ? '4px' : '0' }),
   modeGrid: (isMobile) => ({ display:'grid', gridTemplateColumns: isMobile ? 'repeat(4, 1fr)' : '1fr 1fr', gap:'8px' }),
-  modeBtn: { padding:'10px 4px', background:'rgba(0,0,0,0.5)', color:'#888', border:'1px solid #333', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(9px, 2vw, 11px)', borderRadius: '6px' },
-  modeBtnA: { padding:'10px 4px', background:'rgba(255,234,0,0.1)', color:'#ffea00', border:'1px solid #ffea00', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(9px, 2vw, 11px)', fontWeight:'bold', borderRadius: '6px' },
+  modeBtn: { padding:'12px 4px', background:'rgba(0,0,0,0.5)', color:'#888', border:'1px solid #333', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(10px, 2vw, 12px)', borderRadius: '6px' },
+  modeBtnA: { padding:'12px 4px', background:'rgba(255,234,0,0.1)', color:'#ffea00', border:'1px solid #ffea00', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(10px, 2vw, 12px)', fontWeight:'bold', borderRadius: '6px' },
   
   iaButton: { width:'100%', padding:'clamp(12px, 3vw, 15px)', background:'linear-gradient(45deg, #7b2cbf, #b5179e)', border:'2px solid #f72585', color:'#fff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(14px, 3vw, 16px)', fontWeight:'bold', marginTop:'5px', boxShadow:'0 0 15px rgba(247, 37, 133, 0.5)', borderRadius: '8px', minHeight: '48px' },
   
   // Controles Inferiores (Dashboard Central): Envueltos y centrados
-  controlPanel: (isMobile) => ({ position:'absolute', bottom: 'max(10px, env(safe-area-inset-bottom))', left:'50%', transform:'translateX(-50%)', zIndex:150, display:'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems:'center', gap:'clamp(10px, 2vw, 20px)', background:'rgba(0,5,15,0.85)', padding:'clamp(10px, 2vw, 15px) clamp(15px, 3vw, 30px)', borderRadius:'15px', border:'1px solid #00f2ff', boxShadow:'0 0 20px rgba(0,242,255,0.15)', backdropFilter:'blur(10px)', width: '95%', maxWidth: '900px', boxSizing: 'border-box' }),
+  controlPanel: (isMobile) => ({ position:'absolute', bottom: 'max(10px, env(safe-area-inset-bottom))', left:'50%', transform:'translateX(-50%)', zIndex:150, display:'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems:'center', gap:'clamp(10px, 2vw, 20px)', background:'rgba(0,5,15,0.85)', padding:'clamp(10px, 2vw, 15px) clamp(15px, 3vw, 30px)', borderRadius:'15px', border:'1px solid #00f2ff', boxShadow:'0 0 20px rgba(0,242,255,0.15)', backdropFilter:'blur(10px)', width: '95%', maxWidth: '900px', boxSizing: 'border-box', pointerEvents: 'auto' }),
   
   controlGroup: { display:'flex', flexDirection:'column', gap:'8px', alignItems: 'center' },
   controlLabel: (color) => ({ fontSize: 'clamp(10px, 2vw, 12px)', color: color, letterSpacing: '2px', textAlign: 'center', margin: 0, textShadow: `0 0 5px ${color}`, fontWeight: 'bold' }),
@@ -379,7 +402,7 @@ const ui = {
   hudVal: (isCrit, baseColor, isMobile) => ({ fontSize: isMobile ? 'clamp(14px, 3.5vw, 18px)' : 'clamp(20px, 4vw, 24px)', fontWeight:'bold', color: isCrit ? '#ff0055' : baseColor, margin: 0, textShadow:`0 0 10px ${baseColor}` }),
   
   // Modales
-  quizOverlay: { position:'absolute', inset:0, background:'rgba(0,5,10,0.95)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(15px)', padding: 'clamp(15px, 4vw, 30px)', boxSizing: 'border-box' },
+  quizOverlay: { position:'absolute', inset:0, background:'rgba(0,5,10,0.95)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(15px)', padding: 'clamp(15px, 4vw, 30px)', boxSizing: 'border-box', pointerEvents: 'auto' },
   quizBox: { background:'rgba(0,10,20,0.9)', border:'2px solid #00f2ff', padding:'clamp(20px, 6vw, 50px)', maxWidth:'900px', width:'100%', maxHeight:'85dvh', overflowY:'auto', textAlign:'center', boxShadow:'0 0 60px rgba(0,242,255,0.2)', borderRadius: '20px', boxSizing: 'border-box' },
   quizGrid: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(250px, 1fr))', gap:'clamp(15px, 3vw, 20px)', marginBottom:'20px', width: '100%' },
   quizBtn: { padding:'clamp(15px, 3vw, 25px)', background:'rgba(255,255,255,0.05)', border:'2px solid #555', color:'#fff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(14px, 3.5vw, 18px)', textAlign:'center', transition:'0.3s', borderRadius: '10px', minHeight: '60px', fontWeight: 'bold' }
@@ -398,19 +421,18 @@ if (typeof document !== 'undefined' && !document.getElementById("app-styles-mobi
     @media (max-width: 768px) {
        .game-panel-left { background: rgba(0,5,15,0.85); backdrop-filter: blur(10px); padding: 10px; border-radius: 15px; border: 1px solid #005577; }
        .game-panel-right { padding-bottom: 5px; }
-       .material-selector-box { flex-direction: row !important; align-items: center; padding: 5px 10px !important; }
-       .material-selector-box input { width: 30% !important; margin-right: 10px; }
+       .material-selector-box { flex-direction: row !important; align-items: center; padding: 10px !important; }
        .filter-buttons { margin-top: 0 !important; }
        .element-stats-box { display: none !important; /* Ocultamos los stats extra arriba para salvar espacio, ya salen en HUD central */ }
        
-       .score-box { padding: 5px 10px !important; }
-       .mode-selector-box { padding: 5px 10px !important; }
-       .equation-box { padding: 5px !important; }
-       .generate-quiz-btn { padding: 8px !important; min-height: 40px !important; font-size: 12px !important; }
+       .score-box { padding: 8px 15px !important; flex: 1 1 100% !important; margin-bottom: 5px; }
+       .mode-selector-box { padding: 8px 10px !important; flex: 1 1 45% !important; min-width: 150px; }
+       .equation-box { padding: 8px !important; flex: 1 1 45% !important; min-width: 150px; }
+       .generate-quiz-btn { padding: 12px !important; min-height: 48px !important; font-size: 14px !important; flex: 1 1 100% !important; margin-top: 5px !important; }
        
-       .main-controls-dock { gap: 10px !important; padding: 10px !important; }
-       .control-column { flex-direction: row !important; align-items: center; width: 100%; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
-       .hud-readout-center { width: 100%; justify-content: space-around !important; padding: 5px 0 !important; margin-bottom: 5px; }
+       .main-controls-dock { gap: 10px !important; padding: 15px 10px !important; }
+       .control-column { flex-direction: row !important; align-items: center; width: 100%; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+       .hud-readout-center { width: 100%; justify-content: space-around !important; padding: 10px 0 !important; margin-bottom: 10px; border: none !important; background: transparent !important; box-shadow: none !important; }
     }
   `;
   document.head.appendChild(styleSheet);
