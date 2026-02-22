@@ -6,18 +6,23 @@ import * as THREE from 'three';
 import { useGameStore } from '../../store/useGameStore';
 
 /* ============================================================
-   📱 HOOK DE RESPONSIVIDAD 3D (MOBILE FIRST)
+   📱 HOOK DE RESPONSIVIDAD 3D AVANZADO (MOBILE + ORIENTATION)
 ============================================================ */
 function useMobile() {
-  const [isMobile, setIsMobile] = useState(false);
+  const [deviceState, setDeviceState] = useState({ isMobile: false, isLandscape: false });
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const checkDevice = () => {
+      setDeviceState({
+        isMobile: window.innerWidth <= 768,
+        isLandscape: window.innerWidth > window.innerHeight
+      });
+    };
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
   }, []);
-  return isMobile;
+  return deviceState;
 }
 
 /* ============================================================
@@ -59,8 +64,6 @@ class SafeAudioEngine {
   impact() { this._play('sine', 150, 40, 0.4, 0.5); }
   success() { this._play('sine', 440, 880, 0.4, 0.2); setTimeout(()=>this._play('sine', 880, 1760, 0.5, 0.2), 150); }
   error() { this._play('sawtooth', 150, 50, 0.4, 0.3); }
-  valve() { this._play('noise', 1500, 200, 0.15, 0.05); } 
-  rumble(intensity) { this._play('sawtooth', 60, 40, 0.2, intensity * 0.5); } // Terremoto térmico
 }
 const sfx = new SafeAudioEngine();
 
@@ -210,7 +213,7 @@ const HolographicEquation = ({ core, isStable }) => {
   );
 };
 
-const AtomicCore = React.memo(({ core, hitPulse, isMobile }) => {
+const AtomicCore = React.memo(({ core, hitPulse, isMobile, isLandscape }) => {
   const groupRef = useRef();
   const meshRef = useRef();
   const isStable = core.currentCharge === core.target;
@@ -238,6 +241,11 @@ const AtomicCore = React.memo(({ core, hitPulse, isMobile }) => {
     if (core.geom === "dodecahedron") return <dodecahedronGeometry args={[2.2, isStable ? 0 : 2]} />;
     return <sphereGeometry args={[2.2, 32, 32]} />;
   }, [core.geom, isStable]);
+
+  // 🔥 Posición del panel de Telemetría Dinámico
+  const htmlPos = isMobile 
+    ? (isLandscape ? [6, 2, 0] : [0, 11, 0]) // A la derecha si es Landscape, arriba si es Vertical
+    : [4.5, 5, 0]; // Posición clásica en PC
 
   return (
     <group ref={groupRef} position={initPos}>
@@ -267,7 +275,7 @@ const AtomicCore = React.memo(({ core, hitPulse, isMobile }) => {
    🎮 5. MÁQUINA DE ESTADOS PRINCIPAL
 ============================================================ */
 export default function RedoxLab() {
-  const isMobile = useMobile(); // 🔥 Inyección del Hook de Responsividad
+  const { isMobile, isLandscape } = useMobile(); // 🔥 Inyección del Hook de Responsividad
   const { language, resetProgress } = useGameStore(); 
   
   const safeLang = I18N[language] ? language : 'es';
@@ -375,7 +383,7 @@ export default function RedoxLab() {
 
   const aberrationOffset = useMemo(() => new THREE.Vector2(hitPulse ? 0.02 : 0.002, hitPulse ? 0.02 : 0.002), [hitPulse]);
 
-  // Pantalla de inicio
+  // Pantallas
   if (phase === "BOOT") return (
     <div className="screen-container" style={ui.centerScreen}>
       <div className="glitch-text" style={ui.glitchText}>PROTOCOLO NANO-CORE V16</div>
@@ -384,7 +392,6 @@ export default function RedoxLab() {
     </div>
   );
 
-  // Pantalla de victoria
   if (phase === "END") return (
     <div className="screen-container" style={ui.centerScreen}>
       <h1 className="title-glow" style={{...ui.titleGlow, color: '#0f0', textShadow: '0 0 50px #0f0'}}>{dict.ui.winTitle}</h1>
@@ -406,9 +413,9 @@ export default function RedoxLab() {
       {/* 🖥️ TOP HUD CIBERNÉTICO */}
       <div className="top-hud" style={ui.topHud}>
         <div className="badge" style={ui.badge}>{dict.ui.exp} {levelIdx + 1} / {d.levels.length}</div>
-        <h2 style={{color:'#00f2ff', margin:'10px 0', fontSize:'clamp(24px, 6vw, 40px)', letterSpacing:'clamp(2px, 1vw, 6px)', textShadow:'0 0 20px rgba(0,242,255,0.8)'}}>{lvl.name}</h2>
+        <h2 style={{color:'#00f2ff', margin:'10px 0', fontSize:'clamp(22px, 5vw, 40px)', letterSpacing:'clamp(2px, 1vw, 6px)', textShadow:'0 0 20px rgba(0,242,255,0.8)'}}>{lvl.name}</h2>
         {phase === "EXECUTION" && (
-          <div className="target-msg" style={{background: 'rgba(255,234,0,0.15)', border: '2px solid #ffea00', padding: 'clamp(8px, 2vw, 12px) clamp(15px, 4vw, 30px)', borderRadius: '10px', color:'#ffea00', fontWeight: '900', display:'inline-block', fontSize:'clamp(12px, 3vw, 18px)', letterSpacing:'clamp(1px, 0.5vw, 2px)', boxShadow:'0 0 20px rgba(255,234,0,0.4)', marginTop: '5px'}}>
+          <div className="target-msg" style={{background: 'rgba(255,234,0,0.15)', border: '2px solid #ffea00', padding: '10px 20px', borderRadius: '10px', color:'#ffea00', fontWeight: '900', display:'inline-block', fontSize:'clamp(12px, 3vw, 18px)', letterSpacing:'1px', boxShadow:'0 0 20px rgba(255,234,0,0.4)', marginTop: '5px'}}>
             ⚡ {dict.ui.targetMsg} {lvl.targetText} a {lvl.cond} {lvl.targetVal}
           </div>
         )}
@@ -418,8 +425,8 @@ export default function RedoxLab() {
       {phase === "THEORY" && (
         <div className="modal-bg" style={ui.overlay}>
           <div className="glass-modal" style={ui.dialogBox('#00f2ff')}>
-            <h2 style={{color: '#00f2ff', letterSpacing:'clamp(2px, 1vw, 6px)', borderBottom: '2px solid #00f2ff55', paddingBottom: '15px', fontSize:'clamp(20px, 6vw, 35px)', margin: '0'}}>{dict.ui.theoryTitle}</h2>
-            <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', lineHeight:'1.5', margin: 'clamp(20px, 4vh, 40px) 0'}}>{dict.theory[missionIdx]}</p>
+            <h2 style={{color: '#00f2ff', letterSpacing:'clamp(2px, 1vw, 6px)', borderBottom: '2px solid #00f2ff55', paddingBottom: '15px', fontSize:'clamp(20px, 5vw, 35px)', margin: '0'}}>{dict.ui.theoryTitle}</h2>
+            <p style={{color:'#fff', fontSize:'clamp(16px, 4vw, 28px)', lineHeight:'1.7', margin: 'clamp(20px, 4vh, 40px) 0'}}>{dict.theory[missionIdx]}</p>
             <button className="btn-solid" style={ui.nextBtn('#00f2ff')} onClick={() => { setPhase("DIAGNOSIS"); safeSpeak(config.isGalvanic ? dict.ai.boss : dict.ai.start, langCode); }}>{dict.ui.theoryBtn}</button>
           </div>
         </div>
@@ -429,20 +436,20 @@ export default function RedoxLab() {
       {phase === "DIAGNOSIS" && (
         <div className="modal-bg" style={ui.overlay}>
           <div className="glass-modal" style={ui.dialogBox(config.isGalvanic ? '#ff0055' : '#ffea00')}>
-            <h2 style={{color: config.isGalvanic ? '#ff0055' : '#ffea00', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: `2px solid ${config.isGalvanic ? '#ff005555' : '#ffea0055'}`, paddingBottom: '15px'}}>{dict.ui.diagTitle}</h2>
+            <h2 style={{color: config.isGalvanic ? '#ff0055' : '#ffea00', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 5vw, 35px)', margin: 0, borderBottom: `2px solid ${config.isGalvanic ? '#ff005555' : '#ffea0055'}`, paddingBottom: '15px'}}>{dict.ui.diagTitle}</h2>
             {!config.isGalvanic ? (
               <div style={{display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px'}}>
-                <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', margin: 0}}>{dict.elements[missionIdx]} {dict.ui.diagQ1} <b style={{color:'#ffea00'}}>{cores[0]?.start}</b> {dict.ui.diagQ2} <b style={{color:'#0f0'}}>{cores[0]?.target}</b>.</p>
-                <p style={{color:'#aaa', fontSize:'clamp(14px, 4vw, 20px)', margin: 0}}>{dict.ui.diagQ3}</p>
-                <div className="nano-btn-group" style={ui.btnGroup}>
+                <p style={{color:'#fff', fontSize:'clamp(16px, 4vw, 24px)', margin: 0}}>{dict.elements[missionIdx]} {dict.ui.diagQ1} <b style={{color:'#ffea00'}}>{cores[0]?.start}</b> {dict.ui.diagQ2} <b style={{color:'#0f0'}}>{cores[0]?.target}</b>.</p>
+                <p style={{color:'#aaa', fontSize:'clamp(14px, 3.5vw, 20px)', margin: 0}}>{dict.ui.diagQ3}</p>
+                <div className="nano-btn-group" style={{...ui.btnGroup, flexDirection: isMobile ? 'column' : 'row'}}>
                   <button className="btn-opt" style={ui.actionBtn('#00f2ff')} onClick={() => handlePrediction("reduce")}>{dict.ui.btnGain}</button>
                   <button className="btn-opt" style={ui.actionBtn('#ff0055')} onClick={() => handlePrediction("oxidize")}>{dict.ui.btnLose}</button>
                 </div>
               </div>
             ) : (
               <div style={{display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px'}}>
-                <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', margin: 0}}>{dict.ui.diagGalvanic}</p>
-                <div className="nano-btn-group" style={ui.btnGroup}>
+                <p style={{color:'#fff', fontSize:'clamp(16px, 4vw, 24px)', margin: 0}}>{dict.ui.diagGalvanic}</p>
+                <div className="nano-btn-group" style={{...ui.btnGroup, flexDirection: isMobile ? 'column' : 'row'}}>
                   <button className="btn-opt" style={ui.actionBtn('#00ff88')} onClick={() => handlePrediction("zn_cu")}>{dict.ui.btnZnCu}</button>
                   <button className="btn-opt" style={ui.actionBtn('#ff0055')} onClick={() => handlePrediction("cu_zn")}>{dict.ui.btnCuZn}</button>
                 </div>
@@ -456,7 +463,7 @@ export default function RedoxLab() {
       {phase === "AI_QUESTION" && (
         <div className="modal-bg" style={ui.overlay}>
           <div className="glass-modal" style={ui.dialogBox('#ff00ff')}>
-            <h2 style={{color:'#ff00ff', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: '2px solid #ff00ff55', paddingBottom: '15px'}}>{microClassActive ? dict.ui.microClassTitle : dict.ui.btnAI}</h2>
+            <h2 style={{color:'#ff00ff', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 5vw, 35px)', margin: 0, borderBottom: '2px solid #ff00ff55', paddingBottom: '15px'}}>{microClassActive ? dict.ui.microClassTitle : dict.ui.btnAI}</h2>
             {!microClassActive ? (
               <div style={{marginTop: '20px'}}>
                 <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', margin: 0, fontWeight: 'bold'}}>{qData.q}</p>
@@ -468,7 +475,7 @@ export default function RedoxLab() {
               </div>
             ) : (
               <div style={{marginTop: '20px'}}>
-                <p style={{color:'#ffea00', fontSize:'clamp(16px, 4.5vw, 22px)', lineHeight:'1.5', margin: 0}}>{qData.micro}</p>
+                <p style={{color:'#ffea00', fontSize:'clamp(16px, 4vw, 22px)', lineHeight:'1.5', margin: 0}}>{qData.micro}</p>
                 <button className="btn-solid" style={ui.nextBtn('#0f0')} onClick={() => { setPhase("EXECUTION"); setMicroClassActive(false); }}>{dict.ui.btnContinue}</button>
               </div>
             )}
@@ -478,9 +485,17 @@ export default function RedoxLab() {
 
       {/* 🎯 FASE 2: EJECUCIÓN */}
       {phase === "EXECUTION" && !isStable && (
-        <div className="dock-panel" style={ui.bottomCenter}>
+        <div className="dock-panel" style={{
+           ...ui.bottomCenter, 
+           flexDirection: isMobile && !isLandscape ? 'column' : 'row', 
+           width: isMobile ? '100vw' : 'auto', 
+           bottom: isMobile ? '0' : '50px',
+           borderRadius: isMobile ? '20px 20px 0 0' : '30px',
+           padding: isMobile ? '20px 15px max(15px, env(safe-area-inset-bottom))' : '50px 80px',
+           gap: isMobile ? '15px' : '80px'
+        }}>
           {!config.isGalvanic ? (
-            <div className="nano-btn-group" style={ui.btnGroup}>
+            <div className="nano-btn-group" style={{...ui.btnGroup, flexDirection: isMobile ? 'column' : 'row', margin: 0}}>
               <button className="check-btn" style={ui.fireBtn('#00f2ff')} onClick={() => handleFire("reduce")} disabled={laserActive}>{dict.ui.btnInject}</button>
               <button className="check-btn" style={ui.fireBtn('#ff0055')} onClick={() => handleFire("oxidize")} disabled={laserActive}>{dict.ui.btnExtract}</button>
             </div>
@@ -494,8 +509,8 @@ export default function RedoxLab() {
       {phase === "SYNTHESIS" && (
         <div className="modal-bg" style={ui.overlay}>
           <div className="glass-modal" style={ui.dialogBox('#0f0')}>
-            <h2 style={{color:'#0f0', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: '2px solid #0f05', paddingBottom: '15px'}}>{dict.ui.synthTitle}</h2>
-            <p style={{fontSize:'clamp(16px, 4.5vw, 26px)', lineHeight:'1.7', margin:'clamp(20px, 4vh, 40px) 0', color: '#fff', fontWeight:'bold'}}>{dict.realWorld[missionIdx]}</p>
+            <h2 style={{color:'#0f0', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 5vw, 35px)', margin: 0, borderBottom: '2px solid #0f05', paddingBottom: '15px'}}>{dict.ui.synthTitle}</h2>
+            <p style={{fontSize:'clamp(16px, 4vw, 26px)', lineHeight:'1.7', margin:'clamp(20px, 4vh, 40px) 0', color: '#fff', fontWeight:'bold'}}>{dict.realWorld[missionIdx]}</p>
             <button className="btn-solid" style={ui.nextBtn('#0f0')} onClick={() => loadMission(missionIdx + 1)}>{dict.ui.btnNext}</button>
           </div>
         </div>
@@ -503,59 +518,33 @@ export default function RedoxLab() {
 
       {/* 🌌 MOTOR 3D PROFUNDO (CÁMARA Y VECTORES DINÁMICOS) */}
       <div style={{position:'absolute', inset:0, zIndex:1, pointerEvents:'none'}}>
-        {/* 🔥 FIX CÁMARA MOBILE: Si es movil la alejamos a 28 para que se vea todo en vertical y nada se tape */}
-        <Canvas camera={{position:[0, 2, isMobile ? 28 : 16], fov:45}}>
+        {/* 🔥 FIX CÁMARA MOBILE: Se aleja a 28 (Vertical) o 18 (Horizontal) en móviles para que nada se tape */}
+        <Canvas camera={{position:[0, 2, isMobile ? (isLandscape ? 18 : 32) : 16], fov:45}}>
           <color attach="background" args={['#000308']} />
           <Stars count={5000} factor={4} fade />
           <ambientLight intensity={0.8} />
           
           <Suspense fallback={null}>
-            {/* 🔥 TELEMETRÍA MÓVIL: En celular, el dash flota ARRIBA del pistón y se alinea horizontalmente */}
-            {isMobile && phase === "EXECUTION" && (
-              <Html position={[0, 6.8, 0]} center zIndexRange={[100, 0]}>
-                <div className="telemetry-panel" style={{
-                  background: isCritical ? 'rgba(255,0,0,0.2)' : 'rgba(0,10,25,0.85)', 
-                  border: `1px solid ${isCritical ? '#ff0000' : '#00f2ff55'}`,
-                  borderRadius: '12px', color: '#fff', fontFamily: 'Orbitron',
-                  backdropFilter: 'blur(15px)', 
-                  boxShadow: `0 0 40px ${isCritical ? '#ff0000' : '#00f2ff'}44`,
-                  animation: isCritical ? 'glitch-anim 0.2s infinite' : 'none'
-                }}>
-                  <div className="tel-body" style={{display: 'flex', flexDirection: 'row', gap: '20px', alignItems: 'center', justifyContent: 'center'}}>
-                    <div style={{ color: isHot ? '#ff0055' : '#0f0', textShadow:'0 0 10px currentColor' }}>
-                      T:{temp.toFixed(0)}<span> K</span>
-                    </div>
-                    <div style={{ color: '#00f2ff', textShadow:'0 0 10px currentColor' }}>
-                      V:{vol.toFixed(1)}<span> L</span>
-                    </div>
-                    <div style={{ color: isCritical ? '#ff0000' : '#ffea00', textShadow:'0 0 10px currentColor' }}>
-                      P:{pressure.toFixed(2)}<span> atm</span>
-                    </div>
-                  </div>
-                </div>
-              </Html>
-            )}
-
             {cores.map((c, i) => {
-              // Si es Batería (Jefe) y es Celular, apilamos los núcleos verticalmente para que quepan
+              // Si es Batería (Jefe) y es Celular Horizontal, se acomodan de lado
               let pos = c.pos || [0, 0, 0];
-              if (config.isGalvanic && isMobile) {
-                pos = i === 0 ? [0, 3.5, 0] : [0, -3.5, 0];
+              if (config.isGalvanic && isMobile && !isLandscape) {
+                pos = i === 0 ? [0, 4, 0] : [0, -4, 0]; // Apilados verticalmente si el móvil está parado
               }
-              return <AtomicCore key={i} core={{...c, pos}} hitPulse={hitPulse} isMobile={isMobile}/>
+              return <AtomicCore key={i} core={{...c, pos}} hitPulse={hitPulse} isMobile={isMobile} isLandscape={isLandscape}/>
             })}
             
-            {/* Láser Vertical en Móvil, Horizontal en PC */}
+            {/* Láser Vertical en Móvil (Portrait), Horizontal en PC o Landscape */}
             {laserActive && (
-              <mesh rotation={[0, 0, (config.isGalvanic && isMobile) ? 0 : Math.PI / 2]}>
-                <cylinderGeometry args={[0.2, 0.2, (config.isGalvanic && isMobile) ? 8 : 20, 8]} />
+              <mesh rotation={[0, 0, (config.isGalvanic && isMobile && !isLandscape) ? 0 : Math.PI / 2]}>
+                <cylinderGeometry args={[0.2, 0.2, (config.isGalvanic && isMobile && !isLandscape) ? 8 : 20, 8]} />
                 <meshBasicMaterial color={laserColor} transparent opacity={0.6} />
               </mesh>
             )}
             
-            {/* Cable de Batería Vertical en Móvil, Horizontal en PC */}
+            {/* Cable de Batería */}
             {config.isGalvanic && (
-              <mesh rotation={[0, 0, isMobile ? 0 : Math.PI / 2]}>
+              <mesh rotation={[0, 0, (isMobile && !isLandscape) ? 0 : Math.PI / 2]}>
                  <cylinderGeometry args={[0.08, 0.08, isMobile ? 8 : 9, 16]} />
                  <meshStandardMaterial color="#444" metalness={0.9} roughness={0.1} />
                </mesh>
@@ -576,7 +565,7 @@ export default function RedoxLab() {
   );
 }
 
-// 🎨 ESTILOS UI BASE (SE INYECTA CSS PARA EL MODO MOBILE)
+// 🎨 ESTILOS UI (100% NATIVE MOBILE FIRST CON CSS GRID Y FLEXBOX)
 const ui = {
   container: { position: 'absolute', inset: 0, overflow: 'hidden', background: '#000', fontFamily: 'Orbitron, sans-serif', width: '100vw', height: '100dvh', display: 'flex', flexDirection: 'column' },
   centerScreen: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', width: '100vw', background: 'radial-gradient(circle at center, #001122 0%, #000 100%)', zIndex: 1000, position: 'relative', padding: '20px', boxSizing: 'border-box' },
@@ -621,9 +610,9 @@ if (typeof document !== 'undefined' && !document.getElementById("gas-theory-mobi
       100% { transform: translate(0) }
     }
     
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 10px; }
-    ::-webkit-scrollbar-thumb { background: rgba(0, 242, 255, 0.4); border-radius: 10px; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #00f2ff88; border-radius: 10px; }
 
     /* ========================================= */
     /* 📱 MODO CELULAR (Mobile First Overrides)  */
@@ -644,37 +633,6 @@ if (typeof document !== 'undefined' && !document.getElementById("gas-theory-mobi
       .badge { font-size: 12px !important; padding: 5px 15px !important; }
       .target-msg { font-size: 12px !important; padding: 8px 10px !important; margin-top: 5px !important; display: block !important; }
 
-      /* Telemetría (Dash 3D) en Móvil (Se vuelve una fila horizontal plana y delgada) */
-      .telemetry-panel {
-         width: auto !important;
-         min-width: 280px !important;
-         padding: 10px 15px !important;
-         border-top: 4px solid currentColor !important;
-         transform: scale(0.9) !important;
-         box-sizing: border-box !important;
-      }
-      .tel-body { flex-direction: row !important; gap: 20px !important; justify-content: center !important; align-items: center !important; }
-      .tel-body > div { font-size: 18px !important; text-align: center; display: flex; flex-direction: column; align-items: center; }
-      .tel-body span { font-size: 10px !important; margin-top: 2px; }
-
-      /* Dock Inferior (Controles) */
-      .dock-panel {
-         bottom: 0 !important;
-         left: 0 !important;
-         transform: none !important;
-         width: 100vw !important;
-         border-radius: 25px 25px 0 0 !important;
-         padding: 20px 20px max(20px, env(safe-area-inset-bottom)) !important;
-         flex-direction: column !important;
-         gap: 15px !important;
-         border-bottom: none !important;
-         border-left: none !important;
-         border-right: none !important;
-         box-sizing: border-box !important;
-      }
-      .btn-group { flex-direction: column !important; width: 100% !important; gap: 10px !important; margin-top: 0 !important; }
-      .check-btn { width: 100% !important; padding: 15px !important; font-size: 16px !important; letter-spacing: 2px !important; border-radius: 10px !important; }
-
       /* Modales Scrollables */
       .modal-bg { padding: 15px !important; box-sizing: border-box !important; align-items: flex-start !important; padding-top: max(40px, env(safe-area-inset-top)) !important; }
       .glass-modal { padding: 25px 20px !important; border-radius: 20px !important; max-height: 85dvh !important; overflow-y: auto !important; width: 100% !important; box-sizing: border-box !important; margin-bottom: env(safe-area-inset-bottom) !important; }
@@ -682,14 +640,17 @@ if (typeof document !== 'undefined' && !document.getElementById("gas-theory-mobi
       .glass-modal p { font-size: 16px !important; margin: 15px 0 !important; line-height: 1.5 !important; }
       
       .grid-opts { grid-template-columns: 1fr !important; gap: 10px !important; margin-top: 20px !important; }
-      .btn-opt { padding: 15px !important; font-size: 14px !important; border-radius: 10px !important; min-height: 55px !important; }
+      .btn-opt { padding: 15px !important; font-size: 14px !important; border-radius: 10px !important; min-height: 55px !important; width: 100% !important; box-sizing: border-box !important; }
       .btn-solid { padding: 15px !important; font-size: 16px !important; width: 100% !important; margin-top: 20px !important; border-radius: 10px !important; }
+      .check-btn { width: 100% !important; padding: 15px !important; font-size: 16px !important; letter-spacing: 2px !important; border-radius: 10px !important; }
     }
-
-    /* Mini-ajuste para teléfonos extremadamente pequeños (iPhone SE) */
-    @media (max-width: 380px) {
-      .telemetry-panel { transform: scale(0.75) !important; min-width: 240px !important; }
-      .title-glow { font-size: 32px !important; }
+    
+    /* Si el celular está echado (Landscape) apachurrar botones para que no estorben */
+    @media (max-width: 900px) and (orientation: landscape) {
+      .dock-panel { padding: 10px !important; border-radius: 15px !important; bottom: 5px !important; border: 1px solid #00f2ff !important; background: rgba(0,5,15,0.7) !important; }
+      .btn-opt { padding: 10px !important; font-size: 12px !important; min-height: 40px !important; }
+      .glass-modal p { font-size: 14px !important; margin: 10px 0 !important; }
+      .check-btn { padding: 10px 20px !important; font-size: 14px !important; border-radius: 8px !important; }
     }
   `;
   document.head.appendChild(styleSheet);
