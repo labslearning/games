@@ -82,7 +82,7 @@ const I18N = {
     questions: [
       { q: "¿Qué ión forma el Sodio al oxidarse?", options: ["Catión (+1)", "Anión (-1)", "Neutro", "Isótopo"], correct: 0, micro: "Al perder un electrón negativo, el Sodio queda con carga positiva, formando un catión." },
       { q: "¿Cuál es el estado de oxidación del Oxígeno puro (O2)?", options: ["0", "-2", "+1", "+2"], correct: 0, micro: "Los elementos en su estado libre siempre tienen un estado de oxidación de cero." },
-      { q: "Si el Hierro pasa de +3 a +2, ¿qué proceso ocurrió?", options: ["Reducción", "Oxidación", "Fusión", "Fisión"], correct: 0, micro: "La carga se redujo. Esto significa que ganó una carga negativa (un electrón)." },
+      { q: "Si el Hierro pasa de +3 a +2, ¿qué proceso ocurrió?", options: ["Reducción", "Oxidation", "Fusión", "Fisión"], correct: 0, micro: "La carga se redujo. Esto significa que ganó una carga negativa (un electrón)." },
       { q: "¿Qué partículas viajan para que el Cobre se reduzca?", options: ["Electrones", "Protones", "Neutrones", "Quarks"], correct: 0, micro: "En las reacciones Redox, las únicas partículas que se transfieren son los electrones." },
       { q: "El Cloro gana electrones fácilmente porque es un...", options: ["Halógeno", "Gas noble", "Metal", "Líquido"], correct: 0, micro: "Los halógenos necesitan ganar solo un electrón para completar su octet." },
       { q: "Reducir Aluminio en las fábricas requiere mucha...", options: ["Electricidad", "Agua", "Presión", "Oxígeno"], correct: 0, micro: "Se necesita electrólisis, un proceso que usa cantidades masivas de electricidad." },
@@ -373,16 +373,18 @@ export default function RedoxLab() {
 
   const aberrationOffset = useMemo(() => new THREE.Vector2(hitPulse ? 0.02 : 0.002, hitPulse ? 0.02 : 0.002), [hitPulse]);
 
+  // Pantalla de inicio
   if (phase === "BOOT") return (
     <div style={ui.centerScreen}>
-      <h1 style={ui.titleGlow}>{dict.ui.title}</h1>
+      <h1 className="nano-title" style={ui.titleGlow}>{dict.ui.title}</h1>
       <button style={ui.btnHex('#00f2ff')} onClick={handleStartBoot}>{dict.ui.start}</button>
     </div>
   );
 
+  // Pantalla de victoria
   if (phase === "END") return (
     <div style={ui.centerScreen}>
-      <h1 style={ui.titleComplete}>{dict.ui.winTitle}</h1>
+      <h1 className="nano-title" style={ui.titleComplete}>{dict.ui.winTitle}</h1>
       <p style={{color:'#fff', fontSize:'clamp(20px, 5vw, 30px)', fontFamily:'Orbitron', margin:'30px 0'}}>{dict.ui.exp}: {mastery}</p>
       <button style={ui.btnHex('#0f0')} onClick={handleBack}>{dict.ui.btnBack}</button>
     </div>
@@ -399,14 +401,14 @@ export default function RedoxLab() {
       </div>
 
       {/* 🖥️ HUD CENTRALIZADO Y RESPONSIVO */}
-      <div style={ui.hud}>
-        <div style={ui.glassCard}>
-          <h1 style={ui.title}>{dict.ui.title}</h1>
+      <div className="nano-hud" style={ui.hud}>
+        <div className="nano-glass" style={ui.glassCard}>
+          <h1 className="nano-glass-title" style={ui.title}>{dict.ui.title}</h1>
           <div style={ui.badge}>{dict.ui.level} {config.id} / 10 {config.isGalvanic && " (BOSS)"}</div>
           <div style={{color:'#ffea00', fontSize:'clamp(14px, 3vw, 18px)', marginTop:'10px', fontWeight:'bold'}}>{dict.ui.exp}: {mastery}</div>
-          <div style={ui.statsContainer}>
+          <div className="nano-stats" style={ui.statsContainer}>
             {cores.map((c, i) => (
-              <div key={i} style={ui.statBox(c.color)}>
+              <div key={i} className="nano-stat-box" style={ui.statBox(c.color)}>
                 <div style={{color:c.color, fontSize:'clamp(14px, 3vw, 18px)', fontWeight:'bold'}}>{config.isGalvanic ? c.symbol : dict.elements[missionIdx]}</div>
                 <div style={{color:'#aaa', fontSize:'clamp(10px, 2vw, 12px)'}}>{dict.ui.target}: {c.target}</div>
                 <div style={ui.statNumber(c.color)}>{c.currentCharge > 0 ? `+${c.currentCharge}` : c.currentCharge}</div>
@@ -436,7 +438,7 @@ export default function RedoxLab() {
               <>
                 <p style={{color:'#fff', fontSize:'clamp(16px, 3.5vw, 22px)'}}>{dict.elements[missionIdx]} {dict.ui.diagQ1} <b style={{color:'#ffea00'}}>{cores[0]?.start}</b> {dict.ui.diagQ2} <b style={{color:'#0f0'}}>{cores[0]?.target}</b>.</p>
                 <p style={{color:'#aaa', fontSize:'clamp(14px, 3vw, 18px)'}}>{dict.ui.diagQ3}</p>
-                <div style={ui.btnGroup}>
+                <div className="nano-btn-group" style={ui.btnGroup}>
                   <button style={ui.actionBtn('#00f2ff')} onClick={() => handlePrediction("reduce")}>{dict.ui.btnGain}</button>
                   <button style={ui.actionBtn('#ff0055')} onClick={() => handlePrediction("oxidize")}>{dict.ui.btnLose}</button>
                 </div>
@@ -444,7 +446,7 @@ export default function RedoxLab() {
             ) : (
               <>
                 <p style={{color:'#fff', fontSize:'clamp(16px, 3.5vw, 22px)'}}>{dict.ui.diagGalvanic}</p>
-                <div style={ui.btnGroup}>
+                <div className="nano-btn-group" style={ui.btnGroup}>
                   <button style={ui.actionBtn('#00ff88')} onClick={() => handlePrediction("zn_cu")}>{dict.ui.btnZnCu}</button>
                   <button style={ui.actionBtn('#ff0055')} onClick={() => handlePrediction("cu_zn")}>{dict.ui.btnCuZn}</button>
                 </div>
@@ -462,7 +464,7 @@ export default function RedoxLab() {
             {!microClassActive ? (
               <>
                 <p style={{color:'#fff', fontSize:'clamp(16px, 3.5vw, 22px)'}}>{qData.q}</p>
-                <div style={ui.grid}>
+                <div className="nano-grid" style={ui.grid}>
                   {qData.options.map((opt, i) => (
                     <button key={i} style={ui.actionBtn('#ff00ff')} onClick={() => handleAnswer(i)}>{opt}</button>
                   ))}
@@ -482,7 +484,7 @@ export default function RedoxLab() {
       {phase === "EXECUTION" && !isStable && (
         <div style={ui.bottomCenter}>
           {!config.isGalvanic ? (
-            <div style={ui.btnGroup}>
+            <div className="nano-btn-group" style={ui.btnGroup}>
               <button style={ui.fireBtn('#00f2ff')} onClick={() => handleFire("reduce")} disabled={laserActive}>{dict.ui.btnInject}</button>
               <button style={ui.fireBtn('#ff0055')} onClick={() => handleFire("oxidize")} disabled={laserActive}>{dict.ui.btnExtract}</button>
             </div>
@@ -553,18 +555,21 @@ export default function RedoxLab() {
 
 // 🎨 ESTILOS UI (MOBILE-FIRST ABSOLUTO CON CLAMP Y FLEX)
 const ui = {
-  container: { position: 'absolute', inset: 0, overflow: 'hidden', background: '#000', fontFamily: 'Orbitron, sans-serif', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' },
-  overlayFull: { display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100dvh', background:'radial-gradient(circle at center, #001122 0%, #000 100%)', zIndex:1000, position:'relative', padding:'20px', boxSizing:'border-box' },
+  container: { position: 'absolute', inset: 0, overflow: 'hidden', background: '#000', fontFamily: 'Orbitron, sans-serif', width: '100vw', height: '100dvh' },
+  
+  // 🔥 FIX PARA PANTALLAS DE INICIO Y VICTORIA
+  centerScreen: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', background: 'radial-gradient(circle at center, #001122 0%, #000 100%)', zIndex: 1000, position: 'relative', padding: '20px', boxSizing: 'border-box', textAlign: 'center' },
+  
   titleComplete: { color: '#0f0', fontSize: 'clamp(30px, 6vw, 60px)', letterSpacing: 'clamp(2px, 1vw, 8px)', textShadow: '0 0 40px #0f0', margin: 0, textAlign: 'center' },
   
   // Header Adaptable
-  topControls: { position: 'absolute', top: 'clamp(10px, 2vh, 30px)', left: 'clamp(10px, 2vw, 30px)', right: 'clamp(10px, 2vw, 30px)', display: 'flex', justifyContent: 'space-between', zIndex: 500, pointerEvents: 'none', flexWrap: 'wrap', gap: '10px' },
-  backBtn: { padding: 'clamp(8px, 1.5vw, 15px) clamp(15px, 3vw, 30px)', background: 'rgba(255,0,85,0.15)', border: 'clamp(1px, 0.5vw, 2px) solid #ff0055', color: '#ff0055', cursor: 'pointer', borderRadius: 'clamp(8px, 1.5vw, 10px)', fontFamily: 'Orbitron', fontWeight: '900', backdropFilter: 'blur(10px)', letterSpacing: '1px', transition: '0.3s', pointerEvents: 'auto', fontSize: 'clamp(12px, 2.5vw, 16px)' },
-  aiBtn: { padding: 'clamp(8px, 1.5vw, 15px) clamp(15px, 3vw, 30px)', background: 'rgba(255,0,255,0.15)', border: 'clamp(1px, 0.5vw, 2px) solid #ff00ff', color: '#ff00ff', cursor: 'pointer', borderRadius: 'clamp(8px, 1.5vw, 10px)', fontFamily: 'Orbitron', fontWeight: '900', backdropFilter: 'blur(10px)', letterSpacing: '1px', transition: '0.3s', pointerEvents: 'auto', fontSize: 'clamp(12px, 2.5vw, 16px)' },
+  topControls: { position: 'absolute', top: 'clamp(10px, 2vh, 30px)', left: '0', width: '100%', padding: '0 clamp(10px, 2vw, 30px)', boxSizing: 'border-box', display: 'flex', justifyContent: 'space-between', zIndex: 500, pointerEvents: 'none', flexWrap: 'wrap', gap: '10px' },
+  backBtn: { padding: 'clamp(10px, 1.5vw, 15px) clamp(15px, 3vw, 30px)', background: 'rgba(255,0,85,0.15)', border: 'clamp(1px, 0.5vw, 2px) solid #ff0055', color: '#ff0055', cursor: 'pointer', borderRadius: 'clamp(8px, 1.5vw, 10px)', fontFamily: 'Orbitron', fontWeight: '900', backdropFilter: 'blur(10px)', letterSpacing: '1px', transition: '0.3s', pointerEvents: 'auto', fontSize: 'clamp(12px, 2.5vw, 16px)' },
+  aiBtn: { padding: 'clamp(10px, 1.5vw, 15px) clamp(15px, 3vw, 30px)', background: 'rgba(255,0,255,0.15)', border: 'clamp(1px, 0.5vw, 2px) solid #ff00ff', color: '#ff00ff', cursor: 'pointer', borderRadius: 'clamp(8px, 1.5vw, 10px)', fontFamily: 'Orbitron', fontWeight: '900', backdropFilter: 'blur(10px)', letterSpacing: '1px', transition: '0.3s', pointerEvents: 'auto', fontSize: 'clamp(12px, 2.5vw, 16px)' },
 
   // HUD
-  hud: { position: 'absolute', top: 'clamp(60px, 10vh, 90px)', left: '50%', transform: 'translateX(-50%)', zIndex: 100, width: '100%', padding: '0 clamp(10px, 2vw, 20px)', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', pointerEvents: 'none' },
-  glassCard: { background: 'rgba(0,10,25,0.85)', border: '2px solid #00f2ff', padding: 'clamp(15px, 3vw, 30px)', borderRadius: '12px', backdropFilter: 'blur(15px)', boxShadow: '0 0 40px rgba(0,242,255,0.2)', width: '100%', maxWidth: '600px', textAlign: 'center' },
+  hud: { position: 'absolute', top: 'clamp(60px, 10vh, 90px)', left: '50%', transform: 'translateX(-50%)', zIndex: 100, width: '100%', padding: '0 clamp(15px, 3vw, 20px)', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', pointerEvents: 'none' },
+  glassCard: { background: 'rgba(0,10,25,0.85)', border: '2px solid #00f2ff', padding: 'clamp(15px, 3vw, 30px)', borderRadius: '15px', backdropFilter: 'blur(15px)', boxShadow: '0 0 40px rgba(0,242,255,0.2)', width: '100%', maxWidth: '600px', textAlign: 'center' },
   title: { color: '#fff', margin: 0, fontSize: 'clamp(20px, 4vw, 28px)', letterSpacing: '3px' },
   badge: { display: 'inline-block', marginTop: '10px', padding: 'clamp(5px, 1vw, 8px) clamp(10px, 2vw, 20px)', background: '#ff0055', color: '#fff', fontSize: 'clamp(12px, 2vw, 14px)', fontWeight: 'bold', borderRadius: '5px' },
   statsContainer: { display: 'flex', gap: 'clamp(10px, 2vw, 15px)', marginTop: '20px', flexWrap: 'wrap', justifyContent: 'center' },
@@ -572,25 +577,25 @@ const ui = {
   statNumber: (c) => ({ fontSize: 'clamp(30px, 6vw, 55px)', fontWeight: '900', color: c, textShadow: `0 0 20px ${c}`, marginTop: '10px' }),
 
   // Modales
-  overlay: { position: 'absolute', inset: 0, background: 'rgba(0,5,15,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', pointerEvents: 'auto', padding: 'clamp(10px, 3vw, 20px)' },
-  dialogBox: (c) => ({ border: `clamp(1px, 0.5vw, 3px) solid ${c}`, background: 'rgba(0,0,0,0.95)', padding: 'clamp(20px, 5vw, 60px)', borderRadius: 'clamp(10px, 2vw, 15px)', textAlign: 'center', width: '100%', maxWidth: '800px', boxShadow: `0 0 100px ${c}66`, maxHeight: '90dvh', overflowY: 'auto' }),
+  overlay: { position: 'absolute', inset: 0, background: 'rgba(0,5,15,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', pointerEvents: 'auto', padding: '15px', boxSizing: 'border-box' },
+  dialogBox: (c) => ({ border: `clamp(1px, 0.5vw, 3px) solid ${c}`, background: 'rgba(0,0,0,0.95)', padding: 'clamp(25px, 5vw, 60px)', borderRadius: '20px', textAlign: 'center', width: '100%', maxWidth: '700px', boxShadow: `0 0 100px ${c}66`, maxHeight: '85dvh', overflowY: 'auto' }),
   
   // Botones de Acción
-  btnGroup: { display: 'flex', flexWrap: 'wrap', gap: 'clamp(15px, 3vw, 30px)', justifyContent: 'center', marginTop: 'clamp(20px, 4vw, 40px)' },
-  actionBtn: (c) => ({ padding: 'clamp(15px, 3vw, 20px) clamp(20px, 4vw, 40px)', background: 'rgba(0,0,0,0.8)', border: `2px solid ${c}`, color: c, fontSize: 'clamp(14px, 3vw, 20px)', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', transition: '0.2s', borderRadius: '8px', flex: '1 1 min-content' }),
-  nextBtn: { marginTop: 'clamp(20px, 4vw, 40px)', padding: 'clamp(15px, 3vw, 25px) clamp(40px, 8vw, 80px)', background: '#0f0', border: 'none', color: '#000', fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '8px', boxShadow: '0 0 40px #0f0' },
+  btnGroup: { display: 'flex', flexWrap: 'wrap', gap: 'clamp(15px, 3vw, 30px)', justifyContent: 'center', marginTop: 'clamp(20px, 4vw, 40px)', width: '100%' },
+  actionBtn: (c) => ({ padding: 'clamp(15px, 3vw, 20px) clamp(20px, 4vw, 40px)', background: 'rgba(0,0,0,0.8)', border: `2px solid ${c}`, color: c, fontSize: 'clamp(14px, 3vw, 20px)', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', transition: '0.2s', borderRadius: '8px', minHeight: '50px', flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }),
+  nextBtn: { marginTop: 'clamp(20px, 4vw, 40px)', padding: 'clamp(15px, 3vw, 25px) clamp(40px, 8vw, 80px)', background: '#0f0', border: 'none', color: '#000', fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '8px', boxShadow: '0 0 40px #0f0', minHeight: '50px' },
   
-  bottomCenter: { position: 'absolute', bottom: 'clamp(20px, 5vh, 60px)', left: '50%', transform: 'translateX(-50%)', zIndex: 150, pointerEvents: 'auto', width: '100%', display: 'flex', justifyContent: 'center', padding: '0 clamp(10px, 2vw, 20px)', boxSizing: 'border-box' },
-  fireBtn: (c) => ({ padding: 'clamp(15px, 3vw, 30px) clamp(30px, 6vw, 80px)', background: 'rgba(0,0,0,0.95)', border: `clamp(2px, 0.5vw, 4px) solid ${c}`, color: c, fontSize: 'clamp(18px, 4vw, 28px)', fontWeight: '900', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '50px', boxShadow: `0 0 clamp(30px, 6vw, 60px) ${c}88`, letterSpacing: 'clamp(2px, 0.5vw, 4px)', whiteSpace: 'nowrap' }),
+  bottomCenter: { position: 'absolute', bottom: 'clamp(20px, 5vh, 60px)', left: '50%', transform: 'translateX(-50%)', zIndex: 150, pointerEvents: 'auto', width: '100%', display: 'flex', justifyContent: 'center', padding: '0 clamp(15px, 3vw, 20px)', boxSizing: 'border-box' },
+  fireBtn: (c) => ({ padding: 'clamp(15px, 3vw, 30px) clamp(30px, 6vw, 80px)', background: 'rgba(0,0,0,0.95)', border: `clamp(2px, 0.5vw, 4px) solid ${c}`, color: c, fontSize: 'clamp(16px, 4vw, 28px)', fontWeight: '900', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '50px', boxShadow: `0 0 clamp(30px, 6vw, 60px) ${c}88`, letterSpacing: 'clamp(2px, 0.5vw, 4px)', whiteSpace: 'nowrap', minHeight: '60px', width: '100%', maxWidth: '350px' }),
   
   titleGlow: { color:'#00f2ff', fontSize:'clamp(40px, 8vw, 80px)', letterSpacing:'clamp(5px, 2vw, 15px)', textShadow:'0 0 60px rgba(0, 242, 255, 0.8)', margin:'0 0 30px 0', textAlign: 'center', fontWeight: '900' },
   glitchText: { color: '#00f2ff', fontSize: 'clamp(14px, 3vw, 24px)', letterSpacing: 'clamp(10px, 2vw, 25px)', marginBottom: '0px', fontWeight: 'bold', textAlign: 'center' },
-  btnHex: (c) => ({ padding:'clamp(20px, 4vw, 30px) clamp(40px, 8vw, 80px)', background:`linear-gradient(45deg, rgba(0,0,0,0.9), ${c}33)`, border:`3px solid ${c}`, color:c, fontSize:'clamp(18px, 4vw, 26px)', fontWeight:'900', cursor:'pointer', borderRadius:'15px', fontFamily:'Orbitron', transition:'all 0.3s ease', boxShadow: `0 0 30px ${c}55`, letterSpacing: '4px' }),
-  grid: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(clamp(150px, 30vw, 250px), 1fr))', gap:'clamp(15px, 3vw, 35px)', marginTop:'clamp(30px, 6vw, 50px)' },
+  btnHex: (c) => ({ padding:'clamp(20px, 4vw, 30px) clamp(40px, 8vw, 80px)', background:`linear-gradient(45deg, rgba(0,0,0,0.9), ${c}33)`, border:`3px solid ${c}`, color:c, fontSize:'clamp(18px, 4vw, 26px)', fontWeight:'900', cursor:'pointer', borderRadius:'15px', fontFamily:'Orbitron', transition:'all 0.3s ease', boxShadow: `0 0 30px ${c}55`, letterSpacing: '4px', minHeight: '60px' }),
+  grid: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))', gap:'clamp(15px, 3vw, 35px)', marginTop:'clamp(30px, 6vw, 50px)', width: '100%' },
   flash: { position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.3)', pointerEvents: 'none', zIndex: 999 }
 };
 
-// Parches globales
+// Parches globales y Reglas Media Queries puras para móviles
 if (typeof document !== 'undefined' && !document.getElementById("nano-styles-mobile")) {
   const styleSheet = document.createElement("style");
   styleSheet.id = "nano-styles-mobile";
@@ -598,6 +603,17 @@ if (typeof document !== 'undefined' && !document.getElementById("nano-styles-mob
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); }
     ::-webkit-scrollbar-thumb { background: #00f2ff55; border-radius: 10px; }
+    
+    @media (max-width: 768px) {
+      .nano-btn-group { flex-direction: column !important; }
+      .nano-btn-group button { width: 100% !important; }
+      .nano-stats { gap: 10px !important; }
+      .nano-stat-box { min-width: 45% !important; flex: 1 1 45% !important; padding: 10px !important; }
+      .nano-glass { padding: 20px 15px !important; }
+      .nano-glass-title { font-size: 22px !important; }
+      .nano-grid { grid-template-columns: 1fr !important; }
+      .nano-title { font-size: 32px !important; padding: 0 10px; }
+    }
   `;
   document.head.appendChild(styleSheet);
 }
