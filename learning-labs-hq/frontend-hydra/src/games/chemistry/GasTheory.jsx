@@ -64,403 +64,445 @@ class SafeAudioEngine {
   impact() { this._play('sine', 150, 40, 0.4, 0.5); }
   success() { this._play('sine', 440, 880, 0.4, 0.2); setTimeout(()=>this._play('sine', 880, 1760, 0.5, 0.2), 150); }
   error() { this._play('sawtooth', 150, 50, 0.4, 0.3); }
-  valve() { this._play('noise', 1500, 200, 0.15, 0.05); } 
-  rumble(intensity) { this._play('sawtooth', 60, 40, 0.2, intensity * 0.5); } 
 }
 const sfx = new SafeAudioEngine();
 
 /* ============================================================
    🌍 2. DICCIONARIO GLOBAL 100% TRADUCIDO (CERO FALLBACKS)
 ============================================================ */
-const DICT = {
+const I18N = {
   es: {
     ui: { 
-      start: "INICIAR INSTRUCCIÓN TERMAL", title: "GAS THEORY: THE GOD TIER", exp: "NIVEL",
-      theoryTitle: "TEORÍA FUNDAMENTAL", theoryBtn: "ANALIZAR ➔", diagTitle: "EVALUACIÓN COGNITIVA", 
-      btnCheck: "VERIFICAR LEY FÍSICA", synthTitle: "APLICACIÓN EN LA REALIDAD", btnNext: "SIGUIENTE LEY ➔", winTitle: "🏅 MAESTRÍA TERMODINÁMICA ALCANZADA", btnBack: "⬅ ABORTAR SIMULACIÓN",
-      btnAI: "🤖 ASISTENCIA IA", microTitle: "MICRO-CLASE IA", btnContinue: "RECALIBRAR", targetReached: "¡CONDICIÓN ALCANZADA!", targetMsg: "META ACTIVA: Llevar"
+      start: "INICIAR NANO-CORE", title: "NANO-CORE V11", level: "NIVEL", exp: "EXP", target: "META",
+      theoryTitle: "TUTORÍA TEÓRICA", theoryBtn: "ENTENDIDO ➔", diagTitle: "ANÁLISIS COGNITIVO", diagQ1: "debe pasar de", diagQ2: "a", diagQ3: "¿Qué debe ocurrir con sus electrones?", 
+      btnGain: "GANAR e⁻ (REDUCIR)", btnLose: "PERDER e⁻ (OXIDAR)", diagGalvanic: "En una batería, ¿hacia dónde fluyen los electrones?", 
+      btnZnCu: "ZINC ➔ COBRE", btnCuZn: "COBRE ➔ ZINC", btnInject: "INYECTAR e⁻", btnExtract: "EXTRAER e⁻", btnTransfer: "CERRAR CIRCUITO", 
+      synthTitle: "APLICACIÓN REAL", btnNext: "SIGUIENTE RETO ➔", winTitle: "🏅 MAESTRÍA ALCANZADA", btnBack: "⬅ SALIR",
+      btnAI: "🤖 PREGUNTA IA", microClassTitle: "MICRO-CLASE IA", aiCorrect: "¡Excelente! Comprensión absoluta.", btnContinue: "CONTINUAR"
     },
-    ai: { intro: "Simulador físico en línea. Analizando teoría termodinámica.", wrongAns: "Disonancia cognitiva detectada. Análisis incorrecto.", correct: "Lógica cuántica estabilizada." },
-    levels: [
-      { id: "CINETICA", name: "Teoría Cinética", th: "La temperatura mide la energía cinética promedio. Si calientas un gas, sus partículas se agitan violentamente y chocan contra todo.", q: "Si la temperatura de un gas aumenta, ¿qué le pasa a la energía de las partículas?", o: ["Aumenta", "Disminuye", "Se detienen", "Se congelan"], a: 0, m: "El calor es movimiento puro. A mayor temperatura, mayor es la velocidad de los átomos.", rw: "Así funcionan los globos aerostáticos: los quemadores calientan el aire para que las partículas se agiten, se expandan y el globo flote sobre el aire frío.", targetVar: "t", targetVal: 700, cond: ">=", ctrl: "t", targetText: "Temperatura" },
-      { id: "BOYLE_1", name: "Ley de Boyle (T Constante)", th: "Robert Boyle descubrió que la Presión y el Volumen son INVERSAMENTE proporcionales. Si aprietas un gas reduciendo su espacio, su presión se dispara.", q: "¿Qué le pasa a la presión si reduces el volumen a la mitad?", o: ["Baja a la mitad", "Se duplica", "No cambia", "Se vuelve cero"], a: 1, m: "Es una relación matemáticamente inversa. Menos espacio significa que las partículas chocan el doble de veces contra las paredes del pistón.", rw: "Esto es exactamente lo que sientes en los oídos al bucear: la presión del agua comprime el volumen de aire dentro de tus tímpanos.", targetVar: "v", targetVal: 3, cond: "<=", ctrl: "v", targetText: "Volumen" },
-      { id: "CHARLES_1", name: "Ley de Charles (P Constante)", th: "Jacques Charles notó que el Volumen y la Temperatura son DIRECTAMENTE proporcionales. Si enfrías un gas, este se contrae sobre sí mismo.", q: "Si metes un globo inflado en el congelador, ¿qué sucederá?", o: ["Se expande", "Explota", "Se encoge", "Nada"], a: 2, m: "Al perder energía térmica, las moléculas se mueven con mucha lentitud y, por ende, ocupan menos espacio en el vacío.", rw: "Por esta ley fundamental, las llantas de los automóviles parecen desinfladas en las mañanas muy frías de invierno.", targetVar: "t", targetVal: 150, cond: "<=", ctrl: "t", targetText: "Temperatura" },
-      { id: "GAY_LUSSAC_1", name: "Ley de Gay-Lussac (V Constante)", th: "A volumen fijo, la Presión es DIRECTAMENTE proporcional a la Temperatura. Calentar un recipiente de metal cerrado aumenta críticamente su presión interna.", q: "¿Por qué no debes tirar una lata de aerosol vacía al fuego?", o: ["Se derrite", "La presión la hace explotar", "Apaga el fuego", "Cambia de color"], a: 1, m: "El volumen de la lata de metal rígido es fijo. Al subir la temperatura, la presión aumenta exponencialmente hasta reventarla.", rw: "Esta es la física exacta y mortal detrás de las ollas de presión que usamos en la cocina para elevar el punto de ebullición del agua.", targetVar: "t", targetVal: 800, cond: ">=", ctrl: "t", targetText: "Temperatura" },
-      { id: "BOYLE_2", name: "Boyle: Expansión Biológica", th: "Bajo la ley P1·V1 = P2·V2, al expandir artificialmente el volumen de los pulmones, la presión interna debe caer para que el aire exterior sea succionado.", q: "Tengo un gas a 2 atmósferas en 1 Litro. Si lo expando usando fuerza a 2 Litros, ¿cuál es la nueva presión?", o: ["4 atm", "1 atm", "2 atm", "0.5 atm"], a: 1, m: "Si el volumen se multiplica por dos, la presión debe dividirse por dos para mantener el equilibrio de la constante. El resultado es 1 atmósfera.", rw: "El diafragma baja, expande el volumen total del tórax, la presión interna cae por debajo de 1 atm y el aire entra solo por tu nariz.", targetVar: "v", targetVal: 9, cond: ">=", ctrl: "v", targetText: "Volumen" },
-      { id: "CHARLES_2", name: "Charles: Dilatación Mecánica", th: "Para calcular la ley de Charles con precisión, la temperatura DEBE estar siempre en escala absoluta (Kelvin). A más calor, más expansión agresiva.", q: "Si un gas está a 0 grados centígrados (273 Kelvin) y lo caliento a 273 grados (546 Kelvin), ¿su volumen...?", o: ["Sube poco", "Se duplica", "Se reduce", "Es cero"], a: 1, m: "La temperatura absoluta en escala Kelvin se duplicó de 273 a 546. En consecuencia, el volumen también debe duplicarse geométricamente.", rw: "El motor de combustión interna de los vehículos calienta gases súbitamente; su rápida y violenta expansión es lo que empuja el pistón.", targetVar: "t", targetVal: 900, cond: ">=", ctrl: "t", targetText: "Temperatura" },
-      { id: "GAY_LUSSAC_2", name: "Gay-Lussac: Implosion Estructural", th: "Basado en P1/T1 = P2/T2. Si enfrías drásticamente un recipiente rígido sellado, la presión interior colapsará hacia el vacío.", q: "Un tanque sellado a 600 Kelvin y 4 atmósferas se enfría de golpe a 300 Kelvin. ¿Cuál es su presión final?", o: ["8 atm", "4 atm", "2 atm", "1 atm"], a: 2, m: "La temperatura bajó exactamente a la mitad. Por lo tanto, la presión también debe bajar a la mitad, quedando en 2 atmósferas.", rw: "Si lavas un bidón de plástico con agua hirviendo y lo tapas rápidamente, al enfriarse, la presión caerá y la botella se aplastará sola.", targetVar: "t", targetVal: 100, cond: "<=", ctrl: "t", targetText: "Temperatura" },
-      { id: "AVOGADRO", name: "Principio Cuántico de Avogadro", th: "Sorprendentemente, volúmenes iguales de gases distintos bajo las mismas condiciones exactas contienen exactamente el mismo número de moléculas.", q: "Compara 1 Litro de gas Oxígeno pesado versus 1 Litro de gas Hidrógeno súper ligero a la misma presión y temperatura. ¿Quién tiene más moléculas?", o: ["Oxígeno", "Hidrógeno", "Iguales", "Depende"], a: 2, m: "El tamaño individual o la masa del átomo no importa en absoluto. El volumen en el espacio depende de la presión y la temperatura, no de la identidad del elemento.", rw: "Esta genialidad permitió a los científicos del siglo XIX deducir las fórmulas moleculares correctas de nuestro universo, como H2O y CO2.", targetVar: "v", targetVal: 8, cond: ">=", ctrl: "v", targetText: "Volumen" },
-      { id: "GAS_IDEAL", name: "Ecuación de Estado (PV=nRT)", th: "P multiplicado por V es igual a nRT. Esta es la ecuación maestra. Unifica todas las leyes y demuestra que todo en termodinámica está conectado.", q: "Piensa como un ingeniero: Si la Temperatura y el Volumen de un sistema se duplican simultáneamente, ¿qué le pasa a la Presión?", o: ["Sube", "Baja", "Se queda igual", "Cero"], a: 2, m: "Si la temperatura sube, la presión quiere subir. Si el volumen sube, la presión quiere bajar. Al duplicarse ambos parámetros, el efecto se anula matemáticamente.", rw: "Esta es la ecuación exacta que rige el diseño de los delicados sistemas de soporte vital presurizados en la Estación Espacial Internacional.", targetVar: "t", targetVal: 700, cond: ">=", ctrl: "t", targetText: "Temperatura" },
-      { id: "ZERO", name: "El Abismo del Cero Absoluto", th: "El Cero Absoluto (0 Kelvin o -273.15 °C) es el límite inferior teórico del universo. Toda transferencia de calor y movimiento cinético se detiene.", q: "Según la física teórica clásica, ¿qué volumen tiene un gas ideal al llegar exactamente a 0 Kelvin?", o: ["Infinito", "Cero", "Negativo", "Invariable"], a: 1, m: "La gráfica lineal de Charles cruza el origen coordenado. A 0 Kelvin, el volumen matemático es cero. En el mundo real, la materia se licúa o solidifica antes.", rw: "Los misteriosos condensados de Bose-Einstein (materia con propiedades cuánticas a escala macroscópica) ocurren a millonésimas de grado de este límite mortal.", targetVar: "t", targetVal: 0, cond: "<=", ctrl: "t", targetText: "Temperatura" }
+    ai: { wrongMath: "Incorrecto. Ganar electrones resta carga.", correct: "Correcto. Proceda.", wrongTool: "Herramienta incorrecta.", galvanicError: "Falso. El Zinc cede electrones.", galvanicCorrect: "Circuito correcto.", synth: "Estabilizado. Analizando datos...", start: "Analice el núcleo.", boss: "Construcción de Batería.", aiIntro: "Evaluación activada. Selecciona la respuesta correcta." },
+    theory: ["La OXIDACIÓN es PERDER electrones.", "La REDUCCIÓN es GANAR electrones.", "El hierro se oxida al aire, podemos reducirlo.", "El Cobre es un conductor excelente si se reduce.", "Los halógenos como el Cloro aman ganar electrones.", "El Aluminio requiere inmensa energía para reducirse.", "El Magnesio se oxida emitiendo luz blanca.", "El Azufre forma cristales amarillos al oxidarse.", "El Oro es un metal noble, muy difícil de oxidar.", "La Pila Galvánica oxida un metal para dar energía a otro."],
+    realWorld: ["El Sodio reacciona violentamente perdiendo 1 electrón.", "Las plantas oxidan el agua liberando Oxígeno.", "La hemoglobina reduce el Hierro para transportar oxígeno.", "El cobre se reduce para hacer cables eléctricos.", "El cloro gana electrones para purificar agua.", "Reciclar aluminio requiere inyectar electrones.", "El magnesio se oxida en los fuegos artificiales.", "El azufre se oxida en los volcanes.", "El oro se oxida para ser disuelto en la minería.", "El Zinc da energía al Cobre. Así funcionan las baterías."],
+    elements: ["Sodio", "Oxígeno", "Hierro", "Cobre", "Cloro", "Aluminio", "Magnesio", "Azufre", "Oro", "Batería"],
+    questions: [
+      { q: "¿Qué ión forma el Sodio al oxidarse?", options: ["Catión (+1)", "Anión (-1)", "Neutro", "Isótopo"], correct: 0, micro: "Al perder un electrón negativo, el Sodio queda con carga positiva, formando un catión." },
+      { q: "¿Cuál es el estado de oxidación del Oxígeno puro (O2)?", options: ["0", "-2", "+1", "+2"], correct: 0, micro: "Los elementos en su estado libre siempre tienen un estado de oxidación de cero." },
+      { q: "Si el Hierro pasa de +3 a +2, ¿qué proceso ocurrió?", options: ["Reducción", "Oxidación", "Fusión", "Fisión"], correct: 0, micro: "La carga se redujo. Esto significa que ganó una carga negativa (un electrón)." },
+      { q: "¿Qué partículas viajan para que el Cobre se reduzca?", options: ["Electrones", "Protones", "Neutrones", "Quarks"], correct: 0, micro: "En las reacciones Redox, las únicas partículas que se transfieren son los electrones." },
+      { q: "El Cloro gana electrones fácilmente porque es un...", options: ["Halógeno", "Gas noble", "Metal", "Líquido"], correct: 0, micro: "Los halógenos necesitan ganar solo un electrón para completar su octet." },
+      { q: "Reducir Aluminio en las fábricas requiere mucha...", options: ["Electricidad", "Agua", "Presión", "Oxígeno"], correct: 0, micro: "Se necesita electrólisis, un proceso que usa cantidades masivas de electricidad." },
+      { q: "La rápida oxidación del Magnesio se conoce como...", options: ["Combustion", "Evaporación", "Sublimación", "Fusión"], correct: 0, micro: "La combustión es una oxidación tan rápida que libera energía en forma de luz y calor." },
+      { q: "Si el Azufre pasa de -2 a 0, ¿cuántos electrones pierde?", options: ["2", "1", "4", "0"], correct: 0, micro: "Para subir de -2 a 0, debe deshacerse matemáticamente de 2 cargas negativas." },
+      { q: "¿Por qué el Oro apenas se oxida en la naturaleza?", options: ["Es metal noble", "Es un gas", "Es muy ligero", "Es irreal"], correct: 0, micro: "Los metales nobles tienen una estructura muy estable que resiste perder electrones." },
+      { q: "En una celda galvánica, la oxidación ocurre en el...", options: ["Ánodo", "Cátodo", "Cable", "Puente salino"], correct: 0, micro: "El Ánodo es siempre el electrodo donde ocurre la oxidación." }
     ]
   },
   en: {
-    ui: { start: "INITIALIZE THERMAL SIMULATOR", title: "GAS THEORY: THE GOD TIER", exp: "MODULE", theoryTitle: "PHYSICS BRIEFING", theoryBtn: "ANALYZE DATA ➔", diagTitle: "COGNITIVE EVALUATION", btnCheck: "VERIFY CONDITION", synthTitle: "REAL WORLD APPLICATION", btnNext: "NEXT LAW ➔", winTitle: "🏅 THERMODYNAMICS MASTERED", btnBack: "⬅ ABORT SIMULATION", btnAI: "🤖 AI ASSIST", microTitle: "AI MICRO-CLASS", btnContinue: "RECALIBRATE", targetReached: "TARGET REACHED!", targetMsg: "ACTIVE TARGET: Bring" },
-    ai: { intro: "Thermodynamic system online. Processing theory.", wrongAns: "Cognitive dissonance detected. Incorrect analysis.", correct: "Quantum logic stabilized." },
-    levels: [
-      { id: "CINETICA", name: "Kinetic Theory", th: "Temperature measures average kinetic energy. If you heat a gas, its particles agitate violently and crash into everything.", q: "If gas temperature increases, what happens to particle energy?", o: ["Increases", "Decreases", "Stops", "Freezes"], a: 0, m: "Heat is pure movement. Higher temperature means higher molecular speed.", rw: "This is how hot air balloons work: burners heat the air so particles agitate, expand, and the balloon floats on cold air.", targetVar: "t", targetVal: 700, cond: ">=", ctrl: "t", targetText: "Temperature" },
-      { id: "BOYLE_1", name: "Boyle's Law (Constant T)", th: "Robert Boyle discovered that Pressure and Volume are INVERSELY proportional. If you squeeze a gas reducing its space, pressure spikes.", q: "What happens to pressure if you halve the volume?", o: ["Halves", "Doubles", "No change", "Zero"], a: 1, m: "It's a mathematical inverse relation. Less space means particles hit the piston walls twice as often.", rw: "This is exactly what your ears feel when diving underwater: water pressure compresses the air volume inside your eardrums.", targetVar: "v", targetVal: 3, cond: "<=", ctrl: "v", targetText: "Volume" },
-      { id: "CHARLES_1", name: "Charles's Law (Constant P)", th: "Jacques Charles noted that Volume and Temperature are DIRECTLY proportional. If you cool a gas, it shrinks upon itself.", q: "If you put an inflated balloon in the freezer, what happens?", o: ["Expands", "Explodes", "Shrinks", "Nothing"], a: 2, m: "Losing thermal energy means molecules move very slowly, thus taking up less space in a vacuum.", rw: "Due to this fundamental law, car tires look deflated on very cold winter mornings.", targetVar: "t", targetVal: 150, cond: "<=", ctrl: "t", targetText: "Temperature" },
-      { id: "GAY_LUSSAC_1", name: "Gay-Lussac's Law (Constant V)", th: "At a fixed volume, Pressure is DIRECTLY proportional to Temperature. Heating a closed metal container critically raises its internal pressure.", q: "Why shouldn't you throw an empty aerosol can into a fire?", o: ["Metal melts", "Pressure makes it explode", "Puts out fire", "Changes color"], a: 1, m: "The rigid metal can's volume is fixed. As temperature rises, pressure increases exponentially until it bursts.", rw: "This is the exact, deadly physics behind pressure cookers we use in the kitchen to raise water's boiling point.", targetVar: "t", targetVal: 800, cond: ">=", ctrl: "t", targetText: "Temperature" },
-      { id: "BOYLE_2", name: "Boyle: Biological Expansion", th: "Under P1·V1 = P2·V2, by artificially expanding lung volume, internal pressure must drop for outside air to be sucked in.", q: "I have a gas at 2 atmospheres in 1 Liter. If I force it to expand to 2 Liters, what is the new pressure?", o: ["4 atm", "1 atm", "2 atm", "0.5 atm"], a: 1, m: "Pure math: If volume is multiplied by two, pressure must be divided by two to keep the constant. Result is 1 atm.", rw: "Your diaphragm lowers, expands total chest volume, internal pressure drops below 1 atm, and air flows naturally into your nose.", targetVar: "v", targetVal: 9, cond: ">=", ctrl: "v", targetText: "Volume" },
-      { id: "CHARLES_2", name: "Charles: Mechanical Dilation", th: "To calculate Charles's law accurately, temperature MUST always be in the absolute (Kelvin) scale. More heat, aggressive expansion.", q: "If a gas is at 0 degrees C (273K) and I heat it to 273 degrees C (546K), its volume...?", o: ["Rises slightly", "Doubles", "Reduces", "Is zero"], a: 1, m: "Absolute temperature doubled from 273 to 546. Consequently, volume must also double geometrically.", rw: "Internal combustion engines heat gases suddenly; their rapid, violent expansion is what pushes the piston.", targetVar: "t", targetVal: 900, cond: ">=", ctrl: "t", targetText: "Temperature" },
-      { id: "GAY_LUSSAC_2", name: "Gay-Lussac: Structural Implosion", th: "Based on P1/T1 = P2/T2. If you drastically cool a rigid sealed container, interior pressure collapses into a vacuum.", q: "A sealed tank at 600 Kelvin and 4 atmospheres is suddenly cooled to 300 Kelvin. Final pressure?", o: ["8 atm", "4 atm", "2 atm", "1 atm"], a: 2, m: "Temperature dropped exactly by half. Therefore, pressure must also drop by half, leaving 2 atmospheres.", rw: "If you wash a plastic jug with boiling water and cap it quickly, as it cools, pressure drops and the bottle crushes itself.", targetVar: "t", targetVal: 100, cond: "<=", ctrl: "t", targetText: "Temperature" },
-      { id: "AVOGADRO", name: "Avogadro's Quantum Principle", th: "Surprisingly, equal volumes of different gases under exact same conditions contain exactly the same number of molecules.", q: "Compare 1L of heavy Oxygen gas versus 1L of super light Hydrogen gas at same P and T. Who has more molecules?", o: ["Oxygen", "Hydrogen", "Equal", "Depends"], a: 2, m: "Individual size or mass of the atom matters absolutely zero. Space volume depends on pressure and temperature, not element identity.", rw: "This brilliance allowed 19th-century scientists to deduce correct molecular formulas of our universe, like H2O and CO2.", targetVar: "v", targetVal: 8, cond: ">=", ctrl: "v", targetText: "Volume" },
-      { id: "GAS_IDEAL", name: "Equation of State (PV=nRT)", th: "P times V equals nRT. This is the master equation. It unifies all laws and proves everything in thermodynamics is connected.", q: "Think like an engineer: If Temperature and Volume of a system double simultaneously, what happens to Pressure?", o: ["Rises", "Drops", "Stays the same", "Zero"], a: 2, m: "If temperature rises, pressure wants to rise. If volume rises, pressure wants to drop. Doubling both mathematically cancels the effect.", rw: "This is the exact equation governing the design of delicate pressurized life support systems on the International Space Station.", targetVar: "t", targetVal: 700, cond: ">=", ctrl: "t", targetText: "Temperature" },
-      { id: "ZERO", name: "The Abyss of Absolute Zero", th: "Absolute Zero (0 Kelvin or -273.15 °C) is the theoretical lower limit of the universe. All heat transfer and kinetic movement stops.", q: "According to classical theoretical physics, what volume does an ideal gas have at exactly 0 Kelvin?", o: ["Infinite", "Zero", "Negative", "Unchanged"], a: 1, m: "Charles's linear graph crosses the coordinate origin. At 0 Kelvin, mathematical volume is zero. In reality, matter liquefies or solidifies first.", rw: "Mysterious Bose-Einstein condensates (matter with macroscopic quantum properties) occur at millionths of a degree from this deadly limit.", targetVar: "t", targetVal: 0, cond: "<=", ctrl: "t", targetText: "Temperature" }
+    ui: { 
+      start: "START NANO-CORE", title: "NANO-CORE V11", level: "LEVEL", exp: "EXP", target: "TARGET",
+      theoryTitle: "THEORETICAL TUTORIAL", theoryBtn: "UNDERSTOOD ➔", diagTitle: "COGNITIVE ANALYSIS", diagQ1: "must go from", diagQ2: "to", diagQ3: "What must happen to its electrons?", 
+      btnGain: "GAIN e⁻ (REDUCE)", btnLose: "LOSE e⁻ (OXIDIZE)", diagGalvanic: "In a battery, where do electrons flow?", 
+      btnZnCu: "ZINC ➔ COPPER", btnCuZn: "COPPER ➔ ZINC", btnInject: "INJECT e⁻", btnExtract: "EXTRACT e⁻", btnTransfer: "CLOSE CIRCUIT", 
+      synthTitle: "REAL APPLICATION", btnNext: "NEXT CHALLENGE ➔", winTitle: "🏅 MASTERY ACHIEVED", btnBack: "⬅ EXIT",
+      btnAI: "🤖 AI QUESTION", microClassTitle: "AI MICRO-CLASS", aiCorrect: "Excellent! Absolute comprehension.", btnContinue: "CONTINUE" 
+    },
+    ai: { wrongMath: "Incorrect. Gaining subtracts charge.", correct: "Correct. Proceed.", wrongTool: "Wrong tool.", galvanicError: "False. Zinc yields electrons.", galvanicCorrect: "Circuit correct.", synth: "Stabilized. Analyzing...", start: "Analyze the core.", boss: "Battery Construction.", aiIntro: "Evaluation active. Select the correct answer." },
+    theory: ["OXIDATION is LOSING electrons.", "REDUCTION is GAINING electrons.", "We reduce iron to purify it.", "Copper is a great conductor when reduced.", "Halogens like Chlorine love to gain electrons.", "Aluminum needs immense energy to reduce.", "Magnesium oxidizes emitting white light.", "Sulfur forms yellow crystals.", "Gold is a noble metal, hard to oxidize.", "A Galvanic Cell uses oxidation to send energy."],
+    realWorld: ["Sodium reacts by losing 1 electron.", "Plants oxidize water releasing Oxygen.", "Hemoglobin reduces Fe+3 to Fe+2 to transport oxygen.", "Copper is reduced to metal for wires.", "Chlorine gains 1 electron to purify water.", "Recycling aluminum requires injecting 3 electrons.", "Magnesium oxidizes in fireworks.", "Sulfur oxidizes forming volcanic crystals.", "Gold is oxidized to (+3) in mining.", "Zinc gives energy to Copper. This runs batteries."],
+    elements: ["Sodium", "Oxygen", "Iron", "Copper", "Chlorine", "Aluminum", "Magnesium", "Sulfur", "Gold", "Battery"],
+    questions: [
+      { q: "What ion does Sodium form when oxidized?", options: ["Cation (+1)", "Anion (-1)", "Neutral", "Isotope"], correct: 0, micro: "By losing a negative electron, Sodium gets a positive charge, forming a cation." },
+      { q: "What is the oxidation state of pure Oxygen (O2)?", options: ["0", "-2", "+1", "+2"], correct: 0, micro: "Elements in their free state always have an oxidation state of zero." },
+      { q: "If Iron goes from +3 to +2, what happened?", options: ["Reduction", "Oxidation", "Fusion", "Fission"], correct: 0, micro: "The charge reduced, meaning it gained a negative electron (Reduction)." },
+      { q: "What particles travel to reduce Copper?", options: ["Electrons", "Protons", "Neutrons", "Quarks"], correct: 0, micro: "In Redox reactions, only electrons are transferred between atoms." },
+      { q: "Chlorine gains electrons easily because it is a...", options: ["Halogen", "Noble gas", "Metal", "Liquid"], correct: 0, micro: "Halogens need just one electron to complete their octet." },
+      { q: "Reducing Aluminum in factories requires massive...", options: ["Electricity", "Water", "Pressure", "Oxygen"], correct: 0, micro: "Electrolysis is used, a process requiring massive amounts of electricity." },
+      { q: "The rapid oxidation of Magnesium is known as...", options: ["Combustion", "Evaporation", "Sublimation", "Fusion"], correct: 0, micro: "Combustion is rapid oxidation that releases light and heat." },
+      { q: "If Sulfur goes from -2 to 0, how many electrons are lost?", options: ["2", "1", "4", "0"], correct: 0, micro: "To rise from -2 to 0, it must get rid of 2 negative charges." },
+      { q: "Why does Gold hardly oxidize in nature?", options: ["Noble metal", "Gas", "Lightweight", "Artificial"], correct: 0, micro: "Noble metals have a very stable electronic structure that resists losing electrons." },
+      { q: "In a galvanic cell, oxidation occurs at the...", options: ["Anode", "Cathode", "Wire", "Salt Bridge"], correct: 0, micro: "The Anode is always the electrode where oxidation occurs." }
     ]
   },
   fr: {
-    ui: { start: "INITIALISER LE SIMULATEUR THERMIQUE", title: "GAS THEORY: THE GOD TIER", exp: "MODULE", theoryTitle: "BRIEFING DE PHYSIQUE", theoryBtn: "ANALYSER LES DONNÉES ➔", diagTitle: "ÉVALUATION COGNITIVE", btnCheck: "VÉRIFIER LA CONDITION", synthTitle: "APPLICATION RÉELLE", btnNext: "LOI SUIVANTE ➔", winTitle: "🏅 MAÎTRISE THERMODYNAMIQUE", btnBack: "⬅ ABANDONNER LA SIMULATION", btnAI: "🤖 ASSISTANCE IA", microTitle: "MICRO-CLASSE IA", btnContinue: "RECALIBRER", targetReached: "CIBLE ATTEINTE!", targetMsg: "CIBLE ACTIVE: Amener" },
-    ai: { intro: "Système thermodynamique en ligne. Traitement de la théorie.", wrongAns: "Dissonance cognitive détectée. Analyse incorrecte.", correct: "Logique quantique stabilisée." },
-    levels: [
-      { id: "CINETICA", name: "Théorie Cinétique", th: "La température mesure l'énergie cinétique. Chauffer un gaz rend les collisions moléculaires violentes.", q: "Si la température augmente, qu'arrive-t-il à l'énergie des particules?", o: ["Augmente", "Diminue", "S'arrête", "Gèle"], a: 0, m: "La chaleur est le mouvement pur. Température élevée = grande vitesse.", rw: "C'est le fonctionnement des montgolfières : l'air chaud s'agite et se dilate, faisant flotter le ballon.", targetVar: "t", targetVal: 700, cond: ">=", ctrl: "t", targetText: "Température" },
-      { id: "BOYLE_1", name: "Loi de Boyle", th: "Pression et Volume sont INVERSEMENT proportionnels. Réduire l'espace fait monter la pression.", q: "Que devient la pression si vous réduisez le volume de moitié?", o: ["Moitié", "Double", "Aucun", "Zéro"], a: 1, m: "Relation inverse. Moins d'espace signifie que les particules frappent deux fois plus souvent.", rw: "C'est ce que vos oreilles ressentent sous l'eau : la pression de l'eau comprime l'air dans les tympans.", targetVar: "v", targetVal: 3, cond: "<=", ctrl: "v", targetText: "Volume" },
-      { id: "CHARLES_1", name: "Loi de Charles", th: "Volume et Température sont DIRECTEMENT proportionnels. Refroidir un gaz le contracte.", q: "Mettez un ballon gonflé au congélateur, que se passe-t-il?", o: ["Se dilate", "Explose", "Se contracte", "Rien"], a: 2, m: "Perdre de l'énergie thermique ralentit les molécules, réduisant l'espace occupé.", rw: "C'est pourquoi les pneus de voiture semblent dégonflés par temps froid.", targetVar: "t", targetVal: 150, cond: "<=", ctrl: "t", targetText: "Température" },
-      { id: "GAY_LUSSAC_1", name: "Loi de Gay-Lussac", th: "À volume fixe, la Pression est DIRECTEMENT proportionnelle à la Température.", q: "Pourquoi ne pas jeter un aérosol au feu?", o: ["Fond", "Explose sous pression", "Éteint le feu", "Couleur"], a: 1, m: "Le volume de la boîte est fixe. La chaleur augmente exponentiellement la pression jusqu'à rupture.", rw: "C'est la physique exacte et dangereuse des autocuiseurs.", targetVar: "t", targetVal: 800, cond: ">=", ctrl: "t", targetText: "Température" },
-      { id: "BOYLE_2", name: "Boyle: Expansion", th: "Selon P1·V1 = P2·V2, étendre les poumons fait chuter la pression pour aspirer l'air.", q: "Gaz à 2 atm dans 1L. Étendu à 2L, quelle est la pression?", o: ["4 atm", "1 atm", "2 atm", "0.5 atm"], a: 1, m: "Mathématiques pures : si le volume double, la pression est divisée par deux (1 atm).", rw: "Le diaphragme s'abaisse, la pression chute en dessous de 1 atm et l'air entre.", targetVar: "v", targetVal: 9, cond: ">=", ctrl: "v", targetText: "Volume" },
-      { id: "CHARLES_2", name: "Charles: Dilatation", th: "La température DOIT être en Kelvin. Plus de chaleur, expansion agressive.", q: "Gaz à 0°C (273K) chauffé à 273°C (546K), son volume...?", o: ["Monte peu", "Double", "Réduit", "Zéro"], a: 1, m: "La température absolue ayant doublé, le volume doit doubler géométriquement.", rw: "L'expansion rapide des gaz chauffés pousse les pistons des moteurs.", targetVar: "t", targetVal: 900, cond: ">=", ctrl: "t", targetText: "Température" },
-      { id: "GAY_LUSSAC_2", name: "Gay-Lussac: Implosion", th: "En refroidissant un récipient rigide, la pression intérieure s'effondre.", q: "Réservoir à 600K et 4 atm refroidi à 300K. Pression finale?", o: ["8 atm", "4 atm", "2 atm", "1 atm"], a: 2, m: "La température baisse de moitié, donc la pression baisse de moitié (2 atm).", rw: "Laver une bouteille à l'eau bouillante et la boucher la fera s'écraser en refroidissant.", targetVar: "t", targetVal: 100, cond: "<=", ctrl: "t", targetText: "Température" },
-      { id: "AVOGADRO", name: "Principe d'Avogadro", th: "Des volumes égaux de gaz différents dans les mêmes conditions ont le même nombre de molécules.", q: "1L d'Oxygène vs 1L d'Hydrogène (même P et T). Qui a le plus de molécules?", o: ["Oxygène", "Hydrogène", "Égaux", "Dépend"], a: 2, m: "La taille de l'atome n'importe pas. Le volume dépend de P et T, non du gaz.", rw: "Ceci a permis de déduire les formules moléculaires correctes (H2O, CO2).", targetVar: "v", targetVal: 8, cond: ">=", ctrl: "v", targetText: "Volume" },
-      { id: "GAS_IDEAL", name: "Gaz Parfait (PV=nRT)", th: "PV = nRT. L'équation maîtresse qui relie toute la thermodynamique.", q: "Si Température et Volume doublent simultanément, qu'arrive-t-il à la Pression?", o: ["Monte", "Baisse", "Stable", "Zéro"], a: 2, m: "T fait monter P, V fait baisser P. Doubler les deux annule l'effet mathématiquement.", rw: "Ceci régit les systèmes de survie pressurisés de la Station Spatiale Internationale.", targetVar: "t", targetVal: 700, cond: ">=", ctrl: "t", targetText: "Température" },
-      { id: "ZERO", name: "Zéro Absolu", th: "Le Zéro Absolu (0 Kelvin) est la limite où tout transfert de chaleur s'arrête.", q: "Quel volume théorique a un gaz idéal à 0 Kelvin?", o: ["Infini", "Zéro", "Négatif", "Stable"], a: 1, m: "Le graphique croise l'origine. À 0 Kelvin, le volume mathématique est zéro.", rw: "Les condensats de Bose-Einstein se forment à un millionième de degré de cette limite.", targetVar: "t", targetVal: 0, cond: "<=", ctrl: "t", targetText: "Température" }
+    ui: { 
+      start: "DÉMARRER NANO-CORE", title: "NANO-CORE V11", level: "NIVEAU", exp: "EXP", target: "CIBLE",
+      theoryTitle: "TUTORIEL THÉORIQUE", theoryBtn: "COMPRIS ➔", diagTitle: "ANALYSE COGNITIVE", diagQ1: "doit passer de", diagQ2: "à", diagQ3: "Que doit-il arriver à ses électrons?", 
+      btnGain: "GAGNER e⁻ (RÉDUIRE)", btnLose: "PERDRE e⁻ (OXYDER)", diagGalvanic: "Dans une pile, où circulent les électrons?", 
+      btnZnCu: "ZINC ➔ CUIVRE", btnCuZn: "CUIVRE ➔ ZINC", btnInject: "INJECTER e⁻", btnExtract: "EXTRAIRE e⁻", btnTransfer: "FERMER LE CIRCUIT", 
+      synthTitle: "APPLICATION RÉELLE", btnNext: "DÉFI SUIVANT ➔", winTitle: "🏅 MAÎTRISE ATTEINTE", btnBack: "⬅ QUITTER",
+      btnAI: "🤖 QUESTION IA", microClassTitle: "MICRO-CLASSE IA", aiCorrect: "Excellent! Compréhension absolue.", btnContinue: "CONTINUER" 
+    },
+    ai: { wrongMath: "Incorrect. Gagner soustrait la charge.", correct: "Correct. Procédez.", wrongTool: "Mauvais outil.", galvanicError: "Faux. Le Zinc cède des électrons.", galvanicCorrect: "Circuit correct.", synth: "Stabilisé. Analyse...", start: "Analysez le noyau.", boss: "Construction de Batterie.", aiIntro: "Évaluation active. Choisissez la bonne réponse." },
+    theory: ["L'OXYDATION c'est PERDRE des électrons.", "La RÉDUCTION c'est GAGNER des électrons.", "Le fer s'oxyde, on le réduit pour le purifier.", "Le Cuivre est un excellent conducteur.", "Les halogènes aiment gagner des électrons.", "L'Aluminium nécessite une énergie immense.", "Le Magnésium s'oxyde en émettant une lumière blanche.", "Le Soufre forme des cristaux jaunes.", "L'Or est un métal noble, difficile à oxyder.", "Une Pile Galvanique oxyde un métal pour donner de l'énergie."],
+    realWorld: ["Le Sodium réagit violemment en perdant 1 électron.", "Les plantes libèrent de l'Oxygène pur.", "L'hémoglobine réduit le Fer pour transporter l'oxygène.", "Le Cuivre est réduit pour fabriquer des câbles.", "Le Chlore gagne des électrons pour purifier l'eau.", "Le recyclage nécessite d'injecter des électrons.", "Le Magnésium s'oxyde dans les feux d'artifice.", "Le Soufre s'oxyde dans les volcans.", "L'Or s'oxyde pour être dissous dans les mines.", "Le Zinc donne de l'énergie au Cuivre. Ainsi fonctionnent les batteries."],
+    elements: ["Sodium", "Oxygène", "Fer", "Cuivre", "Chlore", "Aluminium", "Magnésium", "Soufre", "Or", "Batterie"],
+    questions: [
+      { q: "Quel ion forme le Sodium en s'oxydant?", options: ["Cation (+1)", "Anion (-1)", "Neutre", "Isotope"], correct: 0, micro: "En perdant un électron négatif, le Sodium obtient une charge positive (cation)." },
+      { q: "Quel est l'état d'oxydation de l'Oxygène pur (O2)?", options: ["0", "-2", "+1", "+2"], correct: 0, micro: "Les éléments à l'état pur ont toujours un état d'oxydation de zéro." },
+      { q: "Si le Fer passe de +3 à +2, que s'est-il passé?", options: ["Réduction", "Oxydation", "Fusion", "Fission"], correct: 0, micro: "La charge a diminué, ce qui signifie qu'il a gagné un électron négatif (Réduction)." },
+      { q: "Quelles particules voyagent pour réduire le Cuivre?", options: ["Électrons", "Protons", "Neutrons", "Quarks"], correct: 0, micro: "Dans les réactions Redox, seuls les électrons sont transférés." },
+      { q: "Le Chlore gagne des électrons car il est un...", options: ["Halogène", "Gaz noble", "Métal", "Liquide"], correct: 0, micro: "Les halogènes ont besoin d'un électron pour compléter leur octet." },
+      { q: "Réduire l'Aluminium nécessite beaucoup...", options: ["D'électricité", "D'eau", "De pression", "D'oxygène"], correct: 0, micro: "L'électrolyse est utilisée, nécessitant des quantités massives d'électricité." },
+      { q: "L'oxydation rapide du Magnésium s'appelle...", options: ["Combustion", "Évaporation", "Sublimation", "Fusion"], correct: 0, micro: "La combustion est une oxydation rapide libérant lumière et chaleur." },
+      { q: "Si le Soufre passe de -2 à 0, combien d'électrons perd-il?", options: ["2", "1", "4", "0"], correct: 0, micro: "Pour passer de -2 à 0, il doit se débarrasser de 2 charges négatives." },
+      { q: "Pourquoi l'Or s'oxyde-t-il difficilement?", options: ["Métal noble", "Gaz", "Léger", "Artificiel"], correct: 0, micro: "Les métaux nobles ont une structure électronique très stable." },
+      { q: "Dans une pile, l'oxydation se produit à...", options: ["L'anode", "La cathode", "Le câble", "Le pont salin"], correct: 0, micro: "L'anode est toujours l'électrode où se produit l'oxydation." }
     ]
   },
   de: {
-    ui: { start: "THERMISCHEN SIMULATOR INITIALISIEREN", title: "GAS THEORY: THE GOD TIER", exp: "MODUL", theoryTitle: "PHYSIK BRIEFING", theoryBtn: "DATEN ANALYSIEREN ➔", diagTitle: "KOGNITIVE BEWERTUNG", btnCheck: "BEDINGUNG ÜBERPRÜFEN", synthTitle: "REALE ANWENDUNG", btnNext: "NÄCHSTES GESETZ ➔", winTitle: "🏅 THERMODYNAMIK GEMEISTERT", btnBack: "⬅ SIMULATION ABBRECHEN", btnAI: "🤖 KI-ASSISTENZ", microTitle: "KI MIKRO-KLASSE", btnContinue: "NEU KALIBRIEREN", targetReached: "ZIEL ERREICHT!", targetMsg: "AKTIVES ZIEL: Bringen" },
-    ai: { intro: "Thermodynamisches System online. Verarbeite Theorie.", wrongAns: "Kognitive Dissonanz erkannt. Falsche Analyse.", correct: "Quantenlogik stabilisiert." },
-    levels: [
-      { id: "CINETICA", name: "Kinetische Theorie", th: "Temperatur misst kinetische Energie. Heißere Gase haben heftigere molekulare Kollisionen.", q: "Wenn die Gastemperatur steigt, was passiert mit der Teilchenenergie?", o: ["Steigt", "Sinkt", "Stoppt", "Gefriert"], a: 0, m: "Wärme ist Bewegung. Höhere Temperatur, höhere Geschwindigkeit.", rw: "Heißluftballons funktionieren so: Erhitzte Luft bewegt sich schneller, dehnt sich aus und schwebt.", targetVar: "t", targetVal: 700, cond: ">=", ctrl: "t", targetText: "Temperatur" },
-      { id: "BOYLE_1", name: "Gesetz von Boyle", th: "P und V sind UMGEKEHRT proportional. Verringert man den Raum, steigt der Druck.", q: "Was passiert mit dem Druck, wenn man das Volumen halbiert?", o: ["Halbiert", "Verdoppelt", "Gleich", "Null"], a: 1, m: "Es ist umgekehrt. Weniger Platz bedeutet, die Teilchen treffen doppelt so oft auf die Wände.", rw: "Das spüren deine Ohren beim Tauchen: Der Wasserdruck komprimiert das Luftvolumen im Trommelfell.", targetVar: "v", targetVal: 3, cond: "<=", ctrl: "v", targetText: "Volumen" },
-      { id: "CHARLES_1", name: "Gesetz von Charles", th: "Volumen und Temperatur sind DIREKT proportional. Kaltes Gas zieht sich zusammen.", q: "Was passiert mit einem Ballon im Gefrierschrank?", o: ["Dehnt aus", "Explodiert", "Schrumpft", "Nichts"], a: 2, m: "Wärmeverlust bedeutet, dass sich die Moleküle extrem langsam bewegen und weniger Raum beanspruchen.", rw: "Aus diesem Grund sehen Autoreifen an sehr kalten Wintermorgen platt aus.", targetVar: "t", targetVal: 150, cond: "<=", ctrl: "t", targetText: "Temperatur" },
-      { id: "GAY_LUSSAC_1", name: "Gesetz von Gay-Lussac", th: "Bei festem Volumen ist der Druck DIREKT proportional zur Temperatur.", q: "Warum keine leere Sprühdose ins Feuer werfen?", o: ["Schmilzt", "Druck sprengt sie", "Löscht", "Farbe"], a: 1, m: "Das Volumen ist fest. Hitze erhöht den Druck exponentiell, bis das Metall platzt.", rw: "Dies ist die genaue, gefährliche Physik hinter Schnellkochtöpfen.", targetVar: "t", targetVal: 800, cond: ">=", ctrl: "t", targetText: "Temperatur" },
-      { id: "BOYLE_2", name: "Boyle: Expansion", th: "P1·V1 = P2·V2. Ein künstlich vergrößertes Lungenvolumen senkt den Druck, um Luft anzusaugen.", q: "Gas bei 2 atm in 1L. Auf 2L expandiert, was ist der neue Druck?", o: ["4 atm", "1 atm", "2 atm", "0.5 atm"], a: 1, m: "Reine Mathematik: Wenn sich das Volumen verdoppelt, muss sich der Druck halbieren (1 atm).", rw: "Das Zwerchfell senkt sich, der Druck sinkt unter 1 atm und die Luft strömt von selbst ein.", targetVar: "v", targetVal: 9, cond: ">=", ctrl: "v", targetText: "Volumen" },
-      { id: "CHARLES_2", name: "Charles: Ausdehnung", th: "Temperatur MUSS in Kelvin sein. Mehr Hitze, aggressivere Expansion.", q: "Ein Gas bei 0°C (273K) wird auf 273°C (546K) erhitzt, sein Volumen...?", o: ["Steigt", "Verdoppelt", "Reduziert", "Null"], a: 1, m: "Die absolute Temperatur hat sich verdoppelt, also muss sich auch das Volumen geometrisch verdoppeln.", rw: "Die schnelle, gewaltsame Ausdehnung von plötzlich erhitzten Gasen treibt Motorkolben an.", targetVar: "t", targetVal: 900, cond: ">=", ctrl: "t", targetText: "Temperatur" },
-      { id: "GAY_LUSSAC_2", name: "Gay-Lussac: Implosion", th: "Kühlt man einen starren Behälter drastisch ab, bricht der Innendruck ins Vakuum zusammen.", q: "Tank bei 600K und 4 atm wird auf 300K gekühlt. Enddruck?", o: ["8 atm", "4 atm", "2 atm", "1 atm"], a: 2, m: "Die Temperatur sank genau auf die Hälfte, also sinkt auch der Druck auf die Hälfte (2 atm).", rw: "Wenn man eine Flasche mit kochendem Wasser wäscht und schnell verschließt, zerdrückt sie sich beim Abkühlen.", targetVar: "t", targetVal: 100, cond: "<=", ctrl: "t", targetText: "Temperatur" },
-      { id: "AVOGADRO", name: "Avogadro-Prinzip", th: "Gleiche Volumina verschiedener Gase enthalten unter gleichen Bedingungen die gleiche Anzahl an Molekülen.", q: "1L Sauerstoff vs 1L Wasserstoff (gleiche P, T). Wer hat mehr Moleküle?", o: ["Sauerstoff", "Wasserstoff", "Gleich", "Abhängig"], a: 2, m: "Größe oder Masse spielen keine Rolle. Das Volumen hängt von P und T ab.", rw: "Dies ermöglichte Wissenschaftlern, Molekülformeln wie H2O und CO2 abzuleiten.", targetVar: "v", targetVal: 8, cond: ">=", ctrl: "v", targetText: "Volumen" },
-      { id: "GAS_IDEAL", name: "Zustandsgleichung (PV=nRT)", th: "PV = nRT. Die Hauptgleichung. Sie beweist, dass in der Thermodynamik alles zusammenhängt.", q: "Wenn Temperatur und Volumen sich gleichzeitig verdoppeln, was passiert mit dem Druck?", o: ["Steigt", "Sinkt", "Gleich", "Null"], a: 2, m: "T erhöht P, V senkt P. Die Verdoppelung von beidem hebt den Effekt mathematisch auf.", rw: "Diese exakte Gleichung bestimmt das Design von Lebenserhaltungssystemen in der Raumstation.", targetVar: "t", targetVal: 700, cond: ">=", ctrl: "t", targetText: "Temperatur" },
-      { id: "ZERO", name: "Absoluter Nullpunkt", th: "Der Absolute Nullpunkt (0 Kelvin) ist die theoretische Untergrenze des Universums.", q: "Welches theoretische Volumen hat ein ideales Gas bei genau 0 Kelvin?", o: ["Unendlich", "Null", "Negativ", "Unverändert"], a: 1, m: "Bei 0 Kelvin ist das mathematische Volumen null. In der Realität verflüssigt sich Materie vorher.", rw: "Bose-Einstein-Kondensate treten bei Millionstel Grad von dieser tödlichen Grenze auf.", targetVar: "t", targetVal: 0, cond: "<=", ctrl: "t", targetText: "Temperatur" }
+    ui: { 
+      start: "START NANO-CORE", title: "NANO-CORE V11", level: "LEVEL", exp: "EXP", target: "ZIEL",
+      theoryTitle: "THEORETISCHES TUTORIAL", theoryBtn: "VERSTANDEN ➔", diagTitle: "KOGNITIVE ANALYSE", diagQ1: "muss von", diagQ2: "auf", diagQ3: "Was muss mit seinen Elektronen passieren?", 
+      btnGain: "GEWINNEN e⁻ (REDUZIEREN)", btnLose: "VERLIEREN e⁻ (OXIDIEREN)", diagGalvanic: "Wohin fließen die Elektronen in einer Batterie?", 
+      btnZnCu: "ZINK ➔ KUPFER", btnCuZn: "KUPFER ➔ ZINK", btnInject: "INJIZIEREN e⁻", btnExtract: "EXTRAHIEREN e⁻", btnTransfer: "STROMKREIS SCHLIESSEN", 
+      synthTitle: "REALE ANWENDUNG", btnNext: "NÄCHSTE HERAUSFORDERUNG ➔", winTitle: "🏅 MEISTERSCHAFT ERREICHT", btnBack: "⬅ BEENDEN",
+      btnAI: "🤖 KI-FRAGE", microClassTitle: "KI MIKRO-KLASSE", aiCorrect: "Ausgezeichnet! Absolutes Verständnis.", btnContinue: "WEITER" 
+    },
+    ai: { wrongMath: "Falsch. Elektronen gewinnen subtrahiert Ladung.", correct: "Korrekt. Fortfahren.", wrongTool: "Falsches Werkzeug.", galvanicError: "Falsch. Zink gibt Elektronen ab.", galvanicCorrect: "Stromkreis korrekt.", synth: "Stabilisiert. Analysiere...", start: "Analysieren Sie den Kern.", boss: "Batteriebau.", aiIntro: "Auswertung aktiv. Wählen Sie die richtige Antwort." },
+    theory: ["OXIDATION ist Elektronen VERLIEREN.", "REDUKTION ist Elektronen GEWINNEN.", "Wir reduzieren Eisen, um es zu reinigen.", "Kupfer ist ein hervorragender Leiter.", "Halogene wie Chlor gewinnen gerne Elektronen.", "Aluminium benötigt enorme Energie zur Reduktion.", "Magnesium oxidiert und sendet weißes Licht aus.", "Schwefel bildet gelbe Kristalle.", "Gold ist ein Edelmetall, schwer zu oxidieren.", "Eine galvanische Zelle nutzt Oxidation zur Energieübertragung."],
+    realWorld: ["Natrium reagiert heftig und verliert 1 Elektron.", "Pflanzen oxidieren Wasser und setzen Sauerstoff frei.", "Hämoglobin reduziert Eisen für den Sauerstofftransport.", "Kupfer wird für Stromkabel reduziert.", "Chlor gewinnt Elektronen, um Wasser zu reinigen.", "Aluminiumrecycling erfordert die Injektion von Elektronen.", "Magnesium oxidiert in Feuerwerkskörpern.", "Schwefel oxidiert in Vulkanen.", "Gold wird im Bergbau zur Auflösung oxidiert.", "Zink gibt Kupfer Energie. So funktionieren Batterien."],
+    elements: ["Natrium", "Sauerstoff", "Eisen", "Kupfer", "Chlor", "Aluminium", "Magnesium", "Schwefel", "Gold", "Batterie"],
+    questions: [
+      { q: "Welches Ion bildet Natrium beim Oxidieren?", options: ["Kation (+1)", "Anion (-1)", "Neutral", "Isotop"], correct: 0, micro: "Durch den Verlust eines negativen Elektrons erhält Natrium eine positive Ladung (Kation)." },
+      { q: "Was ist die Oxidationsstufe von reinem Sauerstoff (O2)?", options: ["0", "-2", "+1", "+2"], correct: 0, micro: "Elemente im reinen Zustand haben immer eine Oxidationsstufe von Null." },
+      { q: "Wenn Eisen von +3 auf +2 geht, was passierte?", options: ["Reduktion", "Oxidation", "Fusion", "Fission"], correct: 0, micro: "Die Ladung wurde reduziert, d.h. es gewann ein negatives Elektron (Reduktion)." },
+      { q: "Welche Teilchen reisen, um Kupfer zu reduzieren?", options: ["Elektronen", "Protonen", "Neutronen", "Quarks"], correct: 0, micro: "In Redoxreaktionen werden nur Elektronen übertragen." },
+      { q: "Chlor gewinnt Elektronen leicht, weil es ein ... ist", options: ["Halogen", "Edelgas", "Metall", "Flüssigkeit"], correct: 0, micro: "Halogene benötigen nur ein Elektron, um ihr Oktett zu vervollständigen." },
+      { q: "Die Reduzierung von Aluminium erfordert massiv...", options: ["Strom", "Wasser", "Druck", "Sauerstoff"], correct: 0, micro: "Es wird Elektrolyse verwendet, die massive Mengen an Strom erfordert." },
+      { q: "Die schnelle Oxidation von Magnesium nennt man...", options: ["Verbrennung", "Verdampfung", "Sublimation", "Fusion"], correct: 0, micro: "Verbrennung ist eine schnelle Oxidation, die Licht und Wärme freisetzt." },
+      { q: "Wenn Schwefel von -2 auf 0 geht, wie viele Elektronen verliert er?", options: ["2", "1", "4", "0"], correct: 0, micro: "Um von -2 auf 0 zu steigen, muss er 2 negative Ladungen loswerden." },
+      { q: "Warum oxidiert Gold in der Natur kaum?", options: ["Edelmetall", "Gas", "Leichtgewicht", "Künstlich"], correct: 0, micro: "Edelmetalle haben eine sehr stabile Elektronenstruktur." },
+      { q: "In einer galvanischen Zelle findet die Oxidation statt an der...", options: ["Anode", "Kathode", "Draht", "Salzbrücke"], correct: 0, micro: "Die Anode ist immer die Elektrode, an der die Oxidation stattfindet." }
     ]
   }
 };
 const LANG_MAP = { es: 'es-ES', en: 'en-US', fr: 'fr-FR', de: 'de-DE' };
 
 /* ============================================================
-   🎥 3. COMPONENTE DE CÁMARA (TERREMOTO TÉRMICO)
+   ⚙️ 3. CONFIGURACIÓN FÍSICA (10 NIVELES)
 ============================================================ */
-const CameraController = ({ isCritical }) => {
-  useFrame((state) => {
-    if (isCritical) {
-      state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, Math.sin(state.clock.elapsedTime * 60) * 0.1, 0.5);
-      state.camera.position.y = THREE.MathUtils.lerp(state.camera.position.y, 2 + Math.cos(state.clock.elapsedTime * 50) * 0.1, 0.5);
-    } else {
-      state.camera.position.lerp(new THREE.Vector3(0, 2, 16), 0.1);
-    }
-  });
-  return null;
-};
+const MISSIONS_CONFIG = [
+  { id: 1, cores: [{ symbol: "Na", start: 0, target: 1, type: "oxidize", color: "#ffff00", geom: "sphere" }] },
+  { id: 2, cores: [{ symbol: "O", start: -2, target: 0, type: "oxidize", color: "#ff00ff", geom: "octahedron" }] },
+  { id: 3, cores: [{ symbol: "Fe", start: 3, target: 2, type: "reduce", color: "#ff4400", geom: "octahedron" }] },
+  { id: 4, cores: [{ symbol: "Cu", start: 2, target: 0, type: "reduce", color: "#00f2ff", geom: "dodecahedron" }] },
+  { id: 5, cores: [{ symbol: "Cl", start: 0, target: -1, type: "reduce", color: "#00ff88", geom: "icosahedron" }] },
+  { id: 6, cores: [{ symbol: "Al", start: 3, target: 0, type: "reduce", color: "#aaaaaa", geom: "octahedron" }] },
+  { id: 7, cores: [{ symbol: "Mg", start: 0, target: 2, type: "oxidize", color: "#ffffff", geom: "sphere" }] },
+  { id: 8, cores: [{ symbol: "S", start: -2, target: 0, type: "oxidize", color: "#ffee00", geom: "icosahedron" }] },
+  { id: 9, cores: [{ symbol: "Au", start: 0, target: 3, type: "oxidize", color: "#ffd700", geom: "dodecahedron" }] },
+  { id: 10, isGalvanic: true, cores: [
+      { symbol: "Zn", start: 0, target: 2, type: "oxidize", color: "#aaaaaa", geom: "sphere", pos: [-4, 0, 0] },
+      { symbol: "Cu", start: 2, target: 0, type: "reduce", color: "#00f2ff", geom: "dodecahedron", pos: [4, 0, 0] }
+  ]}
+];
 
 /* ============================================================
-   ⚛️ 4. SIMULADOR 3D FÍSICO: EL PISTÓN CUÁNTICO TIER-GOD
+   ⚛️ 4. RENDERIZADOR 3D PROFUNDO (NUBES CUÁNTICAS Y ECUACIONES)
 ============================================================ */
-const QuantumPiston = ({ temp, volume, pressure, isCritical, isMobile, isLandscape }) => {
-  const isHot = temp > 500;
-  const isCold = temp < 200;
-  
-  // Físicas dinámicas calculadas en tiempo real
-  const particleSpeed = Math.max(0.1, temp / 100);
-  const particleColor = isCritical ? "#ff0000" : (isHot ? "#ff0055" : (isCold ? "#00f2ff" : "#00ff88"));
-  
-  // Núcleo de Fusión (Brilla rojo incandescente con calor)
-  const coreEmissive = new THREE.Color(temp / 1000, 0, (1000 - temp) / 2000);
-  const coreIntensity = temp / 100;
-
-  // Animación suave mecánica del pistón con resistencia de lerp
-  const pistonRef = useRef();
-  useFrame((state) => {
-    if (pistonRef.current) {
-      let targetY = volume;
-      // Añadir micro-vibración al pistón si la presión es extrema
-      if (isCritical) targetY += Math.sin(state.clock.elapsedTime * 80) * 0.05;
-      pistonRef.current.position.y = THREE.MathUtils.lerp(pistonRef.current.position.y, targetY, 0.1);
-    }
-  });
-
-  // 🔥 Posición Inteligente de Telemetría (Dash) 
-  // Mobile Vertical: Arriba. Mobile Horizontal: Derecha. PC: Derecha.
-  const htmlPos = isMobile ? (isLandscape ? [5.5, 2, 0] : [0, 11, 0]) : [4.5, 5, 0];
+const HolographicEquation = ({ core, isStable }) => {
+  let eq = "";
+  if (isStable) eq = "EQUILIBRIO ESTABLE";
+  else if (core.type === 'reduce') eq = `${core.symbol}${core.start > 0 ? '+'+core.start : core.start} + ${Math.abs(core.start - core.target)}e⁻ ➔ ${core.symbol}${core.target > 0 ? '+'+core.target : core.target}`;
+  else eq = `${core.symbol}${core.start > 0 ? '+'+core.start : core.start} ➔ ${core.symbol}${core.target > 0 ? '+'+core.target : core.target} + ${Math.abs(core.target - core.start)}e⁻`;
 
   return (
-    <group position={[0, -4, 0]}>
-      {/* 🔹 Vaso de Cristal Refractivo (Physical Material Realista) */}
-      <mesh position={[0, 5, 0]}>
-        <cylinderGeometry args={[2.8, 2.8, 10, 64]} />
-        <meshPhysicalMaterial 
-          transmission={0.95} 
-          opacity={1} 
-          transparent 
-          roughness={0.02} 
-          ior={1.52} 
-          thickness={1.5} 
-          clearcoat={1}
-          color="#ddeeZm" 
-          side={THREE.DoubleSide} 
-        />
-      </mesh>
-      
-      {/* 🔹 Núcleo de Fusión Termodinámica */}
-      <mesh position={[0, 0.2, 0]}>
-        <cylinderGeometry args={[2.5, 2.5, 0.2, 64]} />
-        <meshStandardMaterial color={coreEmissive} emissive={coreEmissive} emissiveIntensity={coreIntensity} />
-      </mesh>
-      
-      {/* 🔹 Base Sólida Industrial */}
-      <mesh position={[0, -0.2, 0]}>
-        <cylinderGeometry args={[3.2, 3.2, 0.6, 64]} />
-        <meshStandardMaterial color="#0a0a0a" metalness={0.9} roughness={0.3} />
-      </mesh>
-      
-      {/* 🔹 Conjunto Dinámico del Pistón */}
-      <group ref={pistonRef}>
-        {/* Sello de Goma del Pistón */}
-        <mesh position={[0, 0, 0]}>
-          <cylinderGeometry args={[2.75, 2.75, 0.5, 64]} />
-          <meshStandardMaterial color="#111" metalness={0.8} roughness={0.5} />
-        </mesh>
-        {/* Anillo de Presión O-Ring */}
-        <mesh position={[0, 0.15, 0]}>
-          <torusGeometry args={[2.75, 0.05, 16, 64]} />
-          <meshStandardMaterial color="#000" roughness={0.9} />
-        </mesh>
-        {/* Barra Metálica de Transmisión */}
-        <mesh position={[0, 5, 0]}>
-          <cylinderGeometry args={[0.4, 0.4, 10, 32]} />
-          <meshStandardMaterial color="#ccc" metalness={1} roughness={0.1} />
-        </mesh>
-      </group>
-      
-      {/* 🔹 Nube de Gas Cuántico (Múltiples capas para profundidad) */}
-      <Sparkles count={250} scale={[4.8, volume, 4.8]} position={[0, volume / 2, 0]} size={10} speed={particleSpeed} color={particleColor} />
-      <Sparkles count={150} scale={[4.0, volume - 0.5, 4.0]} position={[0, volume / 2, 0]} size={4} speed={particleSpeed * 1.5} color="#ffffff" opacity={0.5} />
-      
-      {/* 🔹 Telemetría Holográfica Adaptativa */}
-      <Html position={htmlPos} center zIndexRange={[100, 0]}>
-        <div className="telemetry-panel" style={{
-          background: isCritical ? 'rgba(255,0,0,0.2)' : 'rgba(0,10,25,0.85)', 
-          border: `1px solid ${isCritical ? '#ff0000' : '#00f2ff55'}`,
-          borderLeft: isMobile && !isLandscape ? 'none' : `4px solid ${particleColor}`, 
-          borderTop: isMobile && !isLandscape ? `4px solid ${particleColor}` : 'none',
-          padding: 'clamp(10px, 2vw, 20px)', borderRadius: '12px', color: '#fff', fontFamily: 'Orbitron',
-          width: isMobile && !isLandscape ? 'auto' : 'clamp(180px, 50vw, 260px)', 
-          minWidth: isMobile && !isLandscape ? '280px' : 'auto',
-          backdropFilter: 'blur(15px)', 
-          boxShadow: `0 0 40px ${particleColor}44`,
-          transition: 'all 0.1s ease',
-          animation: isCritical ? 'glitch-anim 0.2s infinite' : 'none',
-          boxSizing: 'border-box'
-        }}>
-          <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '3px', borderBottom: '1px solid #333', paddingBottom: '5px', marginBottom: '15px', fontWeight:'bold', textAlign: isMobile && !isLandscape ? 'center' : 'left' }}>
-            {isCritical ? '⚠️ RIESGO ESTRUCTURAL' : 'SISTEMA NOMINAL'}
-          </div>
-          <div className="tel-body" style={{ display: 'flex', flexDirection: isMobile && !isLandscape ? 'row' : 'column', gap: isMobile && !isLandscape ? '20px' : '0', justifyContent: 'center' }}>
-            <div style={{ fontSize: 'clamp(20px, 5vw, 30px)', fontWeight: '900', color: isHot ? '#ff0055' : '#0f0', textShadow:'0 0 10px currentColor' }}>
-              T: {temp.toFixed(0)}<span style={{fontSize:'14px', color:'#aaa'}}> K</span>
-            </div>
-            <div style={{ fontSize: 'clamp(20px, 5vw, 30px)', fontWeight: '900', color: '#00f2ff', textShadow:'0 0 10px currentColor' }}>
-              V: {volume.toFixed(1)}<span style={{fontSize:'14px', color:'#aaa'}}> L</span>
-            </div>
-            <div style={{ fontSize: 'clamp(20px, 5vw, 30px)', fontWeight: '900', color: isCritical ? '#ff0000' : '#ffea00', textShadow:'0 0 10px currentColor' }}>
-              P: {pressure.toFixed(2)}<span style={{fontSize:'14px', color:'#aaa'}}> atm</span>
-            </div>
-          </div>
-          <div style={{ display: isMobile && !isLandscape ? 'none' : 'block', marginTop: '15px', fontSize: '12px', color: isCritical ? '#ff0000' : '#00f2ff', textAlign: 'center', background: isCritical ? 'rgba(255,0,0,0.1)' : 'rgba(0,242,255,0.1)', padding: '8px', borderRadius: '6px', fontWeight:'bold', letterSpacing:'2px' }}>
-            PV = nRT ENGINE
-          </div>
-        </div>
-      </Html>
-    </group>
+    <Text position={[0, 3.5, 0]} fontSize={0.6} color={isStable ? "#0f0" : "#00f2ff"} font="https://fonts.gstatic.com/s/orbitron/v25/yYK5cRXep8lBoySMYNenOweb.woff" outlineWidth={0.02} outlineColor="#000">
+      {eq}
+    </Text>
   );
 };
 
+const AtomicCore = React.memo(({ core, hitPulse, isMobile, isLandscape }) => {
+  const groupRef = useRef();
+  const meshRef = useRef();
+  const isStable = core.currentCharge === core.target;
+  const visualElectrons = Math.max(0, Math.abs(core.currentCharge));
+  const initPos = useMemo(() => new THREE.Vector3(...(core.pos || [0,0,0])), [core.pos]);
+
+  useFrame((state, delta) => {
+    if (!groupRef.current || !meshRef.current) return;
+    groupRef.current.rotation.y += delta * (isStable ? 0.3 : 1.2);
+    groupRef.current.rotation.x += delta * 0.4;
+    groupRef.current.position.y = initPos.y + Math.sin(state.clock.elapsedTime * 2.5) * 0.15;
+
+    if (hitPulse) {
+      groupRef.current.scale.setScalar(1.2);
+      meshRef.current.material.emissiveIntensity = 8;
+    } else {
+      groupRef.current.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
+      meshRef.current.material.emissiveIntensity = isStable ? 1 : 3;
+    }
+  });
+
+  const geometry = useMemo(() => {
+    if (core.geom === "octahedron") return <octahedronGeometry args={[2.2, isStable ? 0 : 2]} />;
+    if (core.geom === "icosahedron") return <icosahedronGeometry args={[2.2, isStable ? 0 : 2]} />;
+    if (core.geom === "dodecahedron") return <dodecahedronGeometry args={[2.2, isStable ? 0 : 2]} />;
+    return <sphereGeometry args={[2.2, 32, 32]} />;
+  }, [core.geom, isStable]);
+
+  return (
+    <group ref={groupRef} position={initPos}>
+      <Sparkles count={isStable ? 200 : 60} scale={6} size={4} speed={2} color={isStable ? "#00f2ff" : core.color} opacity={0.5} />
+      
+      <mesh ref={meshRef}>
+        {geometry}
+        <meshStandardMaterial color={isStable ? "#00ff88" : core.color} emissive={isStable ? "#00ff88" : core.color} wireframe={!isStable} roughness={0.1} metalness={0.9} />
+      </mesh>
+      
+      <HolographicEquation core={core} isStable={isStable} />
+
+      {[...Array(visualElectrons)].map((_, i) => {
+        const angle = (i / (visualElectrons || 1)) * Math.PI * 2;
+        return (
+          <group key={i} rotation={[Math.PI / 4, angle, 0]}>
+            <mesh position={[3.5, 0, 0]}><sphereGeometry args={[0.2, 16, 16]} /><meshBasicMaterial color="#ffea00" /></mesh>
+            <mesh rotation={[Math.PI / 2, 0, 0]}><ringGeometry args={[3.5, 3.55, 64]} /><meshBasicMaterial color="rgba(255,255,255,0.1)" transparent side={THREE.DoubleSide} /></mesh>
+          </group>
+        )
+      })}
+    </group>
+  );
+});
+
 /* ============================================================
-   🎮 5. MÁQUINA DE ESTADOS PRINCIPAL (EL CEREBRO FSM)
+   🎮 5. MÁQUINA DE ESTADOS PRINCIPAL
 ============================================================ */
-export default function GasTheory() {
-  const { isMobile, isLandscape } = useMobile(); // 🔥 Hook avanzado de Responsividad
+export default function RedoxLab() {
+  const { isMobile, isLandscape } = useMobile(); // 🔥 Inyección del Hook de Responsividad
   const { language, resetProgress } = useGameStore(); 
   
-  const safeLang = DICT[language] ? language : 'es';
-  const d = DICT[safeLang];
-  const lCode = LANG_MAP[safeLang] || 'es-ES';
+  const safeLang = I18N[language] ? language : 'es';
+  const dict = I18N[safeLang];
+  const langCode = LANG_MAP[safeLang];
 
-  const [phase, setPhase] = useState("BOOT");
-  const [levelIdx, setLevelIdx] = useState(0);
+  const [phase, setPhase] = useState("BOOT"); 
+  const [missionIdx, setMissionIdx] = useState(0);
+  const [cores, setCores] = useState([]);
+  const [laserActive, setLaserActive] = useState(false);
+  const [laserColor, setLaserColor] = useState('#fff');
+  const [hitPulse, setHitPulse] = useState(false);
+  const [mastery, setMastery] = useState(0);
   const [microClassActive, setMicroClassActive] = useState(false);
-  
-  // 🔥 FIX BUG "SE QUEDA PEGADO": Estado para mostrar visualmente que fue correcto
-  const [isCorrectAnswer, setIsCorrectAnswer] = useState(false);
-  
-  // Físicas (K de Gases Ideales ajustada a 10 para balance visual)
-  const K = 10;
-  const [temp, setTemp] = useState(300); 
-  const [vol, setVol] = useState(5);     
-  const pressure = (K * temp) / (vol * 100); 
-  const isCritical = pressure > 18;
+  const [isCorrectAnswer, setIsCorrectAnswer] = useState(false); // 🔥 FIX de Transición
 
-  const lvl = d.levels[levelIdx] || d.levels[0];
-
-  // 🛑 PROTECCIÓN DE MEMORIA Y CORTADOR DE AUDIO DESTRUCTOR
-  const isMounted = useRef(true);
-  useEffect(() => {
-    isMounted.current = true;
-    return () => { 
-      isMounted.current = false;
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel(); 
-    };
-  }, []);
-
-  // Control de Alarmas Críticas Continuas
-  useEffect(() => {
-    if (isCritical && phase === "EXECUTION") {
-      const interval = setInterval(() => sfx.rumble(pressure / 20), 500);
-      return () => clearInterval(interval);
-    }
-  }, [isCritical, pressure, phase]);
+  const config = MISSIONS_CONFIG[missionIdx];
+  const qData = dict.questions[missionIdx]; // <-- Ya no crasheará
 
   const handleBack = () => {
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    resetProgress();
+    window.speechSynthesis?.cancel();
+    resetProgress(); // Retorno limpio al menú
   };
 
-  const loadLevel = (idx) => {
-    if (!isMounted.current) return;
-    if (idx >= d.levels.length) { 
+  const handleStartBoot = () => {
+    sfx.init();
+    sfx.success();
+    loadMission(0);
+  };
+
+  const loadMission = (idx) => {
+    const nextConfig = MISSIONS_CONFIG[idx];
+    if (!nextConfig) { 
       setPhase("END"); 
-      triggerVoice(d.ui.winTitle, lCode);
+      safeSpeak(dict.ui.winTitle, langCode);
       return; 
     }
-    setLevelIdx(idx);
-    setTemp(300); setVol(5); 
+    setMissionIdx(idx);
+    setCores(nextConfig.cores.map(c => ({ ...c, currentCharge: c.start })));
     setIsCorrectAnswer(false);
     setMicroClassActive(false);
     setPhase("THEORY");
-    triggerVoice(d.levels[idx].th, lCode);
+    safeSpeak(dict.theory[idx], langCode);
   };
 
-  // 🔥 FIX LOGICO: Se usaba una variable fantasma (qData.correct) que tiraba undefined
-  const handleAnswer = (idx) => {
-    if (idx === lvl.a) {
-      sfx.success(); 
-      setIsCorrectAnswer(true); 
-      triggerVoice(d.ai.correct, lCode);
-      setTimeout(() => {
-        if (isMounted.current) {
-          setPhase("EXECUTION");
-          setIsCorrectAnswer(false);
-        }
-      }, 1500);
+  const isStable = useMemo(() => cores.length > 0 && cores.every(c => c.currentCharge === c.target), [cores]);
+
+  const handlePrediction = (action) => {
+    if (config.isGalvanic) {
+      if (action !== 'zn_cu') { sfx.error(); safeSpeak(dict.ai.galvanicError, langCode); return; }
     } else {
-      sfx.error(); 
-      setMicroClassActive(true); 
-      triggerVoice(lvl.m, lCode);
+      if (action !== config.cores[0].type) { sfx.error(); safeSpeak(dict.ai.wrongMath, langCode); return; }
     }
+    sfx.success(); safeSpeak(dict.ai.correct, langCode); setPhase("EXECUTION");
   };
 
-  const verifyPhysicalState = () => {
-    let currentVal = lvl.targetVar === 't' ? temp : vol;
-    let isDone = false;
+  const handleFire = (tool) => {
+    if (isStable || laserActive) return;
 
-    if (lvl.cond === '>=') isDone = currentVal >= lvl.targetVal;
-    if (lvl.cond === '<=') isDone = currentVal <= lvl.targetVal;
+    if (!config.isGalvanic && tool !== cores[0].type) {
+      sfx.error(); safeSpeak(dict.ai.wrongTool, langCode); return;
+    }
 
-    if (isDone) {
+    setLaserColor(config.isGalvanic ? "#ffea00" : (tool === 'reduce' ? "#00f2ff" : "#ff0055"));
+    setLaserActive(true);
+    tool === 'reduce' ? sfx.laser() : sfx.extract();
+
+    setTimeout(() => {
+      setLaserActive(false);
+      setHitPulse(true);
+      sfx.impact();
+      setCores(prev => prev.map((c, i) => {
+        if (config.isGalvanic) return i === 0 ? { ...c, currentCharge: c.currentCharge + 1 } : { ...c, currentCharge: c.currentCharge - 1 };
+        return { ...c, currentCharge: c.currentCharge + (c.type === "reduce" ? -1 : 1) };
+      }));
+      setTimeout(() => setHitPulse(false), 200);
+    }, 400); 
+  };
+
+  const handleAIQuestion = () => {
+    setPhase("AI_QUESTION");
+    setMicroClassActive(false);
+    safeSpeak(dict.ai.aiIntro, langCode);
+  };
+
+  const handleAnswer = (idx) => {
+    if (idx === qData.correct) {
       sfx.success();
-      setPhase("SYNTHESIS");
-      triggerVoice(lvl.rw, lCode);
+      setIsCorrectAnswer(true); // Evita el "congelamiento visual"
+      safeSpeak(dict.ui.aiCorrect, langCode);
+      setMastery(m => m + 50);
+      setTimeout(() => {
+        setPhase("EXECUTION");
+        setIsCorrectAnswer(false);
+      }, 2000);
     } else {
       sfx.error();
+      setMicroClassActive(true);
+      safeSpeak(qData.micro, langCode);
     }
   };
 
-  // ==========================================
-  // 🖥️ UI RENDERIZADO REACT
-  // ==========================================
+  useEffect(() => {
+    if (isStable && phase === "EXECUTION") {
+      setPhase("SYNTHESIS");
+      setMastery(m => m + (config.isGalvanic ? 500 : 150));
+      setTimeout(() => sfx.success(), 400);
+      safeSpeak(dict.ai.synth, langCode);
+      setTimeout(() => safeSpeak(dict.realWorld[missionIdx], langCode), 3000);
+    }
+  }, [isStable, phase, config, dict, missionIdx, langCode]);
+
+  const aberrationOffset = useMemo(() => new THREE.Vector2(hitPulse ? 0.02 : 0.002, hitPulse ? 0.02 : 0.002), [hitPulse]);
+
+  // Pantallas
   if (phase === "BOOT") return (
-    <div style={ui.overlayFull}>
+    <div className="screen-container" style={ui.centerScreen}>
       <div className="glitch-text" style={ui.glitchText}>PROTOCOLO NANO-CORE V16</div>
-      <h1 className="title-glow" style={ui.titleGlow}>{d.ui.title}</h1>
-      <button className="btn-hex" style={ui.btnHex('#00f2ff')} onClick={() => { sfx.init(); loadLevel(0); }}>{d.ui.start}</button>
-      <button className="btn-ghost" style={ui.btnGhost} onClick={handleBack}>{d.ui.btnBack}</button>
+      <h1 className="title-glow" style={ui.titleGlow}>{dict.ui.title}</h1>
+      <button className="btn-hex" style={ui.btnHex('#00f2ff')} onClick={handleStartBoot}>{dict.ui.start}</button>
     </div>
   );
 
   if (phase === "END") return (
-    <div style={ui.overlayFull}>
-      <h1 style={{color: '#0f0', fontSize: 'clamp(32px, 8vw, 70px)', textShadow: '0 0 50px #0f0', letterSpacing: 'clamp(2px, 2vw, 10px)', textAlign:'center', margin:'0', width: '100%', boxSizing: 'border-box'}}>{d.ui.winTitle}</h1>
-      <button className="btn-hex" style={{...ui.btnHex('#0f0'), marginTop: 'clamp(30px, 6vh, 50px)'}} onClick={handleBack}>{d.ui.btnBack}</button>
+    <div className="screen-container" style={ui.centerScreen}>
+      <h1 className="title-glow" style={{...ui.titleGlow, color: '#0f0', textShadow: '0 0 50px #0f0'}}>{dict.ui.winTitle}</h1>
+      <p style={{color:'#fff', fontSize:'clamp(20px, 5vw, 30px)', fontFamily:'Orbitron', margin:'30px 0'}}>{dict.ui.exp}: {mastery}</p>
+      <button className="btn-hex" style={ui.btnHex('#0f0')} onClick={handleBack}>{dict.ui.btnBack}</button>
     </div>
   );
 
   return (
-    <div className="screen-container" style={ui.screen}>
-      <button className="back-btn" style={ui.backBtn} onClick={handleBack}>{d.ui.btnBack}</button>
-
-      {/* TOP HUD CIBERNÉTICO */}
-      <div className="top-hud" style={ui.topHud}>
-        <div className="badge" style={ui.badge}>{d.ui.exp} {levelIdx + 1} / {d.levels.length}</div>
-        <h2 style={{color:'#00f2ff', margin:'10px 0', fontSize:'clamp(24px, 6vw, 40px)', letterSpacing:'clamp(2px, 1vw, 6px)', textShadow:'0 0 20px rgba(0,242,255,0.8)'}}>{lvl.name}</h2>
-        {phase === "EXECUTION" && (
-          <div className="target-msg" style={{background: 'rgba(255,234,0,0.15)', border: '2px solid #ffea00', padding: 'clamp(8px, 2vw, 12px) clamp(15px, 4vw, 30px)', borderRadius: '10px', color:'#ffea00', fontWeight: '900', display:'inline-block', fontSize:'clamp(12px, 3vw, 18px)', letterSpacing:'clamp(1px, 0.5vw, 2px)', boxShadow:'0 0 20px rgba(255,234,0,0.4)', marginTop: '5px'}}>
-            ⚡ {d.ui.targetMsg} {lvl.targetText} a {lvl.cond} {lvl.targetVal}
-          </div>
+    <div className="screen-container" style={ui.container}>
+      {/* HEADER DE NAVEGACIÓN Y AYUDA */}
+      <div style={ui.topControls}>
+        <button className="back-btn" style={ui.backBtn} onClick={handleBack}>{dict.ui.btnBack}</button>
+        {phase === "EXECUTION" && !isStable && (
+          <button className="ai-btn" style={ui.aiBtn} onClick={handleAIQuestion}>{dict.ui.btnAI}</button>
         )}
       </div>
 
-      {/* MODAL TEORÍA */}
+      {/* 🖥️ HUD CENTRALIZADO Y RESPONSIVO (USANDO CSS GRID PARA LOS STATS) */}
+      <div className="nano-hud" style={ui.topHud(isMobile, isLandscape)}>
+        <div className="nano-glass" style={ui.glassCard(isMobile, isLandscape)}>
+          <h1 className="nano-glass-title" style={ui.title}>{dict.ui.title}</h1>
+          <div style={ui.badge}>{dict.ui.level} {config.id} / 10 {config.isGalvanic && " (BOSS)"}</div>
+          <div style={{color:'#ffea00', fontSize:'clamp(14px, 3vw, 18px)', marginTop:'10px', fontWeight:'bold'}}>{dict.ui.exp}: {mastery}</div>
+          
+          <div className="nano-stats" style={ui.statsContainer}>
+            {cores.map((c, i) => (
+              <div key={i} className="nano-stat-box" style={ui.statBox(c.color)}>
+                <div style={{color:c.color, fontSize:'clamp(14px, 4vw, 18px)', fontWeight:'bold'}}>{config.isGalvanic ? c.symbol : dict.elements[missionIdx]}</div>
+                <div style={{color:'#aaa', fontSize:'clamp(10px, 3vw, 12px)'}}>{dict.ui.target}: {c.target}</div>
+                <div style={ui.statNumber(c.color)}>{c.currentCharge > 0 ? `+${c.currentCharge}` : c.currentCharge}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 📖 FASE 0: TEORÍA */}
       {phase === "THEORY" && (
-        <div className="modal-bg" style={ui.modalBg}>
-          <div className="glass-modal" style={ui.glassModal('#00f2ff')}>
-            <h2 style={{color: '#00f2ff', letterSpacing:'clamp(2px, 1vw, 6px)', borderBottom: '2px solid #00f2ff55', paddingBottom: '15px', fontSize:'clamp(20px, 5vw, 35px)', margin: '0'}}>{d.ui.theoryTitle}</h2>
-            <p style={{color:'#fff', fontSize:'clamp(16px, 4vw, 28px)', lineHeight:'1.7', margin:'clamp(20px, 4vh, 40px) 0'}}>{lvl.th}</p>
-            <button className="btn-solid" style={ui.btnSolid('#00f2ff')} onClick={() => { setPhase("AI"); triggerVoice(d.ai.intro, lCode); }}>{d.ui.theoryBtn}</button>
+        <div className="modal-bg" style={ui.overlay}>
+          <div className="glass-modal" style={ui.dialogBox('#00f2ff')}>
+            <h2 style={{color: '#00f2ff', letterSpacing:'clamp(2px, 1vw, 6px)', borderBottom: '2px solid #00f2ff55', paddingBottom: '15px', fontSize:'clamp(20px, 6vw, 35px)', margin: '0'}}>{dict.ui.theoryTitle}</h2>
+            <p style={{color:'#fff', fontSize:'clamp(16px, 4vw, 28px)', lineHeight:'1.7', margin:'clamp(20px, 4vh, 40px) 0'}}>{dict.theory[missionIdx]}</p>
+            <button className="btn-solid" style={ui.nextBtn('#00f2ff')} onClick={() => { setPhase("DIAGNOSIS"); safeSpeak(config.isGalvanic ? dict.ai.boss : dict.ai.start, langCode); }}>{dict.ui.theoryBtn}</button>
           </div>
         </div>
       )}
 
-      {/* MODAL IA SOCRÁTICA */}
-      {phase === "AI" && (
-        <div className="modal-bg" style={ui.modalBg}>
-          <div className="glass-modal" style={ui.glassModal('#ff00ff')}>
-            <h2 style={{color:'#ff00ff', letterSpacing:'clamp(2px, 1vw, 6px)', borderBottom: '2px solid #ff00ff55', paddingBottom: '15px', fontSize:'clamp(20px, 5vw, 35px)', margin: '0'}}>
-              {microClassActive ? d.ui.microTitle : d.ui.diagTitle}
-            </h2>
-            {!microClassActive ? (
-              isCorrectAnswer ? (
-                <div style={{marginTop:'40px'}}>
-                  <h2 style={{color:'#0f0', fontSize:'clamp(24px, 6vw, 40px)', textShadow:'0 0 20px #0f0'}}>✅ {d.ai.correct}</h2>
+      {/* 🧠 FASE 1: DIAGNÓSTICO */}
+      {phase === "DIAGNOSIS" && (
+        <div className="modal-bg" style={ui.overlay}>
+          <div className="glass-modal" style={ui.dialogBox(config.isGalvanic ? '#ff0055' : '#ffea00')}>
+            <h2 style={{color: config.isGalvanic ? '#ff0055' : '#ffea00', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: `2px solid ${config.isGalvanic ? '#ff005555' : '#ffea0055'}`, paddingBottom: '15px'}}>{dict.ui.diagTitle}</h2>
+            {!config.isGalvanic ? (
+              <div style={{display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px'}}>
+                <p style={{color:'#fff', fontSize:'clamp(16px, 4vw, 24px)', margin: 0}}>{dict.elements[missionIdx]} {dict.ui.diagQ1} <b style={{color:'#ffea00'}}>{cores[0]?.start}</b> {dict.ui.diagQ2} <b style={{color:'#0f0'}}>{cores[0]?.target}</b>.</p>
+                <p style={{color:'#aaa', fontSize:'clamp(14px, 3.5vw, 20px)', margin: 0}}>{dict.ui.diagQ3}</p>
+                <div className="nano-btn-group" style={{...ui.btnGroup, flexDirection: isMobile ? 'column' : 'row'}}>
+                  <button className="btn-opt" style={ui.actionBtn('#00f2ff')} onClick={() => handlePrediction("reduce")}>{dict.ui.btnGain}</button>
+                  <button className="btn-opt" style={ui.actionBtn('#ff0055')} onClick={() => handlePrediction("oxidize")}>{dict.ui.btnLose}</button>
                 </div>
-              ) : (
-                <div style={{marginTop: '20px'}}>
-                  <p style={{fontSize:'clamp(18px, 4.5vw, 32px)', margin:'clamp(20px, 4vh, 50px) 0', color: '#fff', fontWeight: '900'}}>{lvl.q}</p>
-                  <div className="grid-opts" style={ui.grid}>
-                    {lvl.o.map((opt, i) => <button key={i} className="btn-opt" style={ui.btnOpt} onClick={() => handleAnswer(i)}>{opt}</button>)}
-                  </div>
-                </div>
-              )
+              </div>
             ) : (
-              <div style={{marginTop: '20px'}}>
-                <p style={{color:'#ffea00', fontSize:'clamp(16px, 4vw, 30px)', lineHeight:'1.6', margin:'clamp(20px, 4vh, 50px) 0', fontWeight:'bold'}}>{lvl.m}</p>
-                <button className="btn-solid" style={ui.btnSolid('#ff00ff')} onClick={() => { setPhase("AI"); setMicroClassActive(false); window.speechSynthesis.cancel(); }}>{d.ui.btnContinue}</button>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px'}}>
+                <p style={{color:'#fff', fontSize:'clamp(16px, 4vw, 24px)', margin: 0}}>{dict.ui.diagGalvanic}</p>
+                <div className="nano-btn-group" style={{...ui.btnGroup, flexDirection: isMobile ? 'column' : 'row'}}>
+                  <button className="btn-opt" style={ui.actionBtn('#00ff88')} onClick={() => handlePrediction("zn_cu")}>{dict.ui.btnZnCu}</button>
+                  <button className="btn-opt" style={ui.actionBtn('#ff0055')} onClick={() => handlePrediction("cu_zn")}>{dict.ui.btnCuZn}</button>
+                </div>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* DOCK DE CONTROLES FÍSICOS (EXECUTION) */}
-      {phase === "EXECUTION" && (
+      {/* 🤖 NUEVO: FASE IA QUESTION */}
+      {phase === "AI_QUESTION" && (
+        <div className="modal-bg" style={ui.overlay}>
+          <div className="glass-modal" style={ui.dialogBox('#ff00ff')}>
+            <h2 style={{color:'#ff00ff', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: '2px solid #ff00ff55', paddingBottom: '15px'}}>{microClassActive ? dict.ui.microClassTitle : dict.ui.btnAI}</h2>
+            {!microClassActive ? (
+              isCorrectAnswer ? (
+                <div style={{marginTop:'40px'}}>
+                  <h2 style={{color:'#0f0', fontSize:'clamp(24px, 6vw, 40px)', textShadow:'0 0 20px #0f0'}}>✅ {dict.ui.aiCorrect}</h2>
+                </div>
+              ) : (
+                <div style={{marginTop: '20px'}}>
+                  <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', margin: 0, fontWeight: 'bold'}}>{qData.q}</p>
+                  <div className="nano-grid" style={ui.gridOptions}>
+                    {qData.options.map((opt, i) => (
+                      <button key={i} className="btn-opt" style={ui.actionBtn('#ff00ff')} onClick={() => handleAnswer(i)}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
+              )
+            ) : (
+              <div style={{marginTop: '20px'}}>
+                <p style={{color:'#ffea00', fontSize:'clamp(16px, 4.5vw, 22px)', lineHeight:'1.5', margin: 0}}>{qData.micro}</p>
+                <button className="btn-solid" style={ui.nextBtn('#0f0')} onClick={() => { setPhase("EXECUTION"); setMicroClassActive(false); }}>{dict.ui.btnContinue}</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 🎯 FASE 2: EJECUCIÓN */}
+      {phase === "EXECUTION" && !isStable && (
         <div className="dock-panel" style={{
-           ...ui.dockPanel, 
+           ...ui.bottomCenter, 
            flexDirection: isMobile && !isLandscape ? 'column' : 'row', 
            width: isMobile ? '100vw' : 'auto', 
            bottom: isMobile ? '0' : '50px',
@@ -468,200 +510,139 @@ export default function GasTheory() {
            padding: isMobile ? '20px 15px max(15px, env(safe-area-inset-bottom))' : '50px 80px',
            gap: isMobile ? '15px' : '80px'
         }}>
-          {lvl.ctrl === 't' ? (
-            <div style={ui.sliderContainer}>
-              <div style={{color:'#ff0055', marginBottom:'20px', fontWeight:'900', letterSpacing:'clamp(1px, 1vw, 3px)', fontSize:'clamp(14px, 3.5vw, 22px)', textShadow:'0 0 10px #ff0055'}}>🔥 INYECCIÓN TÉRMICA (K)</div>
-              <input type="range" min="0" max="1000" value={temp} onChange={(e) => { 
-                setTemp(Number(e.target.value)); 
-                if(Number(e.target.value) > 800) sfx.valve(); 
-              }} style={ui.cyberSlider('#ff0055')} />
+          {!config.isGalvanic ? (
+            <div className="nano-btn-group" style={{...ui.btnGroup, flexDirection: isMobile ? 'column' : 'row', margin: 0}}>
+              <button className="check-btn" style={ui.fireBtn('#00f2ff')} onClick={() => handleFire("reduce")} disabled={laserActive}>{dict.ui.btnInject}</button>
+              <button className="check-btn" style={ui.fireBtn('#ff0055')} onClick={() => handleFire("oxidize")} disabled={laserActive}>{dict.ui.btnExtract}</button>
             </div>
           ) : (
-            <div style={ui.sliderContainer}>
-              <div style={{color:'#00f2ff', marginBottom:'20px', fontWeight:'900', letterSpacing:'clamp(1px, 1vw, 3px)', fontSize:'clamp(14px, 3.5vw, 22px)', textShadow:'0 0 10px #00f2ff'}}>⚙️ PRENSA HIDRÁULICA (L)</div>
-              <input type="range" min="1" max="10" step="0.1" value={vol} onChange={(e) => { 
-                setVol(Number(e.target.value)); 
-                if(Number(e.target.value) < 2) sfx.valve(); 
-              }} style={ui.cyberSlider('#00f2ff')} />
-            </div>
+            <button className="check-btn" style={ui.fireBtn('#ffea00')} onClick={() => handleFire("transfer")} disabled={laserActive}>{dict.ui.btnTransfer}</button>
           )}
-          <button className="check-btn" style={ui.checkBtn} onClick={verifyPhysicalState}>{d.ui.btnCheck}</button>
         </div>
       )}
 
-      {/* MODAL DE SÍNTESIS DEL MUNDO REAL */}
+      {/* 🎓 FASE 3: SÍNTESIS */}
       {phase === "SYNTHESIS" && (
-        <div className="modal-bg" style={ui.modalBg}>
-          <div className="glass-modal" style={ui.glassModal('#0f0')}>
-            <h2 style={{color:'#0f0', letterSpacing:'clamp(2px, 1vw, 6px)', borderBottom: '2px solid #0f05', paddingBottom: '15px', fontSize:'clamp(20px, 5vw, 35px)', margin: '0'}}>{d.ui.synthTitle}</h2>
-            <p style={{fontSize:'clamp(16px, 4.5vw, 32px)', lineHeight:'1.7', margin:'clamp(20px, 4vh, 50px) 0', color: '#fff', fontWeight:'bold'}}>{lvl.rw}</p>
-            <button className="btn-solid" style={ui.btnSolid('#0f0')} onClick={() => loadLevel(levelIdx + 1)}>{d.ui.btnNext}</button>
+        <div className="modal-bg" style={ui.overlay}>
+          <div className="glass-modal" style={ui.dialogBox('#0f0')}>
+            <h2 style={{color:'#0f0', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: '2px solid #0f05', paddingBottom: '15px'}}>{dict.ui.synthTitle}</h2>
+            <p style={{fontSize:'clamp(16px, 4.5vw, 26px)', lineHeight:'1.7', margin:'clamp(20px, 4vh, 40px) 0', color: '#fff', fontWeight:'bold'}}>{dict.realWorld[missionIdx]}</p>
+            <button className="btn-solid" style={ui.nextBtn('#0f0')} onClick={() => loadMission(missionIdx + 1)}>{dict.ui.btnNext}</button>
           </div>
         </div>
       )}
 
-      {/* 🌌 MOTOR DE RENDERIZADO THREE.JS PROFESIONAL */}
+      {/* 🌌 MOTOR 3D PROFUNDO (CÁMARA Y VECTORES DINÁMICOS) */}
       <div style={{position:'absolute', inset:0, zIndex:1, pointerEvents:'none'}}>
-        {/* 🔥 FIX CÁMARA MOBILE: Z:32 en vertical, Z:18 en horizontal, Z:16 en PC */}
-        <Canvas camera={{position:[0, 2, isMobile ? (isLandscape ? 18 : 32) : 16], fov:45}}>
-          <color attach="background" args={['#000103']} />
-          <ambientLight intensity={1.5} />
-          <directionalLight position={[10, 10, 5]} intensity={2.5} color="#ffffff" />
-          <directionalLight position={[-10, -10, -5]} intensity={1} color="#00f2ff" />
-          <Stars count={8000} factor={6} fade speed={1.5} />
-          <Grid infiniteGrid position={[0, -4.2, 0]} sectionColor="#00f2ff" cellColor="#001122" sectionSize={4} fadeDistance={40} />
+        {/* 🔥 FIX CÁMARA MOBILE: Se aleja a 28 en móviles para que todo el sistema sea visible verticalmente */}
+        <Canvas camera={{position:[0, 0, isMobile ? (isLandscape ? 18 : 28) : 15], fov:45}}>
+          <color attach="background" args={['#000308']} />
+          <Stars count={5000} factor={4} fade />
+          <ambientLight intensity={0.8} />
           
           <Suspense fallback={null}>
-            <CameraController isCritical={isCritical} />
-            <QuantumPiston temp={temp} volume={vol} pressure={pressure} isCritical={isCritical} isMobile={isMobile} isLandscape={isLandscape}/>
+            {cores.map((c, i) => {
+              // Si es Batería (Jefe) y es Celular, apilamos los núcleos verticalmente para que quepan
+              let pos = c.pos || [0, 0, 0];
+              if (config.isGalvanic && isMobile && !isLandscape) {
+                pos = i === 0 ? [0, 4, 0] : [0, -4, 0];
+              }
+              return <AtomicCore key={i} core={{...c, pos}} hitPulse={hitPulse} isMobile={isMobile} isLandscape={isLandscape}/>
+            })}
+            
+            {/* Láser Vertical en Móvil, Horizontal en PC */}
+            {laserActive && (
+              <mesh rotation={[0, 0, (config.isGalvanic && isMobile && !isLandscape) ? 0 : Math.PI / 2]}>
+                <cylinderGeometry args={[0.2, 0.2, (config.isGalvanic && isMobile && !isLandscape) ? 8 : 20, 8]} />
+                <meshBasicMaterial color={laserColor} transparent opacity={0.6} />
+              </mesh>
+            )}
+            
+            {/* Cable de Batería Vertical en Móvil, Horizontal en PC */}
+            {config.isGalvanic && (
+              <mesh rotation={[0, 0, (isMobile && !isLandscape) ? 0 : Math.PI / 2]}>
+                 <cylinderGeometry args={[0.08, 0.08, (isMobile && !isLandscape) ? 8 : 9, 16]} />
+                 <meshStandardMaterial color="#444" metalness={0.9} roughness={0.1} />
+               </mesh>
+            )}
           </Suspense>
-          
+
           <EffectComposer>
-            <Bloom intensity={isCritical ? 5 : 2.5} luminanceThreshold={0.1} mipmapBlur />
-            <ChromaticAberration offset={isCritical ? new THREE.Vector2(0.008, 0.008) : new THREE.Vector2(0.002, 0.002)} />
-            <Scanline opacity={0.2} density={1.5} />
-            <Vignette darkness={1.4} offset={0.1} />
+            <Bloom luminanceThreshold={0.1} intensity={hitPulse || laserActive ? 6 : 2}/>
+            <Scanline opacity={0.1}/>
+            <ChromaticAberration offset={aberrationOffset}/>
+            <Vignette eskil={false} offset={0.1} darkness={1.2}/>
           </EffectComposer>
-          <OrbitControls enablePan={false} maxPolarAngle={Math.PI / 1.7} minPolarAngle={Math.PI / 4} minDistance={10} maxDistance={25} />
         </Canvas>
       </div>
       
-      {/* Alerta Visual Extrema Oculta (Flash Rojo en Crítico) */}
-      {isCritical && phase === "EXECUTION" && <div style={{position:'absolute', inset:0, background:'rgba(255,0,0,0.15)', pointerEvents:'none', zIndex:99, mixBlendMode:'overlay'}} />}
+      {hitPulse && <div style={ui.flash} />}
     </div>
   );
 }
 
-// 🎨 ESTILOS "GOD TIER ABSOLUTO" REFORZADO A MOBILE FIRST
+// 🎨 ESTILOS UI (100% NATIVE MOBILE FIRST CON CSS GRID Y FLEXBOX)
 const ui = {
-  screen: { position:'absolute', inset:0, overflow:'hidden', background:'#000', fontFamily:'Orbitron, sans-serif', color:'#fff', width: '100vw', height: '100dvh', display: 'flex', flexDirection: 'column' },
-  overlayFull: { display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100dvh', width: '100vw', background:'radial-gradient(circle at center, #001122 0%, #000 100%)', zIndex:1000, position:'relative', padding: '20px', boxSizing: 'border-box', textAlign: 'center' },
-  glitchText: { color: '#00f2ff', fontSize: 'clamp(14px, 3vw, 24px)', letterSpacing: 'clamp(10px, 3vw, 25px)', marginBottom: '0px', fontWeight: 'bold' },
-  titleGlow: { color:'#00f2ff', fontSize:'clamp(32px, 8vw, 80px)', letterSpacing:'clamp(3px, 2vw, 15px)', textShadow:'0 0 60px rgba(0, 242, 255, 0.8)', margin:'0 0 30px 0', textAlign: 'center', fontWeight: '900' },
+  // Contenedor principal adaptable con flex column y dvh para móviles
+  container: { position: 'absolute', inset: 0, overflow: 'hidden', background: '#000', fontFamily: 'Orbitron, sans-serif', width: '100vw', height: '100dvh', display: 'flex', flexDirection: 'column' },
   
-  btnHex: (c) => ({ padding:'clamp(15px, 4vw, 30px) clamp(30px, 6vw, 80px)', background:`linear-gradient(45deg, rgba(0,0,0,0.9), ${c}33)`, border:`3px solid ${c}`, color:c, fontSize:'clamp(16px, 4vw, 26px)', fontWeight:'900', cursor:'pointer', borderRadius:'15px', fontFamily:'Orbitron', transition:'all 0.3s ease', boxShadow: `0 0 30px ${c}55`, letterSpacing: 'clamp(2px, 1vw, 4px)', width: '100%', maxWidth: '400px' }),
-  btnGhost: { marginTop:'clamp(15px, 4vh, 30px)', padding:'clamp(10px, 3vw, 15px) clamp(20px, 5vw, 50px)', background:'transparent', border:'2px solid #555', color:'#aaa', fontSize:'clamp(14px, 3vw, 18px)', cursor:'pointer', borderRadius:'10px', fontFamily:'Orbitron', transition:'0.3s', fontWeight: 'bold', letterSpacing: '2px' },
+  // Pantallas de Boot y Victoria
+  centerScreen: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', background: 'radial-gradient(circle at center, #001122 0%, #000 100%)', zIndex: 1000, position: 'relative', padding: '20px', boxSizing: 'border-box', textAlign: 'center' },
+  titleComplete: { color: '#0f0', fontSize: 'clamp(30px, 6vw, 60px)', letterSpacing: 'clamp(2px, 1vw, 8px)', textShadow: '0 0 40px #0f0', margin: 0, textAlign: 'center' },
+  titleGlow: { color:'#00f2ff', fontSize:'clamp(40px, 8vw, 80px)', letterSpacing:'clamp(5px, 2vw, 15px)', textShadow:'0 0 60px rgba(0, 242, 255, 0.8)', margin:'0 0 30px 0', textAlign: 'center', fontWeight: '900' },
+  btnHex: (c) => ({ padding:'clamp(20px, 4vw, 30px) clamp(40px, 8vw, 80px)', background:`linear-gradient(45deg, rgba(0,0,0,0.9), ${c}33)`, border:`3px solid ${c}`, color:c, fontSize:'clamp(18px, 4vw, 26px)', fontWeight:'900', cursor:'pointer', borderRadius:'15px', fontFamily:'Orbitron', transition:'all 0.3s ease', boxShadow: `0 0 30px ${c}55`, letterSpacing: '4px' }),
   
-  backBtn: { position:'absolute', top:'max(15px, env(safe-area-inset-top))', left:'clamp(15px, 4vw, 40px)', zIndex:500, padding:'clamp(10px, 2vw, 15px) clamp(15px, 3vw, 35px)', background:'rgba(255,0,85,0.15)', border:'2px solid #ff0055', color:'#ff0055', cursor:'pointer', borderRadius:'10px', fontFamily:'Orbitron', fontWeight:'900', backdropFilter: 'blur(8px)', letterSpacing: '1px', boxShadow: '0 0 20px rgba(255,0,85,0.3)', fontSize: 'clamp(12px, 3vw, 16px)' },
+  // Header Adaptable
+  topControls: { position: 'absolute', top: 'clamp(10px, 2vh, 30px)', left: '0', width: '100%', padding: '0 clamp(10px, 2vw, 30px)', boxSizing: 'border-box', display: 'flex', justifyContent: 'space-between', zIndex: 500, pointerEvents: 'none', flexWrap: 'wrap', gap: '10px' },
+  backBtn: { padding: 'clamp(8px, 1.5vw, 15px) clamp(15px, 3vw, 30px)', background: 'rgba(255,0,85,0.15)', border: 'clamp(1px, 0.5vw, 2px) solid #ff0055', color: '#ff0055', cursor: 'pointer', borderRadius: 'clamp(8px, 1.5vw, 10px)', fontFamily: 'Orbitron', fontWeight: '900', backdropFilter: 'blur(10px)', letterSpacing: '1px', transition: '0.3s', pointerEvents: 'auto', fontSize: 'clamp(12px, 2.5vw, 16px)' },
+  aiBtn: { padding: 'clamp(8px, 1.5vw, 15px) clamp(15px, 3vw, 30px)', background: 'rgba(255,0,255,0.15)', border: 'clamp(1px, 0.5vw, 2px) solid #ff00ff', color: '#ff00ff', cursor: 'pointer', borderRadius: 'clamp(8px, 1.5vw, 10px)', fontFamily: 'Orbitron', fontWeight: '900', backdropFilter: 'blur(10px)', letterSpacing: '1px', transition: '0.3s', pointerEvents: 'auto', fontSize: 'clamp(12px, 2.5vw, 16px)' },
+
+  // HUD
+  topHud: (isMobile, isLandscape) => ({ position:'absolute', top: isMobile ? (isLandscape ? '10px' : 'max(15px, env(safe-area-inset-top))') : 'max(70px, calc(env(safe-area-inset-top) + 60px))', left:'50%', transform: 'translateX(-50%)', zIndex:100, textAlign: 'center', width: '95%', maxWidth: '800px', pointerEvents:'none' }),
+  glassCard: (isMobile, isLandscape) => ({ background: 'rgba(0,10,25,0.85)', border: '2px solid #00f2ff', padding: 'clamp(10px, 3vw, 30px)', borderRadius: '15px', backdropFilter: 'blur(15px)', boxShadow: '0 0 40px rgba(0,242,255,0.2)', width: '100%', textAlign: 'center', display: isMobile && !isLandscape ? 'none' : 'flex', flexDirection: 'column', alignItems: 'center' }),
+  title: { color: '#fff', margin: 0, fontSize: 'clamp(20px, 4vw, 28px)', letterSpacing: '3px' },
+  badge: { display: 'inline-block', marginTop: '10px', padding: 'clamp(5px, 1vw, 8px) clamp(10px, 2vw, 20px)', background: '#ff0055', color: '#fff', fontSize: 'clamp(12px, 2vw, 14px)', fontWeight: 'bold', borderRadius: '5px' },
+  statsContainer: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '10px', marginTop: '15px', width: '100%' },
+  statBox: (c) => ({ background: 'rgba(0,0,0,0.6)', border: `2px solid ${c}`, borderRadius: '8px', padding: '10px 5px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }),
+  statNumber: (c) => ({ fontSize: 'clamp(24px, 7vw, 45px)', fontWeight: '900', color: c, textShadow: `0 0 15px ${c}`, marginTop: '5px' }),
+
+  // Modales Flexibles con Scroll
+  overlay: { position: 'absolute', inset: 0, background: 'rgba(0,5,15,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', pointerEvents: 'auto', padding: 'clamp(15px, 4vw, 30px)', boxSizing: 'border-box' },
+  dialogBox: (c) => ({ border: `2px solid ${c}`, background: 'rgba(0,0,0,0.95)', padding: 'clamp(20px, 6vw, 40px)', borderRadius: '20px', textAlign: 'center', width: '100%', maxWidth: '700px', boxShadow: `0 0 60px ${c}55`, maxHeight: '85dvh', overflowY: 'auto', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }),
   
-  topHud: { position:'absolute', top:'max(70px, calc(env(safe-area-inset-top) + 60px))', left:'50%', transform: 'translateX(-50%)', zIndex:100, textAlign: 'center', width: '95%', maxWidth: '800px', pointerEvents:'none' },
-  badge: { background:'#00f2ff', color:'#000', padding:'clamp(6px, 2vw, 10px) clamp(15px, 4vw, 25px)', borderRadius:'8px', display:'inline-block', fontSize:'clamp(14px, 3vw, 18px)', fontWeight:'900', letterSpacing: 'clamp(1px, 1vw, 3px)', boxShadow: '0 0 20px #00f2ff' },
+  // Botones de Acción Modales (Grid Inteligente para móvil y PC)
+  btnGroup: { display: 'flex', flexDirection: 'row', gap: '15px', justifyContent: 'center', width: '100%', marginTop: '10px' },
+  gridOptions: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px', width: '100%', marginTop: '20px' },
+  actionBtn: (c) => ({ padding: '15px 10px', background: 'rgba(0,0,0,0.8)', border: `2px solid ${c}`, color: c, fontSize: 'clamp(14px, 4vw, 18px)', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', transition: '0.2s', borderRadius: '10px', minHeight: '55px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', boxSizing: 'border-box' }),
+  nextBtn: (c) => ({ padding: '15px 20px', background: c, border: 'none', color: '#000', fontSize: 'clamp(16px, 4.5vw, 22px)', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '10px', boxShadow: `0 0 30px ${c}`, width: '100%', minHeight: '60px', marginTop: '15px' }),
   
-  dockPanel: { position:'absolute', bottom:'max(20px, env(safe-area-inset-bottom))', left:'50%', transform:'translateX(-50%)', zIndex:150, background:'rgba(0,15,30,0.9)', padding:'clamp(20px, 4vw, 50px) clamp(20px, 5vw, 80px)', borderRadius:'clamp(15px, 4vw, 30px)', border:'2px solid #00f2ff', textAlign:'center', display:'flex', alignItems:'center', justifyContent: 'center', gap:'clamp(20px, 4vw, 80px)', pointerEvents:'auto', backdropFilter: 'blur(25px)', boxShadow: '0 30px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,242,255,0.1)', width: '95%', maxWidth: '900px', flexWrap: 'wrap', boxSizing: 'border-box' },
-  sliderContainer: { display:'flex', flexDirection:'column', alignItems:'center', width:'100%', flex: '1 1 250px' },
-  cyberSlider: (c) => ({ width:'100%', cursor:'pointer', accentColor: c, height: '20px', borderRadius: '8px', outline: 'none', background: 'rgba(255,255,255,0.15)', boxShadow: `0 0 15px ${c}66` }),
-  checkBtn: { padding:'clamp(15px, 4vw, 30px) clamp(20px, 5vw, 60px)', background:'#00f2ff', border:'none', color:'#000', fontWeight:'900', fontSize:'clamp(16px, 4vw, 24px)', borderRadius:'15px', cursor:'pointer', fontFamily:'Orbitron', boxShadow:'0 0 40px rgba(0, 242, 255, 0.8)', letterSpacing: 'clamp(1px, 1vw, 3px)', flex: '1 1 200px', minHeight: '60px' },
+  // Área Inferior de Ejecución (Disparos)
+  bottomCenter: { position: 'absolute', bottom: 'max(20px, env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', zIndex: 150, pointerEvents: 'auto', display: 'flex', flexDirection: 'row', gap: '80px', background: 'rgba(0,15,30,0.9)', padding: '50px 80px', borderRadius: '30px', border: '2px solid #00f2ff', boxShadow: '0 30px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,242,255,0.1)', backdropFilter: 'blur(25px)' },
+  fireBtn: (c) => ({ padding: '15px 20px', background: 'rgba(0,0,0,0.95)', border: `3px solid ${c}`, color: c, fontSize: 'clamp(16px, 4.5vw, 24px)', fontWeight: '900', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '30px', boxShadow: `0 0 40px ${c}66`, letterSpacing: '2px', width: '100%', minHeight: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }),
   
-  modalBg: { position:'absolute', inset:0, zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,5,15,0.92)', backdropFilter:'blur(30px)', pointerEvents:'auto', padding: 'clamp(15px, 4vw, 30px)', boxSizing: 'border-box' },
-  glassModal: (c) => ({ border:`clamp(1px, 0.5vw, 3px) solid ${c}`, background:'rgba(0, 15, 30, 0.85)', padding:'clamp(25px, 6vw, 80px)', borderRadius:'clamp(20px, 4vw, 35px)', textAlign:'center', maxWidth:'1000px', width:'100%', boxShadow:`0 0 100px ${c}55`, backdropFilter: 'blur(15px)', maxHeight: '85dvh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center', boxSizing: 'border-box' }),
-  
-  grid: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))', gap:'clamp(15px, 3vw, 35px)', marginTop:'clamp(20px, 5vh, 50px)', width: '100%' },
-  btnOpt: { padding:'clamp(15px, 3vw, 30px)', background:'rgba(255,255,255,0.03)', border:'2px solid #555', color:'#fff', borderRadius:'15px', fontSize:'clamp(14px, 3.5vw, 24px)', cursor:'pointer', fontFamily:'Orbitron', transition:'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', minHeight: '60px' },
-  btnSolid: (c) => ({ marginTop:'clamp(20px, 4vh, 60px)', padding:'clamp(15px, 3vw, 30px) clamp(20px, 5vw, 90px)', background:c, color:'#000', fontWeight:'900', fontSize:'clamp(16px, 4vw, 26px)', borderRadius:'15px', border:'none', cursor:'pointer', fontFamily:'Orbitron', letterSpacing: 'clamp(2px, 1vw, 4px)', boxShadow: `0 0 50px ${c}88`, width: '100%' })
+  flash: { position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.3)', pointerEvents: 'none', zIndex: 999 }
 };
 
-// 🔥 INYECCIÓN MAESTRA DE ESTILOS MOBILE FIRST 🔥
-if (typeof document !== 'undefined' && !document.getElementById("gas-theory-mobile")) {
+// Parches visuales para Scrollbar y ajustes puros CSS
+if (typeof document !== 'undefined' && !document.getElementById("nano-styles-mobile")) {
   const styleSheet = document.createElement("style");
-  styleSheet.id = "gas-theory-mobile";
+  styleSheet.id = "nano-styles-mobile";
   styleSheet.innerText = `
-    @keyframes glitch-anim {
-      0% { transform: translate(0) }
-      20% { transform: translate(-2px, 2px) }
-      40% { transform: translate(-2px, -2px) }
-      60% { transform: translate(2px, 2px) }
-      80% { transform: translate(2px, -2px) }
-      100% { transform: translate(0) }
-    }
-    
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 10px; }
     ::-webkit-scrollbar-thumb { background: rgba(0, 242, 255, 0.4); border-radius: 10px; }
-
-    /* ========================================= */
-    /* 📱 MODO CELULAR (Mobile First Overrides)  */
-    /* ========================================= */
-    @media (max-width: 768px) {
-      /* Pantallas de Inicio / Fin */
-      .screen-container { height: 100dvh !important; }
-      .title-glow { font-size: 38px !important; letter-spacing: 5px !important; line-height: 1.2 !important; margin-bottom: 20px !important; }
-      .glitch-text { font-size: 12px !important; letter-spacing: 10px !important; text-align: center; }
-      .btn-hex { padding: 15px 30px !important; font-size: 16px !important; width: 100% !important; max-width: 350px !important; letter-spacing: 2px !important; }
-      .btn-ghost { padding: 15px 30px !important; font-size: 14px !important; }
-
-      /* Botones y HUD Superior */
-      .back-btn { top: max(10px, env(safe-area-inset-top)) !important; left: 10px !important; padding: 10px 15px !important; font-size: 12px !important; z-index: 9999 !important; }
-      .ai-btn { top: max(10px, env(safe-area-inset-top)) !important; right: 10px !important; padding: 10px 15px !important; font-size: 12px !important; z-index: 9999 !important; }
-      .top-hud { top: max(55px, calc(env(safe-area-inset-top) + 45px)) !important; width: 95% !important; padding: 0 !important; }
-      .top-hud h2 { font-size: 22px !important; letter-spacing: 2px !important; margin: 5px 0 !important; }
-      .badge { font-size: 12px !important; padding: 5px 15px !important; }
-      .target-msg { font-size: 12px !important; padding: 8px 10px !important; margin-top: 5px !important; display: block !important; }
-
-      /* Telemetría (Dash 3D) en Móvil (Se vuelve una fila horizontal plana y delgada) */
-      .telemetry-panel {
-         width: auto !important;
-         min-width: 280px !important;
-         padding: 10px 15px !important;
-         border-top: 4px solid currentColor !important;
-         transform: scale(0.9) !important;
-         box-sizing: border-box !important;
-      }
-      .tel-body { flex-direction: row !important; gap: 20px !important; justify-content: center !important; align-items: center !important; }
-      .tel-body > div { font-size: 18px !important; text-align: center; display: flex; flex-direction: column; align-items: center; }
-      .tel-body span { font-size: 10px !important; margin-top: 2px; }
-
-      /* Modales Scrollables */
-      .modal-bg { padding: 15px !important; box-sizing: border-box !important; align-items: flex-start !important; padding-top: max(40px, env(safe-area-inset-top)) !important; }
-      .glass-modal { padding: 25px 20px !important; border-radius: 20px !important; max-height: 85dvh !important; overflow-y: auto !important; width: 100% !important; box-sizing: border-box !important; margin-bottom: env(safe-area-inset-bottom) !important; }
-      .glass-modal h2 { font-size: 20px !important; letter-spacing: 2px !important; padding-bottom: 10px !important; }
-      .glass-modal p { font-size: 16px !important; margin: 15px 0 !important; line-height: 1.5 !important; }
-      
-      .grid-opts { grid-template-columns: 1fr !important; gap: 10px !important; margin-top: 20px !important; }
-      .btn-opt { padding: 15px !important; font-size: 14px !important; border-radius: 10px !important; min-height: 55px !important; width: 100% !important; box-sizing: border-box !important; }
-      .btn-solid { padding: 15px !important; font-size: 16px !important; width: 100% !important; margin-top: 20px !important; border-radius: 10px !important; }
-    }
-
-    /* ========================================= */
-    /* 📱 MODO CELULAR PANTALLA VERTICAL         */
-    /* ========================================= */
-    @media (max-width: 768px) and (orientation: portrait) {
-      .dock-panel {
-         bottom: 0 !important;
-         left: 0 !important;
-         transform: none !important;
-         width: 100vw !important;
-         border-radius: 25px 25px 0 0 !important;
-         padding: 20px 20px max(20px, env(safe-area-inset-bottom)) !important;
-         flex-direction: column !important;
-         gap: 15px !important;
-         border-bottom: none !important;
-         border-left: none !important;
-         border-right: none !important;
-         box-sizing: border-box !important;
-      }
-      .check-btn { width: 100% !important; padding: 15px !important; font-size: 16px !important; letter-spacing: 2px !important; border-radius: 10px !important; }
-    }
-
-    /* ========================================= */
-    /* 📱 MODO CELULAR PANTALLA HORIZONTAL       */
-    /* ========================================= */
-    @media (max-width: 900px) and (orientation: landscape) {
-      .dock-panel { 
-         padding: 10px !important; 
-         border-radius: 15px !important; 
-         bottom: 5px !important; 
-         border: 1px solid #00f2ff !important; 
-         background: rgba(0,5,15,0.7) !important; 
-      }
-      .btn-opt { padding: 10px !important; font-size: 12px !important; min-height: 40px !important; }
-      .glass-modal p { font-size: 14px !important; margin: 10px 0 !important; }
-      .check-btn { padding: 10px 20px !important; font-size: 14px !important; border-radius: 8px !important; }
-    }
     
-    /* Mini-ajuste para teléfonos extremadamente pequeños (iPhone SE) */
-    @media (max-width: 380px) {
-      .telemetry-panel { transform: scale(0.75) !important; min-width: 240px !important; }
-      .title-glow { font-size: 32px !important; }
+    /* Reglas Mágicas Mobile First */
+    @media (max-width: 768px) {
+      .nano-btn-group { flex-direction: column !important; }
+      .nano-btn-group button { width: 100% !important; }
+      .nano-stats { gap: 10px !important; }
+      .nano-stat-box { min-width: 45% !important; flex: 1 1 45% !important; padding: 10px !important; }
+      .nano-glass { padding: 20px 15px !important; }
+      .nano-glass-title { font-size: 22px !important; }
+      .nano-grid { grid-template-columns: 1fr !important; }
+      .nano-title { font-size: 32px !important; padding: 0 10px; }
+      .check-btn { width: 100% !important; padding: 15px !important; font-size: 16px !important; letter-spacing: 2px !important; border-radius: 10px !important; }
     }
   `;
   document.head.appendChild(styleSheet);
