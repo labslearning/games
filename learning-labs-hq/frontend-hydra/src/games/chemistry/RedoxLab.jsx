@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stars, Text, Sphere, Float, MeshDistortMaterial, ContactShadows, Sparkles, Line } from '@react-three/drei';
+import { OrbitControls, Stars, Text, Sphere, Float, MeshDistortMaterial, ContactShadows, Sparkles, Line, Html } from '@react-three/drei';
 import { EffectComposer, Bloom, Scanline, ChromaticAberration, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useGameStore } from '../../store/useGameStore';
@@ -265,7 +265,7 @@ const AtomicCore = React.memo(({ core, hitPulse }) => {
    🎮 5. MÁQUINA DE ESTADOS PRINCIPAL
 ============================================================ */
 export default function RedoxLab() {
-  const isMobile = useMobile(); // 🔥 Inyección del Hook
+  const isMobile = useMobile(); // 🔥 Inyección del Hook de Responsividad
   const { language } = useGameStore();
   
   const safeLang = I18N[language] ? language : 'es';
@@ -373,16 +373,18 @@ export default function RedoxLab() {
 
   const aberrationOffset = useMemo(() => new THREE.Vector2(hitPulse ? 0.02 : 0.002, hitPulse ? 0.02 : 0.002), [hitPulse]);
 
+  // Pantalla de inicio
   if (phase === "BOOT") return (
     <div style={ui.centerScreen}>
-      <h1 style={ui.titleGlow}>{dict.ui.title}</h1>
+      <h1 className="nano-title" style={ui.titleGlow}>{dict.ui.title}</h1>
       <button style={ui.btnHex('#00f2ff')} onClick={handleStartBoot}>{dict.ui.start}</button>
     </div>
   );
 
+  // Pantalla de victoria
   if (phase === "END") return (
     <div style={ui.centerScreen}>
-      <h1 style={ui.titleComplete}>{dict.ui.winTitle}</h1>
+      <h1 className="nano-title" style={ui.titleComplete}>{dict.ui.winTitle}</h1>
       <p style={{color:'#fff', fontSize:'clamp(20px, 5vw, 30px)', fontFamily:'Orbitron', margin:'30px 0'}}>{dict.ui.exp}: {mastery}</p>
       <button style={ui.btnHex('#0f0')} onClick={handleBack}>{dict.ui.btnBack}</button>
     </div>
@@ -398,17 +400,18 @@ export default function RedoxLab() {
         )}
       </div>
 
-      {/* 🖥️ HUD CENTRALIZADO Y RESPONSIVO */}
-      <div style={ui.hud}>
-        <div style={ui.glassCard}>
-          <h1 style={ui.title}>{dict.ui.title}</h1>
+      {/* 🖥️ HUD CENTRALIZADO Y RESPONSIVO (USANDO CSS GRID PARA LOS STATS) */}
+      <div className="nano-hud" style={ui.hud}>
+        <div className="nano-glass" style={ui.glassCard}>
+          <h1 className="nano-glass-title" style={ui.title}>{dict.ui.title}</h1>
           <div style={ui.badge}>{dict.ui.level} {config.id} / 10 {config.isGalvanic && " (BOSS)"}</div>
           <div style={{color:'#ffea00', fontSize:'clamp(14px, 3vw, 18px)', marginTop:'10px', fontWeight:'bold'}}>{dict.ui.exp}: {mastery}</div>
-          <div style={ui.statsContainer}>
+          
+          <div className="nano-stats" style={ui.statsContainer}>
             {cores.map((c, i) => (
-              <div key={i} style={ui.statBox(c.color)}>
-                <div style={{color:c.color, fontSize:'clamp(14px, 3vw, 18px)', fontWeight:'bold'}}>{config.isGalvanic ? c.symbol : dict.elements[missionIdx]}</div>
-                <div style={{color:'#aaa', fontSize:'clamp(10px, 2vw, 12px)'}}>{dict.ui.target}: {c.target}</div>
+              <div key={i} className="nano-stat-box" style={ui.statBox(c.color)}>
+                <div style={{color:c.color, fontSize:'clamp(14px, 4vw, 18px)', fontWeight:'bold'}}>{config.isGalvanic ? c.symbol : dict.elements[missionIdx]}</div>
+                <div style={{color:'#aaa', fontSize:'clamp(10px, 3vw, 12px)'}}>{dict.ui.target}: {c.target}</div>
                 <div style={ui.statNumber(c.color)}>{c.currentCharge > 0 ? `+${c.currentCharge}` : c.currentCharge}</div>
               </div>
             ))}
@@ -420,9 +423,9 @@ export default function RedoxLab() {
       {phase === "THEORY" && (
         <div style={ui.overlay}>
           <div style={ui.dialogBox('#00f2ff')}>
-            <h2 style={{color: '#00f2ff', letterSpacing:'3px', marginBottom:'20px', fontSize:'clamp(20px, 5vw, 35px)'}}>{dict.ui.theoryTitle}</h2>
-            <p style={{color:'#fff', fontSize:'clamp(16px, 3.5vw, 22px)', lineHeight:'1.5', padding:'clamp(10px, 2vw, 20px)'}}>{dict.theory[missionIdx]}</p>
-            <button style={ui.actionBtn('#00f2ff')} onClick={() => { setPhase("DIAGNOSIS"); safeSpeak(config.isGalvanic ? dict.ai.boss : dict.ai.start, langCode); }}>{dict.ui.theoryBtn}</button>
+            <h2 style={{color: '#00f2ff', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: '2px solid #00f2ff55', paddingBottom: '15px'}}>{dict.ui.theoryTitle}</h2>
+            <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', lineHeight:'1.5', margin: 'clamp(20px, 4vh, 40px) 0'}}>{dict.theory[missionIdx]}</p>
+            <button style={ui.nextBtn('#00f2ff')} onClick={() => { setPhase("DIAGNOSIS"); safeSpeak(config.isGalvanic ? dict.ai.boss : dict.ai.start, langCode); }}>{dict.ui.theoryBtn}</button>
           </div>
         </div>
       )}
@@ -431,24 +434,24 @@ export default function RedoxLab() {
       {phase === "DIAGNOSIS" && (
         <div style={ui.overlay}>
           <div style={ui.dialogBox(config.isGalvanic ? '#ff0055' : '#ffea00')}>
-            <h2 style={{color: config.isGalvanic ? '#ff0055' : '#ffea00', letterSpacing:'3px', fontSize:'clamp(20px, 5vw, 35px)'}}>{dict.ui.diagTitle}</h2>
+            <h2 style={{color: config.isGalvanic ? '#ff0055' : '#ffea00', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: `2px solid ${config.isGalvanic ? '#ff005555' : '#ffea0055'}`, paddingBottom: '15px'}}>{dict.ui.diagTitle}</h2>
             {!config.isGalvanic ? (
-              <>
-                <p style={{color:'#fff', fontSize:'clamp(16px, 3.5vw, 22px)'}}>{dict.elements[missionIdx]} {dict.ui.diagQ1} <b style={{color:'#ffea00'}}>{cores[0]?.start}</b> {dict.ui.diagQ2} <b style={{color:'#0f0'}}>{cores[0]?.target}</b>.</p>
-                <p style={{color:'#aaa', fontSize:'clamp(14px, 3vw, 18px)'}}>{dict.ui.diagQ3}</p>
-                <div style={ui.btnGroup}>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px'}}>
+                <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', margin: 0}}>{dict.elements[missionIdx]} {dict.ui.diagQ1} <b style={{color:'#ffea00'}}>{cores[0]?.start}</b> {dict.ui.diagQ2} <b style={{color:'#0f0'}}>{cores[0]?.target}</b>.</p>
+                <p style={{color:'#aaa', fontSize:'clamp(14px, 4vw, 20px)', margin: 0}}>{dict.ui.diagQ3}</p>
+                <div className="nano-btn-group" style={ui.btnGroup}>
                   <button style={ui.actionBtn('#00f2ff')} onClick={() => handlePrediction("reduce")}>{dict.ui.btnGain}</button>
                   <button style={ui.actionBtn('#ff0055')} onClick={() => handlePrediction("oxidize")}>{dict.ui.btnLose}</button>
                 </div>
-              </>
+              </div>
             ) : (
-              <>
-                <p style={{color:'#fff', fontSize:'clamp(16px, 3.5vw, 22px)'}}>{dict.ui.diagGalvanic}</p>
-                <div style={ui.btnGroup}>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px'}}>
+                <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', margin: 0}}>{dict.ui.diagGalvanic}</p>
+                <div className="nano-btn-group" style={ui.btnGroup}>
                   <button style={ui.actionBtn('#00ff88')} onClick={() => handlePrediction("zn_cu")}>{dict.ui.btnZnCu}</button>
                   <button style={ui.actionBtn('#ff0055')} onClick={() => handlePrediction("cu_zn")}>{dict.ui.btnCuZn}</button>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -458,21 +461,21 @@ export default function RedoxLab() {
       {phase === "AI_QUESTION" && (
         <div style={ui.overlay}>
           <div style={ui.dialogBox('#ff00ff')}>
-            <h2 style={{color:'#ff00ff', letterSpacing:'3px', fontSize:'clamp(20px, 5vw, 35px)'}}>{microClassActive ? dict.ui.microClassTitle : dict.ui.btnAI}</h2>
+            <h2 style={{color:'#ff00ff', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: '2px solid #ff00ff55', paddingBottom: '15px'}}>{microClassActive ? dict.ui.microClassTitle : dict.ui.btnAI}</h2>
             {!microClassActive ? (
-              <>
-                <p style={{color:'#fff', fontSize:'clamp(16px, 3.5vw, 22px)'}}>{qData.q}</p>
-                <div style={ui.grid}>
+              <div style={{marginTop: '20px'}}>
+                <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', margin: 0, fontWeight: 'bold'}}>{qData.q}</p>
+                <div className="nano-grid" style={ui.gridOptions}>
                   {qData.options.map((opt, i) => (
                     <button key={i} style={ui.actionBtn('#ff00ff')} onClick={() => handleAnswer(i)}>{opt}</button>
                   ))}
                 </div>
-              </>
+              </div>
             ) : (
-              <>
-                <p style={{color:'#ffea00', fontSize:'clamp(16px, 3.5vw, 20px)', lineHeight:'1.5'}}>{qData.micro}</p>
-                <button style={ui.nextBtn} onClick={() => { setPhase("EXECUTION"); setMicroClassActive(false); }}>{dict.ui.btnContinue}</button>
-              </>
+              <div style={{marginTop: '20px'}}>
+                <p style={{color:'#ffea00', fontSize:'clamp(16px, 4.5vw, 22px)', lineHeight:'1.5', margin: 0}}>{qData.micro}</p>
+                <button style={ui.nextBtn('#0f0')} onClick={() => { setPhase("EXECUTION"); setMicroClassActive(false); }}>{dict.ui.btnContinue}</button>
+              </div>
             )}
           </div>
         </div>
@@ -482,7 +485,7 @@ export default function RedoxLab() {
       {phase === "EXECUTION" && !isStable && (
         <div style={ui.bottomCenter}>
           {!config.isGalvanic ? (
-            <div style={ui.btnGroup}>
+            <div className="nano-btn-group" style={ui.btnGroup}>
               <button style={ui.fireBtn('#00f2ff')} onClick={() => handleFire("reduce")} disabled={laserActive}>{dict.ui.btnInject}</button>
               <button style={ui.fireBtn('#ff0055')} onClick={() => handleFire("oxidize")} disabled={laserActive}>{dict.ui.btnExtract}</button>
             </div>
@@ -496,23 +499,24 @@ export default function RedoxLab() {
       {phase === "SYNTHESIS" && (
         <div style={ui.overlay}>
           <div style={ui.dialogBox('#0f0')}>
-            <h2 style={{color:'#0f0', letterSpacing:'3px', fontSize:'clamp(20px, 5vw, 35px)'}}>{dict.ui.synthTitle}</h2>
-            <p style={{fontSize:'clamp(16px, 3.5vw, 24px)', lineHeight:'1.5', color:'#fff'}}>{dict.realWorld[missionIdx]}</p>
-            <button style={ui.nextBtn} onClick={() => loadMission(missionIdx + 1)}>{dict.ui.btnNext}</button>
+            <h2 style={{color:'#0f0', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: '2px solid #0f05', paddingBottom: '15px'}}>{dict.ui.synthTitle}</h2>
+            <p style={{fontSize:'clamp(16px, 4.5vw, 26px)', lineHeight:'1.7', margin:'clamp(20px, 4vh, 40px) 0', color: '#fff', fontWeight:'bold'}}>{dict.realWorld[missionIdx]}</p>
+            <button style={ui.nextBtn('#0f0')} onClick={() => loadMission(missionIdx + 1)}>{dict.ui.btnNext}</button>
           </div>
         </div>
       )}
 
       {/* 🌌 MOTOR 3D PROFUNDO (CÁMARA Y VECTORES DINÁMICOS) */}
       <div style={{position:'absolute', inset:0, zIndex:1, pointerEvents:'none'}}>
-        <Canvas camera={{position:[0,0, isMobile ? 22 : 15], fov:45}}>
+        {/* 🔥 FIX CÁMARA MOBILE: Si es movil la alejamos a 26 para que se vea todo en vertical */}
+        <Canvas camera={{position:[0, 0, isMobile ? 26 : 15], fov:45}}>
           <color attach="background" args={['#000308']} />
           <Stars count={5000} factor={4} fade />
           <ambientLight intensity={0.8} />
           
           <Suspense fallback={null}>
             {cores.map((c, i) => {
-              // Si es Batería (Jefe) y es Celular, apilamos los núcleos verticalmente
+              // Si es Batería (Jefe) y es Celular, apilamos los núcleos verticalmente para que quepan
               let pos = c.pos || [0, 0, 0];
               if (config.isGalvanic && isMobile) {
                 pos = i === 0 ? [0, 4, 0] : [0, -4, 0];
@@ -551,53 +555,68 @@ export default function RedoxLab() {
   );
 }
 
-// 🎨 ESTILOS UI (MOBILE-FIRST ABSOLUTO CON CLAMP Y FLEX)
+// 🎨 ESTILOS UI (100% NATIVE MOBILE FIRST CON CSS GRID Y FLEXBOX)
 const ui = {
-  container: { position: 'absolute', inset: 0, overflow: 'hidden', background: '#000', fontFamily: 'Orbitron, sans-serif', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' },
-  overlayFull: { display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100dvh', background:'radial-gradient(circle at center, #001122 0%, #000 100%)', zIndex:1000, position:'relative', padding:'20px', boxSizing:'border-box' },
+  // Contenedor principal adaptable con flex column y dvh para móviles
+  container: { position: 'absolute', inset: 0, overflow: 'hidden', background: '#000', fontFamily: 'Orbitron, sans-serif', width: '100vw', height: '100dvh', display: 'flex', flexDirection: 'column' },
+  
+  // Pantallas de Boot y Victoria
+  centerScreen: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', background: 'radial-gradient(circle at center, #001122 0%, #000 100%)', zIndex: 1000, position: 'relative', padding: '20px', boxSizing: 'border-box', textAlign: 'center' },
   titleComplete: { color: '#0f0', fontSize: 'clamp(30px, 6vw, 60px)', letterSpacing: 'clamp(2px, 1vw, 8px)', textShadow: '0 0 40px #0f0', margin: 0, textAlign: 'center' },
+  titleGlow: { color:'#00f2ff', fontSize:'clamp(40px, 8vw, 80px)', letterSpacing:'clamp(5px, 2vw, 15px)', textShadow:'0 0 60px rgba(0, 242, 255, 0.8)', margin:'0 0 30px 0', textAlign: 'center', fontWeight: '900' },
+  btnHex: (c) => ({ padding:'clamp(20px, 4vw, 30px) clamp(40px, 8vw, 80px)', background:`linear-gradient(45deg, rgba(0,0,0,0.9), ${c}33)`, border:`3px solid ${c}`, color:c, fontSize:'clamp(18px, 4vw, 26px)', fontWeight:'900', cursor:'pointer', borderRadius:'15px', fontFamily:'Orbitron', transition:'all 0.3s ease', boxShadow: `0 0 30px ${c}55`, letterSpacing: '4px' }),
   
   // Header Adaptable
-  topControls: { position: 'absolute', top: 'clamp(10px, 2vh, 30px)', left: 'clamp(10px, 2vw, 30px)', right: 'clamp(10px, 2vw, 30px)', display: 'flex', justifyContent: 'space-between', zIndex: 500, pointerEvents: 'none', flexWrap: 'wrap', gap: '10px' },
+  topControls: { position: 'absolute', top: 'clamp(10px, 2vh, 30px)', left: '0', width: '100%', padding: '0 clamp(10px, 2vw, 30px)', boxSizing: 'border-box', display: 'flex', justifyContent: 'space-between', zIndex: 500, pointerEvents: 'none', flexWrap: 'wrap', gap: '10px' },
   backBtn: { padding: 'clamp(8px, 1.5vw, 15px) clamp(15px, 3vw, 30px)', background: 'rgba(255,0,85,0.15)', border: 'clamp(1px, 0.5vw, 2px) solid #ff0055', color: '#ff0055', cursor: 'pointer', borderRadius: 'clamp(8px, 1.5vw, 10px)', fontFamily: 'Orbitron', fontWeight: '900', backdropFilter: 'blur(10px)', letterSpacing: '1px', transition: '0.3s', pointerEvents: 'auto', fontSize: 'clamp(12px, 2.5vw, 16px)' },
   aiBtn: { padding: 'clamp(8px, 1.5vw, 15px) clamp(15px, 3vw, 30px)', background: 'rgba(255,0,255,0.15)', border: 'clamp(1px, 0.5vw, 2px) solid #ff00ff', color: '#ff00ff', cursor: 'pointer', borderRadius: 'clamp(8px, 1.5vw, 10px)', fontFamily: 'Orbitron', fontWeight: '900', backdropFilter: 'blur(10px)', letterSpacing: '1px', transition: '0.3s', pointerEvents: 'auto', fontSize: 'clamp(12px, 2.5vw, 16px)' },
 
   // HUD
-  hud: { position: 'absolute', top: 'clamp(60px, 10vh, 90px)', left: '50%', transform: 'translateX(-50%)', zIndex: 100, width: '100%', padding: '0 clamp(10px, 2vw, 20px)', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', pointerEvents: 'none' },
-  glassCard: { background: 'rgba(0,10,25,0.85)', border: '2px solid #00f2ff', padding: 'clamp(15px, 3vw, 30px)', borderRadius: '12px', backdropFilter: 'blur(15px)', boxShadow: '0 0 40px rgba(0,242,255,0.2)', width: '100%', maxWidth: '600px', textAlign: 'center' },
+  hud: { position: 'absolute', top: 'clamp(60px, 10vh, 90px)', left: '50%', transform: 'translateX(-50%)', zIndex: 100, width: '100%', padding: '0 clamp(15px, 3vw, 20px)', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', pointerEvents: 'none' },
+  glassCard: { background: 'rgba(0,10,25,0.85)', border: '2px solid #00f2ff', padding: 'clamp(15px, 3vw, 30px)', borderRadius: '15px', backdropFilter: 'blur(15px)', boxShadow: '0 0 40px rgba(0,242,255,0.2)', width: '100%', maxWidth: '600px', textAlign: 'center' },
   title: { color: '#fff', margin: 0, fontSize: 'clamp(20px, 4vw, 28px)', letterSpacing: '3px' },
   badge: { display: 'inline-block', marginTop: '10px', padding: 'clamp(5px, 1vw, 8px) clamp(10px, 2vw, 20px)', background: '#ff0055', color: '#fff', fontSize: 'clamp(12px, 2vw, 14px)', fontWeight: 'bold', borderRadius: '5px' },
-  statsContainer: { display: 'flex', gap: 'clamp(10px, 2vw, 15px)', marginTop: '20px', flexWrap: 'wrap', justifyContent: 'center' },
-  statBox: (c) => ({ flex: '1 1 min-content', minWidth: '120px', padding: '15px', background: 'rgba(0,0,0,0.6)', border: `2px solid ${c}`, borderRadius: '8px' }),
-  statNumber: (c) => ({ fontSize: 'clamp(30px, 6vw, 55px)', fontWeight: '900', color: c, textShadow: `0 0 20px ${c}`, marginTop: '10px' }),
+  statsContainer: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '10px', marginTop: '15px', width: '100%' },
+  statBox: (c) => ({ background: 'rgba(0,0,0,0.6)', border: `2px solid ${c}`, borderRadius: '8px', padding: '10px 5px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }),
+  statNumber: (c) => ({ fontSize: 'clamp(24px, 7vw, 45px)', fontWeight: '900', color: c, textShadow: `0 0 15px ${c}`, marginTop: '5px' }),
 
-  // Modales
-  overlay: { position: 'absolute', inset: 0, background: 'rgba(0,5,15,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', pointerEvents: 'auto', padding: 'clamp(10px, 3vw, 20px)' },
-  dialogBox: (c) => ({ border: `clamp(1px, 0.5vw, 3px) solid ${c}`, background: 'rgba(0,0,0,0.95)', padding: 'clamp(20px, 5vw, 60px)', borderRadius: 'clamp(10px, 2vw, 15px)', textAlign: 'center', width: '100%', maxWidth: '800px', boxShadow: `0 0 100px ${c}66`, maxHeight: '90dvh', overflowY: 'auto' }),
+  // Modales Flexibles con Scroll
+  overlay: { position: 'absolute', inset: 0, background: 'rgba(0,5,15,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', pointerEvents: 'auto', padding: 'clamp(15px, 4vw, 30px)', boxSizing: 'border-box' },
+  dialogBox: (c) => ({ border: `2px solid ${c}`, background: 'rgba(0,0,0,0.95)', padding: 'clamp(20px, 6vw, 40px)', borderRadius: '20px', textAlign: 'center', width: '100%', maxWidth: '700px', boxShadow: `0 0 60px ${c}55`, maxHeight: '85dvh', overflowY: 'auto', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }),
   
-  // Botones de Acción
-  btnGroup: { display: 'flex', flexWrap: 'wrap', gap: 'clamp(15px, 3vw, 30px)', justifyContent: 'center', marginTop: 'clamp(20px, 4vw, 40px)' },
-  actionBtn: (c) => ({ padding: 'clamp(15px, 3vw, 20px) clamp(20px, 4vw, 40px)', background: 'rgba(0,0,0,0.8)', border: `2px solid ${c}`, color: c, fontSize: 'clamp(14px, 3vw, 20px)', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', transition: '0.2s', borderRadius: '8px', flex: '1 1 min-content' }),
-  nextBtn: { marginTop: 'clamp(20px, 4vw, 40px)', padding: 'clamp(15px, 3vw, 25px) clamp(40px, 8vw, 80px)', background: '#0f0', border: 'none', color: '#000', fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '8px', boxShadow: '0 0 40px #0f0' },
+  // Botones de Acción Modales (Grid Inteligente para móvil y PC)
+  btnGroup: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', width: '100%' },
+  gridOptions: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px', width: '100%', marginTop: '20px' },
+  actionBtn: (c) => ({ padding: '15px 10px', background: 'rgba(0,0,0,0.8)', border: `2px solid ${c}`, color: c, fontSize: 'clamp(14px, 4vw, 18px)', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', transition: '0.2s', borderRadius: '10px', minHeight: '55px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', boxSizing: 'border-box' }),
+  nextBtn: (c) => ({ padding: '15px 20px', background: c, border: 'none', color: '#000', fontSize: 'clamp(16px, 4.5vw, 22px)', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '10px', boxShadow: `0 0 30px ${c}`, width: '100%', minHeight: '60px', marginTop: '15px' }),
   
-  bottomCenter: { position: 'absolute', bottom: 'clamp(20px, 5vh, 60px)', left: '50%', transform: 'translateX(-50%)', zIndex: 150, pointerEvents: 'auto', width: '100%', display: 'flex', justifyContent: 'center', padding: '0 clamp(10px, 2vw, 20px)', boxSizing: 'border-box' },
-  fireBtn: (c) => ({ padding: 'clamp(15px, 3vw, 30px) clamp(30px, 6vw, 80px)', background: 'rgba(0,0,0,0.95)', border: `clamp(2px, 0.5vw, 4px) solid ${c}`, color: c, fontSize: 'clamp(18px, 4vw, 28px)', fontWeight: '900', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '50px', boxShadow: `0 0 clamp(30px, 6vw, 60px) ${c}88`, letterSpacing: 'clamp(2px, 0.5vw, 4px)', whiteSpace: 'nowrap' }),
+  // Área Inferior de Ejecución (Disparos)
+  bottomCenter: { position: 'absolute', bottom: 'max(20px, env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', zIndex: 150, pointerEvents: 'auto', width: '95%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '15px', boxSizing: 'border-box' },
+  fireBtn: (c) => ({ padding: '15px 20px', background: 'rgba(0,0,0,0.95)', border: `3px solid ${c}`, color: c, fontSize: 'clamp(16px, 4.5vw, 24px)', fontWeight: '900', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '30px', boxShadow: `0 0 40px ${c}66`, letterSpacing: '2px', width: '100%', minHeight: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }),
   
-  titleGlow: { color:'#00f2ff', fontSize:'clamp(40px, 8vw, 80px)', letterSpacing:'clamp(5px, 2vw, 15px)', textShadow:'0 0 60px rgba(0, 242, 255, 0.8)', margin:'0 0 30px 0', textAlign: 'center', fontWeight: '900' },
-  glitchText: { color: '#00f2ff', fontSize: 'clamp(14px, 3vw, 24px)', letterSpacing: 'clamp(10px, 2vw, 25px)', marginBottom: '0px', fontWeight: 'bold', textAlign: 'center' },
-  btnHex: (c) => ({ padding:'clamp(20px, 4vw, 30px) clamp(40px, 8vw, 80px)', background:`linear-gradient(45deg, rgba(0,0,0,0.9), ${c}33)`, border:`3px solid ${c}`, color:c, fontSize:'clamp(18px, 4vw, 26px)', fontWeight:'900', cursor:'pointer', borderRadius:'15px', fontFamily:'Orbitron', transition:'all 0.3s ease', boxShadow: `0 0 30px ${c}55`, letterSpacing: '4px' }),
-  grid: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(clamp(150px, 30vw, 250px), 1fr))', gap:'clamp(15px, 3vw, 35px)', marginTop:'clamp(30px, 6vw, 50px)' },
   flash: { position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.3)', pointerEvents: 'none', zIndex: 999 }
 };
 
-// Parches globales
+// Parches visuales para Scrollbar y ajustes puros CSS
 if (typeof document !== 'undefined' && !document.getElementById("nano-styles-mobile")) {
   const styleSheet = document.createElement("style");
   styleSheet.id = "nano-styles-mobile";
   styleSheet.innerText = `
     ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); }
-    ::-webkit-scrollbar-thumb { background: #00f2ff55; border-radius: 10px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: rgba(0, 242, 255, 0.4); border-radius: 10px; }
+    
+    /* Reglas Mágicas Mobile First */
+    @media (max-width: 768px) {
+      .nano-btn-group { flex-direction: column !important; }
+      .nano-btn-group button { width: 100% !important; }
+      .nano-stats { gap: 10px !important; }
+      .nano-stat-box { min-width: 45% !important; flex: 1 1 45% !important; padding: 10px !important; }
+      .nano-glass { padding: 20px 15px !important; }
+      .nano-glass-title { font-size: 22px !important; }
+      .nano-grid { grid-template-columns: 1fr !important; }
+      .nano-title { font-size: 32px !important; padding: 0 10px; }
+    }
   `;
   document.head.appendChild(styleSheet);
 }
