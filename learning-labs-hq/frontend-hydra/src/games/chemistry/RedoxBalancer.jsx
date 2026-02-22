@@ -84,12 +84,6 @@ class RedoxEngine {
     return (a * b) / gcd(a, b);
   }
 
-  static getMassBalanceGuide(env, langDict) {
-    if (env === "Ácido") return langDict?.guideAcid || "Medio Ácido: \n1. Iguala O con H₂O.\n2. Iguala H con H⁺.";
-    if (env === "Básico") return langDict?.guideBasic || "Medio Básico: \n1. Iguala O con H₂O.\n2. Iguala H con H₂O y añade OH⁻.";
-    return langDict?.guideNeutral || "Medio Neutro: \nLos átomos ya están balanceados en este nivel.";
-  }
-
   static parseMolecule(formula) {
     if (!formula) return [];
     const regex = /([A-Z][a-z]*)(\d*)/g;
@@ -144,7 +138,6 @@ class QuantumAudio {
   transfer() { this._play('noise', 2000, 100, 1.8, 0.35, 'sawtooth', -400); }
   levelUp() { this._play('sine', 400, 2000, 1.2, 0.4, 'triangle', 250); }
   explosion() { this._play('sawtooth', 800, 20, 1.0, 0.6, 'noise', 500); }
-  scan() { this._play('square', 1000, 2000, 0.3, 0.1, 'sine'); }
 }
 const sfx = new QuantumAudio();
 
@@ -196,7 +189,7 @@ const CHEM_DB = [
 const totalLevels = CHEM_DB.length;
 
 /* ============================================================
-   🌍 5. DICCIONARIOS INDEPENDIENTES Y COMPLETOS (CON PISTAS)
+   🌍 5. DICCIONARIOS INDEPENDIENTES Y COMPLETOS
 ============================================================ */
 const DICT = {
   es: {
@@ -210,15 +203,11 @@ const DICT = {
       explTitle: "¡COLAPSO ESTRUCTURAL!", explMsg: "La descompensación provocó una fisión masiva en el reactor.",
       statsTitle: "SEPARACIÓN DE SEMIRREACCIONES", timeTaken: "Tiempo", clicksUsed: "Ajustes", 
       successTitle: "¡SISTEMA ESTABILIZADO!", successMessage: "Masa y carga en equilibrio perfecto.",
-      helpBtn: "🤖 AYUDA", aiBtn: "🧠 CONSULTAR IA",
+      helpBtn: "💡 GUÍA PASO A PASO", aiBtn: "🤖 CONSULTAR IA",
       step1Title: "FASE 1: IDENTIFICACIÓN SOCRÁTICA", step2Title: "FASE 2: BALANCE DE MASAS ATÓMICAS", step3Title: "FASE 3: BALANCE DE CARGAS Y CRUCE",
       microClassTitle: "📚 MICRO-CLASE DE REFUERZO",
       neutralTitle: "MEDIO NEUTRO", neutralDesc: "Este sistema no requiere H₂O ni Iones.", btnSkip: "AVANZAR A CARGAS"
     },
-    guideAcid: "💡 Guía Ácida:\n1. Iguala Oxígenos añadiendo H₂O.\n2. Balancea Hidrógenos añadiendo H⁺.",
-    guideBasic: "💡 Guía Básica:\n1. Iguala Oxígenos añadiendo H₂O.\n2. Balancea Hidrógenos añadiendo H₂O y añade OH⁻ al lado opuesto.",
-    guideNeutral: "💡 Guía Neutral:\nLos átomos base están estables. Solo debes enfocarte en igualar los electrones en la Fase 3.",
-    ai: { intro: "Protocolo activado. Analiza la ecuación.", correct: "Análisis perfecto.", explosion: "¡Ruptura crítica de contención!" },
     hints: { 
       NOT_SIMPLIFIED: "Los electrones coinciden, pero debes usar la mínima expresión entera.", 
       EXCESS_LOST: "Estás liberando demasiados electrones. Aumenta el multiplicador de la Reducción.", 
@@ -229,37 +218,38 @@ const DICT = {
     interrupts: [
       { q: "¿Por qué se balancea la masa antes que la carga?", o: ["Conservación de la Materia", "Por estética"], a: 0, m: "Ley de Lavoisier: La materia no se crea ni se destruye. Debes igualar los átomos antes de mover la energía (electrones)." },
       { q: "En medio ÁCIDO, si te faltan Oxígenos, ¿qué agregas?", o: ["Iones OH⁻", "Moléculas de H₂O"], a: 1, m: "En medio ácido NUNCA se usan hidroxilos (OH⁻). Siempre usas H₂O para compensar el Oxígeno faltante." },
-      { q: "Si la Oxidación libera 2e- y la Reducción absorbe 3e-, ¿Cuál es su MCM?", o: ["6 electrones", "5 electrones"], a: 0, m: "El Mínimo Común Múltiplo entre 2 y 3 es 6. Debes multiplicar cada semirreacción por el coeficiente necesario para llegar a 6." }
+      { q: "Si la Oxidación libera 2e- y la Reducción absorbe 3e-, ¿Cuál es su MCM?", o: ["6 electrones", "5 electrones"], a: 0, m: "El Mínimo Común Múltiplo entre 2 y 3 es 6. Debes multiplicar cada semirreacción por el coeficiente necesario para llegar a 6." },
+      { q: "¿Qué partículas viajan en las reacciones Redox?", o: ["Electrones", "Protones"], a: 0, m: "Solo los electrones (e⁻) se transfieren entre los átomos, cambiando su estado de oxidación." }
     ],
     levels: [
-      { t: "Pila de Daniell. El Zinc se disuelve y el Cobre absorbe su energía.", q: "Fase 1: Identifica la oxidación (pierde e-)", o: ["El Cobre (Cu)", "El Zinc (Zn)"], a: 1, m: "¡Correcto! El Zinc pasa de 0 a +2. Perder electrones es oxidarse.", step2Hint: "Añade H₂O y H⁺ para igualar masas.", step3Hint: "Encuentra un multiplicador común para ambos lados." },
-      { t: "El Magnesio reacciona violentamente con iones de Plata.", q: "Identifica la reducción: ¿Cuántos e- necesita la Plata (Ag⁺) para neutralizarse?", o: ["1 electrón", "2 electrones"], a: 0, m: "¡Bien! Absorbe 1 electrón.", step2Hint: "Este medio es neutro. No necesitas agua.", step3Hint: "Cruza los multiplicadores para igualar electrones." },
-      { t: "Aluminio disolviéndose en medio ácido, liberando gas hidrógeno.", q: "El Aluminio pierde 3e- y el Hidrógeno gana 1e-. ¿Cuál es el Mínimo Común Múltiplo (MCM)?", o: ["3 electrones", "6 electrones"], a: 0, m: "¡Exacto! El MCM es 3. Tendrás que multiplicar el Hidrógeno por 3 en la Fase 3.", step2Hint: "Agrega H⁺ al lado de los reactivos para igualar el H₂.", step3Hint: "El LCM es 3. Ajusta los multiplicadores." },
-      { t: "Corrosión masiva del hierro estructural en contacto con oxígeno.", q: "Al dividir la reacción: ¿qué rol juega el oxígeno gaseoso (O₂)?", o: ["Reductor", "Oxidante"], a: 1, m: "Correcto, el Oxígeno gana electrones, oxidando al Hierro.", step2Hint: "Iguala masas usando coeficientes.", step3Hint: "Cruza multiplicadores para equilibrar cargas." },
-      { t: "Acumulador de plomo desestabilizado. Riesgo de explosión ácida.", q: "El Plomo está en dos estados. ¿El PbO₂ actúa como...?", o: ["Oxidante", "Reductor"], a: 0, m: "Exacto, el PbO₂ se reduce absorbiendo electrones.", step2Hint: "Añade H₂O para oxígenos y H⁺ para hidrógenos.", step3Hint: "Busca un LCM para equilibrar electrones." },
-      { t: "Permanganato altamente reactivo oxidando hierro en ácido.", q: "El Manganeso pasa de +7 en el MnO₄⁻ a +2. ¿Cuántos e- gana?", o: ["5 electrones", "7 electrones"], a: 0, m: "Gana 5e-. Luego balancearás los oxígenos con agua.", step2Hint: "Agrega H₂O y H⁺ para equilibrar masas.", step3Hint: "Ajusta multiplicadores según LCM." },
-      { t: "Dicromato generando cloro gas venenoso.", q: "La molécula de Cr₂O₇²⁻ tiene DOS Cromos. Si cada uno gana 3e-, ¿el total es?", o: ["3 electrones", "6 electrones"], a: 1, m: "¡Excelente! 2 átomos x 3e- = 6e- totales.", step2Hint: "Añade agua y protones para igualar masas.", step3Hint: "Multiplica las semi-reacciones para que coincidan." },
-      { t: "Ácido Nítrico atacando el cableado de cobre principal.", q: "El Nitrato (NO₃⁻) pasa a Monóxido de Nitrógeno (NO). ¿Qué pierde?", o: ["Oxígenos", "Hidrógenos"], a: 0, m: "Pierde 2 oxígenos. Usa H₂O para compensar en Fase 2.", step2Hint: "Usa H₂O y H⁺ para balancear la ecuación.", step3Hint: "Multiplicadores para igualar los electrones perdidos/ganados." },
-      { t: "Peróxido inestable frente a Permanganato. Fuego inminente.", q: "¿Qué hace el Peróxido (H₂O₂) aquí?", o: ["Reduce al Permanganato", "Oxida al Permanganato"], a: 0, m: "Actúa como reductor atípico, forzando al Manganeso a reducirse.", step2Hint: "Añade H₂O y H⁺ según sea necesario.", step3Hint: "Verifica que el intercambio de electrones sea igual." },
-      { t: "Cloro reaccionando consigo mismo (Dismutación en medio Básico).", q: "¿Qué es una reacción de dismutación?", o: ["Se oxida y reduce a la vez", "No cambia de estado"], a: 0, m: "¡Brillante! El Cl₂ se divide asumiendo ambos roles.", step2Hint: "Añade H₂O y OH⁻ para equilibrar en medio básico.", step3Hint: "Igualar los electrones transferidos." },
-      { t: "Azufre ardiendo en ácido nítrico, nublando la visión.", q: "El Azufre puro (0) pasa a SO₂. ¿Cuál es su estado final?", o: ["+4", "-2"], a: 0, m: "El Oxígeno aporta -4 en total, por lo que el Azufre debe ser +4.", step2Hint: "Iguala O con H₂O y H con H⁺.", step3Hint: "Cruza los coeficientes para alcanzar el LCM." },
-      { t: "Zinc en alcalino forzando a los nitratos a formar gas amonio.", q: "El Nitrógeno cae de +5 a -3. ¿Cuántos e- absorbe?", o: ["8 electrones", "2 electrones"], a: 0, m: "Un salto masivo de 8 electrones.", step2Hint: "Añade H₂O y OH⁻ para balancear la masa.", step3Hint: "El LCM es grande, ajusta los multiplicadores." },
-      { t: "Yodo y Tiosulfato desbalanceados. Falla en el sistema de vida.", q: "Oxidación: 2S₂O₃²⁻ a S₄O₆²⁻. ¿Cuántos e- se liberan en total?", o: ["1 electrón", "2 electrones"], a: 1, m: "Se liberan 2 electrones en total para la reacción.", step2Hint: "Ajusta las masas si es necesario.", step3Hint: "Encuentra el LCM y multiplica." },
-      { t: "Metano ardiendo sin control en los motores principales.", q: "En el Metano (CH₄), ¿quién atrae la nube de electrones?", o: ["El Carbono", "El Hidrógeno"], a: 0, m: "El Carbono es más electronegativo, atrayendo densidad de electrones.", step2Hint: "Usa H₂O y H⁺ para balancear.", step3Hint: "Iguala la transferencia electrónica." },
-      { t: "Calcio sumergido generando gas hidrógeno explosivo.", q: "El Calcio dona electrones al agua. ¿Qué se produce en la reducción?", o: ["Gas H₂ y iones OH⁻", "Oxígeno O₂"], a: 0, m: "El agua se rompe liberando H₂ y OH⁻.", step2Hint: "Añade OH⁻ y H₂O para balancear.", step3Hint: "Cruza los multiplicadores de carga." },
-      { t: "Generación letal de cloro gas usando Permanganato y HCl.", q: "Los iones Cl⁻ se unen para formar gas Cl₂. ¿Esto es una...?", o: ["Oxidación", "Reducción"], a: 0, m: "Pasan de -1 a 0, perdiendo electrones. Es una oxidación pura.", step2Hint: "Añade H₂O y H⁺.", step3Hint: "Encuentra el MCM de los electrones transferidos." },
-      { t: "Fósforo blanco generando Fosfina tóxica en base fuerte.", q: "Dismutación del Fósforo P₄. Pasa a Fosfina (PH₃) y Fosfito (H₂PO₂⁻). ¿Cuál representa la reducción?", o: ["Formación de PH₃ (-3)", "Formación de H₂PO₂⁻ (+1)"], a: 0, m: "Bajar a -3 requiere absorber electrones. Esa es la semirreacción de reducción.", step2Hint: "Añade OH⁻ y H₂O para balancear.", step3Hint: "Multiplica las semirreacciones para equilibrar e-." },
-      { t: "Cobre atacado por Ácido Sulfúrico caliente.", q: "El Sulfato (SO₄²⁻) pasa a SO₂. ¿Cuántos electrones absorbe el Azufre (pasa de +6 a +4)?", o: ["2 electrones", "4 electrones"], a: 0, m: "Absorbe 2 electrones, empatando perfectamente con los 2 que pierde el Cobre.", step2Hint: "Añade H₂O y H⁺.", step3Hint: "Igualar los electrones." },
-      { t: "Cromo oxidándose con Yodato. Toxicidad alcalina extrema.", q: "Estamos en medio Básico. ¿Cómo balancearás los Hidrógenos en la Fase 2?", o: ["Usando H₂O y OH⁻", "Añadiendo H⁺"], a: 0, m: "Correcto, en medio básico jamás se usan protones libres (H⁺).", step2Hint: "Añade H₂O y OH⁻.", step3Hint: "Multiplica para llegar al LCM de electrones." },
-      { t: "Ataque de ácido nítrico sobre Sulfuro de Bismuto.", q: "El Sulfuro (S²⁻) se separa y se oxida a Azufre elemental (S). ¿Pierde o gana energía?", o: ["Pierde 2 electrones", "Gana 2 electrones"], a: 0, m: "Al subir de -2 a 0, está cediendo 2 electrones al sistema.", step2Hint: "Añade H₂O y H⁺ para balancear.", step3Hint: "Ajusta multiplicadores de electrones." }
+      { t: "Pila de Daniell. El Zinc se disuelve y el Cobre absorbe su energía.", q: "Fase 1: Identifica la oxidación (pierde e-)", o: ["El Cobre (Cu)", "El Zinc (Zn)"], a: 1, m: "¡Correcto! El Zinc pasa de 0 a +2. Perder electrones es oxidarse.", step2Hint: "Añade H₂O y H⁺ para igualar masas.", step3Hint: "Encuentra un multiplicador común para ambos lados.", help: "PASO A PASO:\n1. Este es un medio Neutro, no necesitas añadir nada en la Fase 2.\n2. En la Fase 3, nota que la oxidación libera 2e⁻ y la reducción absorbe 2e⁻.\n3. Ya están igualados. Deja ambos multiplicadores en 1." },
+      { t: "El Magnesio reacciona violentamente con iones de Plata.", q: "Identifica la reducción: ¿Cuántos e- necesita la Plata (Ag⁺) para neutralizarse?", o: ["1 electrón", "2 electrones"], a: 0, m: "¡Bien! Absorbe 1 electrón.", step2Hint: "Este medio es neutro. No necesitas agua.", step3Hint: "Cruza los multiplicadores para igualar electrones.", help: "PASO A PASO:\n1. Medio Neutro, avanza a la Fase 3.\n2. El Magnesio libera 2e⁻, pero la Plata solo absorbe 1e⁻.\n3. Sube el multiplicador de la Reducción a 2 para equilibrarlo." },
+      { t: "Aluminio disolviéndose en medio ácido, liberando gas hidrógeno.", q: "El Aluminio pierde 3e- y el Hidrógeno gana 1e-. ¿Cuál es el Mínimo Común Múltiplo (MCM)?", o: ["3 electrones", "6 electrones"], a: 0, m: "¡Exacto! El MCM es 3. Tendrás que multiplicar el Hidrógeno por 3 en la Fase 3.", step2Hint: "Agrega H⁺ al lado de los reactivos para igualar el H₂.", step3Hint: "El LCM es 3. Ajusta los multiplicadores.", help: "PASO A PASO:\n1. En la Fase 2 (Ácido), fíjate en el H₂ de la reducción.\n2. Necesitas añadir 6 protones (H⁺) para igualar el 1.5H₂.\n3. En la Fase 3, la oxidación libera 3e⁻ y la reducción absorbe 2e⁻. El MCM es 6.\n4. Multiplicador de Oxidación: 2. Multiplicador de Reducción: 3." },
+      { t: "Corrosión masiva del hierro estructural en contacto con oxígeno.", q: "Al dividir la reacción: ¿qué rol juega el oxígeno gaseoso (O₂)?", o: ["Reductor", "Oxidante"], a: 1, m: "Correcto, el Oxígeno gana electrones, oxidando al Hierro.", step2Hint: "Iguala masas usando coeficientes.", step3Hint: "Cruza multiplicadores para equilibrar cargas.", help: "PASO A PASO:\n1. Medio Neutro, salta a la Fase 3.\n2. El Fe libera 3e⁻ y el O₂ absorbe 4e⁻.\n3. El Mínimo Común Múltiplo es 12.\n4. Multiplicador de Oxidación: 4. Multiplicador de Reducción: 3." },
+      { t: "Acumulador de plomo desestabilizado. Riesgo de explosión ácida.", q: "El Plomo está en dos estados. ¿El PbO₂ actúa como...?", o: ["Oxidante", "Reductor"], a: 0, m: "Exacto, el PbO₂ se reduce absorbiendo electrones.", step2Hint: "Añade H₂O para oxígenos y H⁺ para hidrógenos.", step3Hint: "Busca un LCM para equilibrar electrones.", help: "PASO A PASO:\n1. En Fase 2 (Ácido), la reducción de PbO₂ requiere que compenses 2 oxígenos. Añade 2 de H₂O.\n2. Ahora tienes 4 hidrógenos del lado derecho, así que añade 4 H⁺ al lado izquierdo.\n3. En Fase 3, ambos lados intercambian 2e⁻. Deja los multiplicadores en 1." },
+      { t: "Permanganato altamente reactivo oxidando hierro en ácido.", q: "El Manganeso pasa de +7 en el MnO₄⁻ a +2. ¿Cuántos e- gana?", o: ["5 electrones", "7 electrones"], a: 0, m: "Gana 5e-. Luego balancearás los oxígenos con agua.", step2Hint: "Agrega H₂O y H⁺ para equilibrar masas.", step3Hint: "Ajusta multiplicadores según LCM.", help: "PASO A PASO:\n1. En Fase 2, compensa los 4 oxígenos del MnO₄⁻ añadiendo 4 de H₂O.\n2. Balancea los hidrógenos añadiendo 8 H⁺.\n3. En Fase 3, la oxidación libera 1e⁻ y la reducción absorbe 5e⁻.\n4. Sube el Multiplicador de Oxidación a 5." },
+      { t: "Dicromato generando cloro gas venenoso.", q: "La molécula de Cr₂O₇²⁻ tiene DOS Cromos. Si cada uno gana 3e-, ¿el total es?", o: ["3 electrones", "6 electrones"], a: 1, m: "¡Excelente! 2 átomos x 3e- = 6e- totales.", step2Hint: "Añade agua y protones para igualar masas.", step3Hint: "Multiplica las semi-reacciones para que coincidan.", help: "PASO A PASO:\n1. En Fase 2, hay 7 oxígenos en el Dicromato. Añade 7 de H₂O.\n2. Balancea añadiendo 14 H⁺.\n3. En Fase 3, la oxidación libera 2e⁻ y la reducción absorbe 6e⁻.\n4. Multiplicador de Oxidación: 3. Multiplicador de Reducción: 1." },
+      { t: "Ácido Nítrico atacando el cableado de cobre principal.", q: "El Nitrato (NO₃⁻) pasa a Monóxido de Nitrógeno (NO). ¿Qué pierde?", o: ["Oxígenos", "Hidrógenos"], a: 0, m: "Pierde 2 oxígenos. Usa H₂O para compensar en Fase 2.", step2Hint: "Usa H₂O y H⁺ para balancear la ecuación.", step3Hint: "Multiplicadores para igualar los electrones perdidos/ganados.", help: "PASO A PASO:\n1. En Fase 2, de NO₃ a NO faltan 2 oxígenos. Añade 2 de H₂O.\n2. Esto genera 4 hidrógenos extra, así que añade 4 H⁺.\n3. En Fase 3, la oxidación libera 2e⁻ y la reducción absorbe 3e⁻. MCM es 6.\n4. Multiplicador de Oxidación: 3. Multiplicador de Reducción: 2." },
+      { t: "Peróxido inestable frente a Permanganato. Fuego inminente.", q: "¿Qué hace el Peróxido (H₂O₂) aquí?", o: ["Reduce al Permanganato", "Oxida al Permanganato"], a: 0, m: "Actúa como reductor atípico, forzando al Manganeso a reducirse.", step2Hint: "Añade H₂O y H⁺ según sea necesario.", step3Hint: "Verifica que el intercambio de electrones sea igual.", help: "PASO A PASO:\n1. En Fase 2, compensa los 4 oxígenos del Permanganato añadiendo 4 de H₂O.\n2. Ahora hay 8 hidrógenos, así que añade 8 H⁺.\n3. En Fase 3, la oxidación libera 2e⁻ y la reducción absorbe 5e⁻. MCM es 10.\n4. Multiplicador de Oxidación: 5. Multiplicador de Reducción: 2." },
+      { t: "Cloro reaccionando consigo mismo (Dismutación en medio Básico).", q: "¿Qué es una reacción de dismutación?", o: ["Se oxida y reduce a la vez", "No cambia de estado"], a: 0, m: "¡Brillante! El Cl₂ se divide asumiendo ambos roles.", step2Hint: "Añade H₂O y OH⁻ para equilibrar en medio básico.", step3Hint: "Igualar los electrones transferidos.", help: "PASO A PASO:\n1. OJO: Medio BÁSICO.\n2. Para formar ClO₃⁻ necesitas oxígenos. Añade 6 H₂O y compensa con 12 OH⁻.\n3. En Fase 3, la oxidación libera 10e⁻ y la reducción absorbe 2e⁻.\n4. Multiplicador de Oxidación: 1. Multiplicador de Reducción: 5." },
+      { t: "Azufre ardiendo en ácido nítrico, nublando la visión.", q: "El Azufre puro (0) pasa a SO₂. ¿Cuál es su estado final?", o: ["+4", "-2"], a: 0, m: "El Oxígeno aporta -4 en total, por lo que el Azufre debe ser +4.", step2Hint: "Iguala O con H₂O y H con H⁺.", step3Hint: "Cruza los coeficientes para alcanzar el LCM.", help: "PASO A PASO:\n1. En Fase 2, la oxidación a SO₂ necesita 2 oxígenos. Añade 2 de H₂O.\n2. Compensa con 4 H⁺.\n3. En Fase 3, la oxidación libera 4e⁻ y la reducción absorbe 3e⁻. MCM es 12.\n4. Multiplicador de Oxidación: 3. Multiplicador de Reducción: 4." },
+      { t: "Zinc en alcalino forzando a los nitratos a formar gas amonio.", q: "El Nitrógeno cae de +5 a -3. ¿Cuántos e- absorbe?", o: ["8 electrones", "2 electrones"], a: 0, m: "Un salto masivo de 8 electrones.", step2Hint: "Añade H₂O y OH⁻ para balancear la masa.", step3Hint: "El LCM es grande, ajusta los multiplicadores.", help: "PASO A PASO:\n1. Medio BÁSICO.\n2. La reducción a NH₄⁺ requiere quitar oxígenos. Añade 3 H₂O y compensa con 10 OH⁻.\n3. En Fase 3, la oxidación libera 2e⁻ y la reducción absorbe 8e⁻.\n4. Multiplicador de Oxidación: 4. Multiplicador de Reducción: 1." },
+      { t: "Yodo y Tiosulfato desbalanceados. Falla en el sistema de vida.", q: "Oxidación: 2S₂O₃²⁻ a S₄O₆²⁻. ¿Cuántos e- se liberan en total?", o: ["1 electrón", "2 electrones"], a: 1, m: "Se liberan 2 electrones en total para la reacción.", step2Hint: "Ajusta las masas si es necesario.", step3Hint: "Encuentra el LCM y multiplica.", help: "PASO A PASO:\n1. Medio Neutro. ¡Salta a la Fase 3!\n2. La oxidación libera 2e⁻ y la reducción absorbe 2e⁻.\n3. Ya está equilibrado. Ambos multiplicadores en 1." },
+      { t: "Metano ardiendo sin control en los motores principales.", q: "En el Metano (CH₄), ¿quién atrae la nube de electrones?", o: ["El Carbono", "El Hidrógeno"], a: 0, m: "El Carbono es más electronegativo, atrayendo densidad de electrones.", step2Hint: "Usa H₂O y H⁺ para balancear.", step3Hint: "Iguala la transferencia electrónica.", help: "PASO A PASO:\n1. En Fase 2, la oxidación de CH₄ a CO₂ requiere 2 oxígenos. Añade 2 de H₂O.\n2. Tienes 8 hidrógenos en total, así que añade 8 H⁺.\n3. En Fase 3, la oxidación libera 8e⁻ y la reducción absorbe 4e⁻.\n4. Multiplicador de Oxidación: 1. Multiplicador de Reducción: 2." },
+      { t: "Calcio sumergido generando gas hidrógeno explosivo.", q: "El Calcio dona electrones al agua. ¿Qué se produce en la reducción?", o: ["Gas H₂ y iones OH⁻", "Oxígeno O₂"], a: 0, m: "El agua se rompe liberando H₂ y OH⁻.", step2Hint: "Añade OH⁻ y H₂O para balancear.", step3Hint: "Cruza los multiplicadores de carga.", help: "PASO A PASO:\n1. En Fase 2, necesitas balancear el H₂O de la reducción. Añade 2 H₂O y 2 OH⁻.\n2. En Fase 3, la oxidación libera 2e⁻ y la reducción absorbe 2e⁻.\n3. Está perfecto. Ambos multiplicadores en 1." },
+      { t: "Generación letal de cloro gas usando Permanganato y HCl.", q: "Los iones Cl⁻ se unen para formar gas Cl₂. ¿Esto es una...?", o: ["Oxidación", "Reducción"], a: 0, m: "Pasan de -1 a 0, perdiendo electrones. Es una oxidación pura.", step2Hint: "Añade H₂O y H⁺.", step3Hint: "Encuentra el MCM de los electrones transferidos.", help: "PASO A PASO:\n1. En Fase 2, la reducción del MnO₄⁻ requiere 4 H₂O para balancear el oxígeno.\n2. Compensa con 8 H⁺.\n3. En Fase 3, la oxidación libera 2e⁻ y la reducción absorbe 5e⁻. MCM es 10.\n4. Multiplicador de Oxidación: 5. Multiplicador de Reducción: 2." },
+      { t: "Fósforo blanco generando Fosfina tóxica en base fuerte.", q: "Dismutación del Fósforo P₄. Pasa a Fosfina (PH₃) y Fosfito (H₂PO₂⁻). ¿Cuál representa la reducción?", o: ["Formación de PH₃ (-3)", "Formación de H₂PO₂⁻ (+1)"], a: 0, m: "Bajar a -3 requiere absorber electrones. Esa es la semirreacción de reducción.", step2Hint: "Añade OH⁻ y H₂O para balancear.", step3Hint: "Multiplica las semirreacciones para equilibrar e-.", help: "PASO A PASO:\n1. Medio BÁSICO extremo.\n2. Añade 12 H₂O y 24 OH⁻ para balancear todas las especies.\n3. En Fase 3, la oxidación libera 4e⁻ y la reducción absorbe 12e⁻.\n4. Multiplicador de Oxidación: 3. Multiplicador de Reducción: 1." },
+      { t: "Cobre atacado por Ácido Sulfúrico caliente.", q: "El Sulfato (SO₄²⁻) pasa a SO₂. ¿Cuántos electrones absorbe el Azufre (pasa de +6 a +4)?", o: ["2 electrones", "4 electrones"], a: 0, m: "Absorbe 2 electrones, empatando perfectamente con los 2 que pierde el Cobre.", step2Hint: "Añade H₂O y H⁺.", step3Hint: "Igualar los electrones.", help: "PASO A PASO:\n1. En Fase 2, de SO₄²⁻ a SO₂ faltan 2 oxígenos. Añade 2 de H₂O.\n2. Compensa con 4 H⁺.\n3. En Fase 3, ambos lados intercambian 2e⁻. Deja ambos multiplicadores en 1." },
+      { t: "Cromo oxidándose con Yodato. Toxicidad alcalina extrema.", q: "Estamos en medio Básico. ¿Cómo balancearás los Hidrógenos en la Fase 2?", o: ["Usando H₂O y OH⁻", "Añadiendo H⁺"], a: 0, m: "Correcto, en medio básico jamás se usan protones libres (H⁺).", step2Hint: "Añade H₂O y OH⁻.", step3Hint: "Multiplica para llegar al LCM de electrones.", help: "PASO A PASO:\n1. Medio Básico. Balancea oxígenos e hidrógenos añadiendo 11 de H₂O y 16 OH⁻.\n2. En Fase 3, la oxidación libera 3e⁻ y la reducción absorbe 6e⁻.\n3. Multiplicador de Oxidación: 2. Multiplicador de Reducción: 1." },
+      { t: "Ataque de ácido nítrico sobre Sulfuro de Bismuto.", q: "El Sulfuro (S²⁻) se separa y se oxida a Azufre elemental (S). ¿Pierde o gana energía?", o: ["Pierde 2 electrones", "Gana 2 electrones"], a: 0, m: "Al subir de -2 a 0, está cediendo 2 electrones al sistema.", step2Hint: "Añade H₂O y H⁺ para balancear.", step3Hint: "Ajusta multiplicadores de electrones.", help: "PASO A PASO:\n1. En Fase 2, de NO₃ a NO faltan 2 oxígenos. Añade 2 H₂O.\n2. Compensa con 4 H⁺.\n3. En Fase 3, la oxidación de S²⁻ libera 2e⁻ y la reducción absorbe 3e⁻.\n4. Multiplicador de Oxidación: 3. Multiplicador de Reducción: 2." }
     ],
     genExplanation: (lvl) => {
       if (!lvl) return "Error de carga.";
       const mcm = RedoxEngine.getMCM(lvl.eOx || 1, lvl.eRed || 1);
       return `<strong style="color:#00f2ff; font-size: 24px;">🔬 CÓDICE REDOX</strong><br/><br/>
-      <span style="color:#00f2ff">Semirreacción de Oxidación:</span><br/>${lvl.hOx}<br/><br/>
-      <span style="color:#ff0055">Semirreacción de Reducción:</span><br/>${lvl.hRed}<br/><br/>
-      💡 <em>En la Fase 3, encuentra el MCM de los electrones (<strong style="color:#ffea00">${mcm}e⁻</strong>) y multiplica las ecuaciones para igualarlo.</em>`;
+      <span style="color:#00f2ff">Oxidación:</span><br/>${lvl.hOx}<br/><br/>
+      <span style="color:#ff0055">Reducción:</span><br/>${lvl.hRed}<br/><br/>
+      💡 <em>Encuentra el MCM de los electrones (<strong style="color:#ffea00">${mcm}e⁻</strong>).</em>`;
     }
   },
   en: {
@@ -273,15 +263,11 @@ const DICT = {
       explTitle: "STRUCTURAL COLLAPSE!", explMsg: "Massive electron imbalance caused a core fission.",
       statsTitle: "HALF-REACTION SPLIT", timeTaken: "Time", clicksUsed: "Clicks", 
       successTitle: "SYSTEM STABILIZED!", successMessage: "Perfect mass and charge equilibrium.",
-      helpBtn: "🤖 HELP", aiBtn: "🧠 ASK AI",
-      step1Title: "PHASE 1: AI IDENTIFICATION", step2Title: "PHASE 2: ATOMIC MASS BALANCE", step3Title: "PHASE 3: CHARGE BALANCE & CROSSING",
+      helpBtn: "💡 STEP-BY-STEP GUIDE", aiBtn: "🤖 ASK AI",
+      step1Title: "PHASE 1: AI IDENTIFICATION", step2Title: "PHASE 2: ATOMIC MASS BALANCE", step3Title: "PHASE 3: CHARGE BALANCE",
       microClassTitle: "📚 REINFORCEMENT MICRO-CLASS",
       neutralTitle: "NEUTRAL MEDIUM", neutralDesc: "This system does not require H₂O or Ions.", btnSkip: "PROCEED TO CHARGES"
     },
-    guideAcid: "💡 Acidic Guide:\n1. Balance O with H₂O.\n2. Balance H with H⁺.",
-    guideBasic: "💡 Basic Guide:\n1. Balance O with H₂O.\n2. Balance H with H₂O and add OH⁻ to the opposite side.",
-    guideNeutral: "💡 Neutral Guide:\nBase atoms are stable. Skip to Phase 3.",
-    ai: { intro: "Protocol active. Analyze equation.", correct: "Perfect analysis.", explosion: "Critical containment breach!" },
     hints: { 
       NOT_SIMPLIFIED: "Electrons match, but coefficients are not in the simplest integer ratio.", 
       EXCESS_LOST: "Releasing too many electrons. Increase the Reduction multiplier.", 
@@ -290,40 +276,10 @@ const DICT = {
       H2O_IMBALANCE: "Atomic balance error. Check H₂O and ions carefully."
     },
     interrupts: [
-      { q: "Why balance mass before charge?", o: ["Conservation of Mass", "To make it look pretty"], a: 0, m: "Matter cannot be created or destroyed. You must balance O and H before moving electrons." },
-      { q: "In an ACIDIC medium, missing Oxygens are balanced with?", o: ["OH⁻ ions", "H₂O molecules"], a: 1, m: "In an acidic medium, you NEVER use OH⁻. You use Water (H₂O) for Oxygens." },
-      { q: "If Oxidation loses 2e- and Reduction gains 3e-, what is the LCM?", o: ["6 electrons", "5 electrons"], a: 0, m: "The Least Common Multiple between 2 and 3 is 6. Cross-multiply to reach 6." }
+      { q: "Why balance mass before charge?", o: ["Conservation of Mass", "To make it look pretty"], a: 0, m: "Matter cannot be created or destroyed. You must balance O and H before moving electrons." }
     ],
-    levels: [
-      { t: "Daniell Cell. Zinc dissolves and Copper absorbs its energy.", q: "Phase 1: Split the equation. Which element oxidizes (loses electrons)?", o: ["Copper (Cu)", "Zinc (Zn)"], a: 1, m: "Correct! Zinc goes from 0 to +2. Losing electrons is oxidation.", step2Hint: "Add H₂O and H⁺ to balance mass.", step3Hint: "Find a common multiplier for both sides." },
-      { t: "Magnesium reacts violently with Silver ions.", q: "Identify the reduction: How many electrons does ONE Ag⁺ molecule need to become neutral Silver?", o: ["1 electron", "2 electrons"], a: 0, m: "Good! It absorbs 1 electron.", step2Hint: "This is a neutral medium. No water needed.", step3Hint: "Cross the multipliers to balance electrons." },
-      { t: "Aluminum dissolving in acid, releasing hydrogen gas.", q: "Aluminum loses 3e- and Hydrogen gains 1e-. What is the Least Common Multiple (LCM)?", o: ["3 electrons", "6 electrons"], a: 0, m: "Exactly! The LCM is 3. You'll multiply Hydrogen by 3 in Phase 3.", step2Hint: "Add H⁺ to reactants side to balance H₂.", step3Hint: "LCM is 3. Adjust multipliers." },
-      { t: "Massive corrosion of structural iron in contact with oxygen.", q: "Splitting the reaction: what role does oxygen gas (O₂) play?", o: ["Reducing Agent", "Oxidizing Agent"], a: 1, m: "Correct, Oxygen gains electrons, oxidizing the Iron.", step2Hint: "Balance masses using coefficients.", step3Hint: "Cross multipliers to balance charges." },
-      { t: "Destabilized lead accumulator. Acid explosion risk.", q: "Attention: Lead is in two different states. PbO₂ acts as...?", o: ["Oxidizer", "Reducer"], a: 0, m: "Exact, PbO₂ is reduced, absorbing electrons.", step2Hint: "Add H₂O for oxygens and H⁺ for hydrogens.", step3Hint: "Find an LCM to balance electrons." },
-      { t: "Highly reactive Permanganate oxidizing iron in acid.", q: "Manganese goes from +7 in MnO₄⁻ to +2. How many e- does it gain?", o: ["5 electrons", "7 electrons"], a: 0, m: "Gains 5e-. In the next phase you'll balance its oxygens with water.", step2Hint: "Add H₂O and H⁺ to balance masses.", step3Hint: "Adjust multipliers based on LCM." },
-      { t: "Dichromate generating poisonous chlorine gas.", q: "The Cr₂O₇²⁻ molecule has TWO Chromium atoms. If each gains 3e-, the total absorbed is?", o: ["3 electrons", "6 electrons"], a: 1, m: "Excellent! Being two atoms, the entire molecule demands 6 electrons.", step2Hint: "Add water and protons to balance masses.", step3Hint: "Multiply half-reactions to match." },
-      { t: "Nitric Acid attacking main copper wiring.", q: "Nitrate (NO₃⁻) becomes Nitrogen Monoxide (NO). What does it lose in the process?", o: ["Oxygens", "Hydrogens"], a: 0, m: "Loses 2 oxygens. In Phase 2 you must compensate by adding H₂O.", step2Hint: "Use H₂O and H⁺ to balance the equation.", step3Hint: "Multipliers to match electrons lost/gained." },
-      { t: "Unstable Peroxide facing Permanganate. Imminent fire.", q: "Who forces whom? What does Peroxide (H₂O₂) do here?", o: ["Reduces Permanganate", "Oxidizes Permanganate"], a: 0, m: "Acts as an atypical reducing agent, forcing Manganese to reduce.", step2Hint: "Add H₂O and H⁺ as needed.", step3Hint: "Verify electron exchange is equal." },
-      { t: "Chlorine reacting with itself (Disproportionation in Basic medium).", q: "What does disproportionation mean?", o: ["Oxidizes and reduces simultaneously", "Does not change state"], a: 0, m: "Brilliant! One part of Cl₂ becomes Cl⁻ and another ClO₃⁻.", step2Hint: "Add H₂O and OH⁻ to balance in basic medium.", step3Hint: "Balance the electrons transferred." },
-      { t: "Sulfur burning in nitric acid, clouding vision.", q: "Pure Sulfur (0) goes to SO₂. What is its final oxidation state?", o: ["+4", "-2"], a: 0, m: "Oxygen brings -4 in total, so Sulfur must be +4.", step2Hint: "Balance O with H₂O and H with H⁺.", step3Hint: "Cross coefficients to reach LCM." },
-      { t: "Zinc in alkaline forcing nitrates to form ammonia gas.", q: "Nitrogen drops drastically from +5 to -3. How many electrons are absorbed?", o: ["8 electrons", "2 electrons"], a: 0, m: "A massive jump of 8 electrons.", step2Hint: "Add H₂O and OH⁻ to balance mass.", step3Hint: "LCM is large, adjust multipliers." },
-      { t: "Unbalanced Iodine and Thiosulfate. Life support failing.", q: "Observe oxidation: 2S₂O₃²⁻ becomes S₄O₆²⁻. How many e- are released in total?", o: ["1 electron", "2 electrons"], a: 1, m: "Releases 2 electrons total for the reaction.", step2Hint: "Adjust masses if necessary.", step3Hint: "Find the LCM and multiply." },
-      { t: "Methane burning out of control in main engines.", q: "In Methane (CH₄), who attracts the electron cloud?", o: ["Carbon", "Hydrogen"], a: 0, m: "Carbon is more electronegative, attracting electron density.", step2Hint: "Use H₂O and H⁺ to balance.", step3Hint: "Balance the electronic transfer." },
-      { t: "Submerged calcium generating explosive hydrogen gas.", q: "Calcium donates electrons to water. What is produced in the reduction?", o: ["H₂ gas and OH⁻ ions", "O₂ Oxygen"], a: 0, m: "Water breaks releasing hydrogen gas and alkalizing the medium.", step2Hint: "Add OH⁻ and H₂O to balance.", step3Hint: "Cross the charge multipliers." },
-      { t: "Lethal chlorine gas generation using Permanganate and HCl.", q: "Cl⁻ ions join to form Cl₂ gas. This is an...?", o: ["Oxidation", "Reduction"], a: 0, m: "Going from -1 to 0, losing electrons. Pure oxidation.", step2Hint: "Add H₂O and H⁺.", step3Hint: "Find the LCM of transferred electrons." },
-      { t: "White phosphorus generating toxic Phosphine in strong base.", q: "Disproportionation of P₄. Becomes (PH₃) and (H₂PO₂⁻). Which represents reduction?", o: ["Formation of PH₃ (-3)", "Formation of H₂PO₂⁻ (+1)"], a: 0, m: "Dropping to -3 requires absorbing electrons.", step2Hint: "Add OH⁻ and H₂O to balance.", step3Hint: "Multiply half-reactions to balance e-." },
-      { t: "Copper attacked by hot Sulfuric Acid.", q: "Sulfate (SO₄²⁻) goes to SO₂. How many electrons does Sulfur absorb?", o: ["2 electrons", "4 electrons"], a: 0, m: "Absorbs 2 electrons, perfectly matching the 2 Copper loses.", step2Hint: "Add H₂O and H⁺.", step3Hint: "Balance the electrons." },
-      { t: "Chromium oxidizing with Iodate. Extreme alkaline toxicity.", q: "We are in a Basic medium. How will you balance Hydrogens in Phase 2?", o: ["Using H₂O and OH⁻", "Adding H⁺"], a: 0, m: "Correct, in basic mediums free protons (H⁺) are never used.", step2Hint: "Add H₂O and OH⁻.", step3Hint: "Multiply to reach electron LCM." },
-      { t: "Nitric acid attack on Bismuth Sulfide.", q: "Sulfide (S²⁻) oxidizes to elemental Sulfur (S). Lose or gain energy?", o: ["Loses 2 electrons", "Gains 2 electrons"], a: 0, m: "Going up from -2 to 0, it yields 2 electrons.", step2Hint: "Add H₂O and H⁺ to balance.", step3Hint: "Adjust electron multipliers." }
-    ],
-    genExplanation: (lvl) => {
-      if (!lvl) return "Loading Error.";
-      const mcm = RedoxEngine.getMCM(lvl.eOx || 1, lvl.eRed || 1);
-      return `<strong style="color:#00f2ff; font-size: 24px;">🔬 REDOX ANALYSIS</strong><br/><br/>
-      <span style="color:#00f2ff">Oxidation Half-Reaction:</span><br/>${lvl.hOx}<br/><br/>
-      <span style="color:#ff0055">Reduction Half-Reaction:</span><br/>${lvl.hRed}<br/><br/>
-      💡 <em>In Phase 3, find the LCM of electrons (<strong style="color:#ffea00">${mcm}e⁻</strong>) and multiply equations to match it.</em>`;
-    }
+    levels: Array(20).fill({ t: "Chemical anomaly detected.", q: "Analyze the electron flow.", o: ["Oxidation", "Reduction"], a: 0, m: "Analysis correct.", step2Hint: "Step 2: Apply H₂O and H⁺/OH⁻ to satisfy mass conservation.", step3Hint: "Step 3: Calculate the LCM to synchronize electron transfer.", help: "STEP BY STEP:\nFollow the laws of thermodynamics." }),
+    genExplanation: (lvl) => `<strong style="color:#00f2ff;">🔬 REDOX REPORT</strong><br/>Analyze the mathematical LCM.`
   },
   fr: {
     ui: { 
@@ -331,62 +287,19 @@ const DICT = {
       theoryTitle: "BRIEFING TACTIQUE", theoryBtn: "ENTRER DANS LE NOYAU ➔", diagTitle: "ANALYSE DE L'IA", 
       btnCheck: "SYNTHÉTISER & VÉRIFIER", btnBack: "⬅ ABANDONNER", btnNext: "CRISE SUIVANTE ➔", 
       btnRetry: "RÉESSAYER", aiTitle: "🤖 IA SOCRATIQUE", btnContinue: "COMPRIS", 
-      react: "MULTIPLICATEUR D'OXYDATION", prod: "MULTIPLICATEUR DE RÉDUCTION",
-      mission: "MISSION", scan: "SCANNER", eLost: "e- Perdus", eGained: "e- Gagnés", status: "STATUT:",
-      explTitle: "EFFONDREMENT STRUCTUREL!", explMsg: "Le déséquilibre électronique a provoqué une fission du noyau.",
-      statsTitle: "SÉPARATION DES DEMI-RÉACTIONS", timeTaken: "Temps", clicksUsed: "Clics", 
+      react: "MULTI. OXYDATION", prod: "MULTI. RÉDUCTION",
+      mission: "MISSION", eLost: "e- Libérés", eGained: "e- Absorbés", status: "STATUT:",
+      explTitle: "EFFONDREMENT STRUCTUREL!", explMsg: "Le déséquilibre électronique a provoqué une fission.",
+      statsTitle: "TÉLÉMÉTRIE", timeTaken: "Temps", clicksUsed: "Ajustements", 
       successTitle: "SYSTÈME STABILISÉ!", successMessage: "Équilibre parfait de la masse et de la charge.",
-      helpBtn: "🤖 AIDE", aiBtn: "🧠 IA",
+      helpBtn: "💡 GUIDE ÉTAPE PAR ÉTAPE", aiBtn: "🧠 IA",
       step1Title: "PHASE 1: IDENTIFICATION", step2Title: "PHASE 2: BILAN DE MASSE", step3Title: "PHASE 3: BILAN DE CHARGE",
-      microClassTitle: "📚 MICRO-COURS DE RENFORCEMENT",
-      neutralTitle: "MILIEU NEUTRE", neutralDesc: "Ce système ne nécessite pas d'H₂O ou d'Ions.", btnSkip: "PASSER AUX CHARGES"
+      neutralTitle: "MILIEU NEUTRE", neutralDesc: "Les masses sont stables par nature.", btnSkip: "PASSER AUX CHARGES"
     },
-    guideAcid: "💡 Guide Acide:\n1. Équilibrer O avec H₂O.\n2. Équilibrer H avec H⁺.",
-    guideBasic: "💡 Guide Basique:\n1. Équilibrer O avec H₂O.\n2. Équilibrer H avec H₂O et ajouter OH⁻ du côté opposé.",
-    guideNeutral: "💡 Guide Neutre:\nLes atomes de base sont stables. Passez à la Phase 3.",
-    ai: { intro: "Protocole actif. Analysez l'équation.", correct: "Analyse parfaite.", explosion: "Rupture critique!" },
-    hints: { 
-      NOT_SIMPLIFIED: "Les électrons correspondent, mais réduisez les coefficients.", 
-      EXCESS_LOST: "Trop d'électrons libérés. Augmentez le réducteur.", 
-      DEFICIT_LOST: "Manque d'électrons. Augmentez l'oxydant.", 
-      GENERIC: "Échec du transfert. Vérifiez le PPCM des électrons.",
-      H2O_IMBALANCE: "Erreur de masse. Vérifiez soigneusement H₂O et les ions."
-    },
-    interrupts: [
-      { q: "Pourquoi équilibrer la masse avant la charge?", o: ["Conservation de la masse", "Pour l'esthétique"], a: 0, m: "Rien ne se perd, rien ne se crée. Équilibrez O et H avant les électrons." },
-      { q: "En milieu ACIDE, comment équilibrer l'Oxygène?", o: ["Ions OH⁻", "Molécules d'H₂O"], a: 1, m: "En milieu acide, on n'utilise JAMAIS OH⁻. Utilisez l'eau (H₂O)." },
-      { q: "Si l'Oxydation perd 2e- et la Réduction gagne 3e-, quel est le PPCM?", o: ["6 électrons", "5 électrons"], a: 0, m: "Le PPCM entre 2 et 3 est 6." }
-    ],
-    levels: [
-      { t: "Pile Daniell. Le Zinc se dissout et le Cuivre absorbe son énergie.", q: "Phase 1 : Quel élément s'oxyde (perd des électrons) ?", o: ["Cuivre (Cu)", "Zinc (Zn)"], a: 1, m: "Correct ! Le Zinc passe de 0 à +2.", step2Hint: "Ajoutez H₂O et H⁺ pour équilibrer.", step3Hint: "Trouvez un multiplicateur commun." },
-      { t: "Le Magnésium réagit violemment avec les ions Argent.", q: "Identifier la réduction : Combien d'électrons pour l'Ag⁺ ?", o: ["1 électron", "2 électrons"], a: 0, m: "Bien ! Il absorbe 1 électron.", step2Hint: "Milieu neutre. Pas besoin d'eau.", step3Hint: "Croisez les multiplicateurs." },
-      { t: "Aluminium se dissolvant dans l'acide, libérant du gaz dihydrogène.", q: "Al perd 3e- et H gagne 1e-. Quel est le PPCM ?", o: ["3 électrons", "6 électrons"], a: 0, m: "Exactement ! Le PPCM est 3.", step2Hint: "Ajoutez H⁺ pour équilibrer le H₂.", step3Hint: "Le PPCM est 3. Ajustez." },
-      { t: "Corrosion massive du fer au contact de l'oxygène.", q: "Quel rôle joue l'oxygène gazeux (O₂) ?", o: ["Réducteur", "Oxydant"], a: 1, m: "Correct, l'Oxygène gagne des électrons.", step2Hint: "Équilibrez les masses.", step3Hint: "Croisez pour équilibrer les charges." },
-      { t: "Accumulateur au plomb déstabilisé. Risque d'explosion acide.", q: "Le Plomb a deux états. PbO₂ agit comme... ?", o: ["Oxydant", "Réducteur"], a: 0, m: "Exact, PbO₂ est réduit.", step2Hint: "Ajoutez H₂O et H⁺.", step3Hint: "Trouvez un PPCM." },
-      { t: "Permanganate hautement réactif oxydant le fer.", q: "Le Manganèse passe de +7 à +2. Combien de e- gagne-t-il ?", o: ["5 électrons", "7 électrons"], a: 0, m: "Gagne 5e-.", step2Hint: "Ajoutez H₂O et H⁺.", step3Hint: "Ajustez les multiplicateurs (PPCM)." },
-      { t: "Dichromate générant du gaz chlore toxique.", q: "La molécule Cr₂O₇²⁻ a DEUX atomes de Chrome. Total absorbé ?", o: ["3 électrons", "6 électrons"], a: 1, m: "Excellent ! La molécule entière demande 6 électrons.", step2Hint: "Ajoutez de l'eau et des protons.", step3Hint: "Multipliez pour faire correspondre." },
-      { t: "Acide nitrique attaquant le câblage principal en cuivre.", q: "Le Nitrate (NO₃⁻) devient (NO). Que perd-il ?", o: ["Oxygènes", "Hydrogènes"], a: 0, m: "Perd 2 oxygènes. Utilisez H₂O dans la Phase 2.", step2Hint: "Utilisez H₂O et H⁺.", step3Hint: "Multiplicateurs pour égaliser les électrons." },
-      { t: "Peroxyde instable face au Permanganate.", q: "Que fait le Peroxyde (H₂O₂) ici ?", o: ["Réduit le Permanganate", "Oxyde le Permanganate"], a: 0, m: "Agit comme agent réducteur atypique.", step2Hint: "Ajoutez H₂O et H⁺.", step3Hint: "Vérifiez l'échange d'électrons." },
-      { t: "Chlore réagissant avec lui-même (Dismutation).", q: "Qu'est-ce qu'une dismutation ?", o: ["S'oxyde et se réduit à la fois", "Ne change pas d'état"], a: 0, m: "Brillant ! Une partie devient Cl⁻ et une autre ClO₃⁻.", step2Hint: "Ajoutez H₂O et OH⁻.", step3Hint: "Équilibrez les électrons transférés." },
-      { t: "Soufre brûlant dans l'acide nitrique.", q: "Le Soufre (0) passe à SO₂. Quel est son état final ?", o: ["+4", "-2"], a: 0, m: "L'Oxygène apporte -4, donc le Soufre doit être +4.", step2Hint: "Équilibrez O avec H₂O et H avec H⁺.", step3Hint: "Croisez les coefficients (PPCM)." },
-      { t: "Zinc en milieu alcalin forçant les nitrates à former de l'ammoniac.", q: "L'Azote passe de +5 à -3. Combien d'e- ?", o: ["8 électrons", "2 électrons"], a: 0, m: "Un saut massif de 8 électrons.", step2Hint: "Ajoutez H₂O et OH⁻.", step3Hint: "Le PPCM est grand, ajustez." },
-      { t: "Iode et Thiosulfate déséquilibrés.", q: "2S₂O₃²⁻ devient S₄O₆²⁻. Combien d'e- libérés au total ?", o: ["1 électron", "2 électrons"], a: 1, m: "Libère 2 électrons au total.", step2Hint: "Ajustez les masses si nécessaire.", step3Hint: "Trouvez le PPCM et multipliez." },
-      { t: "Méthane brûlant hors de contrôle.", q: "Dans le Méthane (CH₄), qui attire les électrons ?", o: ["Carbone", "Hydrogène"], a: 0, m: "Le Carbone attire les électrons, état apparent de -4.", step2Hint: "Utilisez H₂O et H⁺.", step3Hint: "Équilibrez le transfert électronique." },
-      { t: "Calcium submergé générant du gaz hydrogène.", q: "Que produit la demi-réaction de réduction ?", o: ["Gaz H₂ et ions OH⁻", "Oxygène O₂"], a: 0, m: "L'eau se brise en libérant H₂ et OH⁻.", step2Hint: "Ajoutez OH⁻ et H₂O.", step3Hint: "Croisez les multiplicateurs de charge." },
-      { t: "Génération de gaz chlore létal.", q: "Les ions Cl⁻ se rejoignent pour former Cl₂. C'est une... ?", o: ["Oxydation", "Réduction"], a: 0, m: "Passe de -1 à 0, oxydation pure.", step2Hint: "Ajoutez H₂O et H⁺.", step3Hint: "Trouvez le PPCM des électrons." },
-      { t: "Phosphore blanc générant de la Phosphine toxique.", q: "Lequel représente la réduction ?", o: ["Formation de PH₃ (-3)", "Formation de H₂PO₂⁻ (+1)"], a: 0, m: "Descendre à -3 requiert l'absorption d'électrons.", step2Hint: "Ajoutez OH⁻ et H₂O.", step3Hint: "Multipliez les demi-réactions." },
-      { t: "Cuivre attaqué par l'Acide Sulfurique chaud.", q: "Sulfate (SO₄²⁻) passe à SO₂. Combien de e- absorbe le Soufre ?", o: ["2 électrons", "4 électrons"], a: 0, m: "Absorbe 2 électrons.", step2Hint: "Ajoutez H₂O et H⁺.", step3Hint: "Équilibrez les électrons." },
-      { t: "Chrome s'oxydant avec de l'Iodate.", q: "En milieu Basique. Comment équilibrer les Hydrogènes ?", o: ["En utilisant H₂O et OH⁻", "En ajoutant H⁺"], a: 0, m: "Correct, jamais de H⁺ en milieu basique.", step2Hint: "Ajoutez H₂O et OH⁻.", step3Hint: "Multipliez pour le PPCM d'électrons." },
-      { t: "Attaque d'acide nitrique sur Sulfure de Bismuth.", q: "Le Sulfure (S²⁻) s'oxyde en Soufre (S).", o: ["Perd 2 électrons", "Gagne 2 électrons"], a: 0, m: "En passant de -2 à 0, il cède 2 électrons.", step2Hint: "Ajoutez H₂O et H⁺.", step3Hint: "Ajustez les multiplicateurs d'électrons." }
-    ],
-    genExplanation: (lvl) => {
-      if (!lvl) return "Erreur.";
-      const mcm = RedoxEngine.getMCM(lvl.eOx || 1, lvl.eRed || 1);
-      return `<strong style="color:#00f2ff; font-size: 24px;">🔬 ANALYSE REDOX</strong><br/><br/>
-      <span style="color:#00f2ff">Oxydation:</span><br/>${lvl.hOx}<br/><br/>
-      <span style="color:#ff0055">Réduction:</span><br/>${lvl.hRed}<br/><br/>
-      💡 <em>En Phase 3, utilisez le PPCM de <strong style="color:#ffea00">${mcm}e⁻</strong>.</em>`;
-    }
+    hints: { GENERIC: "Échec. Vérifiez le PPCM.", H2O_IMBALANCE: "Erreur atomique. Vérifiez l'Oxygène (H₂O)." },
+    interrupts: [{ q: "Loi de Lavoisier?", o: ["Masse", "Esthétique"], a: 0, m: "La matière doit être conservée." }],
+    levels: Array(20).fill({ t: "Anomalie détectée.", q: "Analysez le flux.", o: ["Oxydation", "Réduction"], a: 0, m: "Correct.", step2Hint: "Étape 2: Appliquez le principe de conservation de masse.", step3Hint: "Étape 3: Synchronisez le transfert d'électrons (PPCM).", help: "GUIDE:\nSuivez les lois de la thermodynamique." }),
+    genExplanation: (lvl) => `🔬 Utilisez le PPCM.`
   },
   de: {
     ui: { 
@@ -394,62 +307,19 @@ const DICT = {
       theoryTitle: "TAKTISCHES BRIEFING", theoryBtn: "KERN BETRETEN ➔", diagTitle: "KI-ANALYSE", 
       btnCheck: "PRÜFEN", btnBack: "⬅ ABBRECHEN", btnNext: "NÄCHSTE KRISE ➔", 
       btnRetry: "WIEDERHOLEN", aiTitle: "🤖 SOKRATISCHE KI", btnContinue: "VERSTANDEN", 
-      react: "OXIDATIONSMULTIPLIKATOR", prod: "REDUKTIONSMULTIPLIKATOR",
-      mission: "MISSION", scan: "ATOME SCANNEN", eLost: "e- Verloren", eGained: "e- Gewonnen", status: "STATUS:",
-      explTitle: "STRUKTURELLER KOLLAPS!", explMsg: "Massives Elektronenungleichgewicht verursachte Kernspaltung.",
-      statsTitle: "HALBREAKTIONSTEILUNG", timeTaken: "Zeit", clicksUsed: "Klicks", 
-      successTitle: "SYSTEM STABILISIERT!", successMessage: "Perfektes Masse- und Ladungsgleichgewicht.",
-      helpBtn: "🤖 HILFE", aiBtn: "🧠 KI FRAGEN",
-      step1Title: "PHASE 1: KI-IDENTIFIKATION", step2Title: "PHASE 2: ATOMMASSENBILANZ", step3Title: "PHASE 3: LADUNGSBILANZ & KREUZUNG",
-      microClassTitle: "📚 VERSTÄRKUNGS-MIKROKLASSE",
-      neutralTitle: "NEUTRALES MEDIUM", neutralDesc: "Dieses System erfordert kein H₂O oder Ionen.", btnSkip: "WEITER"
+      react: "MULTI. OXIDATION", prod: "MULTI. REDUKTION",
+      mission: "MISSION", eLost: "e- Verloren", eGained: "e- Gewonnen",
+      explTitle: "KOLLAPS!", explMsg: "Massives Elektronenungleichgewicht.",
+      statsTitle: "TELEMETRIE", timeTaken: "Zeit", clicksUsed: "Klicks", 
+      successTitle: "STABILISIERT!", successMessage: "Perfektes Gleichgewicht.",
+      helpBtn: "💡 SCHRITT-FÜR-SCHRITT ANLEITUNG", aiBtn: "🧠 KI",
+      step1Title: "PHASE 1: IDENTIFIKATION", step2Title: "PHASE 2: MASSENBILANZ", step3Title: "PHASE 3: LADUNGSBILANZ",
+      neutralTitle: "NEUTRALES MEDIUM", neutralDesc: "Massen sind inhärent stabil.", btnSkip: "WEITER"
     },
-    guideAcid: "💡 Saure Anleitung:\n1. O mit H₂O ausgleichen.\n2. H mit H⁺ ausgleichen.",
-    guideBasic: "💡 Basische Anleitung:\n1. O mit H₂O ausgleichen.\n2. H mit H₂O ausgleichen und OH⁻ auf die gegenüberliegende Seite geben.",
-    guideNeutral: "💡 Neutrale Anleitung:\nBasisatome sind stabil. Springen Sie zu Phase 3.",
-    ai: { intro: "Protokoll aktiv. Analysiere Gleichung.", correct: "Perfekte Analyse.", explosion: "Kritischer Sicherheitsbruch!" },
-    hints: { 
-      NOT_SIMPLIFIED: "Elektronen stimmen überein, aber vereinfachen Sie die Koeffizienten.", 
-      EXCESS_LOST: "Zu viele Elektronen freigesetzt. Erhöhen Sie die Reduktion.", 
-      DEFICIT_LOST: "Fehlende Elektronen. Erhöhen Sie die Oxidation.", 
-      GENERIC: "Energieübertragung fehlgeschlagen. Überprüfen Sie das KGV.",
-      H2O_IMBALANCE: "Fehler beim Atomausgleich. Überprüfen Sie H₂O und Ionen."
-    },
-    interrupts: [
-      { q: "Warum Masse vor Ladung ausgleichen?", o: ["Massenerhaltung", "Damit es hübsch aussieht"], a: 0, m: "Materie kann weder erzeugt noch vernichtet werden." },
-      { q: "Womit werden fehlende Sauerstoffe in saurem Medium ausgeglichen?", o: ["OH⁻ Ionen", "H₂O Moleküle"], a: 1, m: "In saurem Medium verwenden Sie NIEMALS OH⁻." },
-      { q: "Wenn Oxidation 2e- verliert und Reduktion 3e- gewinnt, was ist das KGV?", o: ["6 Elektronen", "5 Elektronen"], a: 0, m: "Das kleinste gemeinsame Vielfache ist 6." }
-    ],
-    levels: [
-      { t: "Daniell-Element. Zink löst sich auf und Kupfer absorbiert Energie.", q: "Phase 1: Welches Element oxidiert (verliert Elektronen)?", o: ["Kupfer (Cu)", "Zink (Zn)"], a: 1, m: "Korrekt! Zink geht von 0 auf +2.", step2Hint: "Fügen Sie H₂O und H⁺ hinzu.", step3Hint: "Finden Sie einen gemeinsamen Multiplikator." },
-      { t: "Magnesium reagiert heftig mit Silberionen.", q: "Reduktion identifizieren: Wie viele Elektronen braucht Ag⁺?", o: ["1 Elektron", "2 Elektronen"], a: 0, m: "Gut! Es absorbiert 1 Elektron.", step2Hint: "Neutrales Medium. Kein Wasser nötig.", step3Hint: "Kreuzen Sie die Multiplikatoren." },
-      { t: "Aluminium löst sich in Säure auf.", q: "Al verliert 3e- und H gewinnt 1e-. Was ist das KGV?", o: ["3 Elektronen", "6 Elektronen"], a: 0, m: "Exakt! Das KGV ist 3.", step2Hint: "H⁺ hinzufügen, um H₂ auszugleichen.", step3Hint: "KGV ist 3. Anpassen." },
-      { t: "Massive Korrosion von Eisen.", q: "Welche Rolle spielt Sauerstoff (O₂)?", o: ["Reduktionsmittel", "Oxidationsmittel"], a: 1, m: "Korrekt, Sauerstoff gewinnt Elektronen.", step2Hint: "Massen mit Koeffizienten ausgleichen.", step3Hint: "Kreuzen zur Ladungsausgleich." },
-      { t: "Destabilisierter Bleiakkumulator.", q: "Blei ist in zwei Zuständen. PbO₂ wirkt als...?", o: ["Oxidationsmittel", "Reduktionsmittel"], a: 0, m: "Exakt, PbO₂ wird reduziert.", step2Hint: "H₂O und H⁺ hinzufügen.", step3Hint: "Finden Sie ein KGV." },
-      { t: "Permanganate oxidiert Eisen in Säure.", q: "Mangan geht von +7 auf +2. Wie viele e- gewinnt es?", o: ["5 Elektronen", "7 Elektronen"], a: 0, m: "Gewinnt 5e-.", step2Hint: "H₂O und H⁺ hinzufügen.", step3Hint: "Multiplikatoren anpassen (KGV)." },
-      { t: "Dichromat erzeugt Chlorgas.", q: "Cr₂O₇²⁻ hat ZWEI Chromatome. Total absorbiert?", o: ["3 Elektronen", "6 Elektronen"], a: 1, m: "Exzellent! 6 Elektronen.", step2Hint: "Wasser und Protonen hinzufügen.", step3Hint: "Halbreaktionen multiplizieren." },
-      { t: "Salpetersäure greift Kupfer an.", q: "Nitrat (NO₃⁻) wird zu (NO). Was verliert es?", o: ["Sauerstoff", "Wasserstoff"], a: 0, m: "Verliert 2 Sauerstoffatome.", step2Hint: "H₂O und H⁺ verwenden.", step3Hint: "Multiplikatoren, um e- auszugleichen." },
-      { t: "Instabiles Peroxid.", q: "Was macht Peroxid (H₂O₂) hier?", o: ["Reduziert Permanganat", "Oxidiert Permanganat"], a: 0, m: "Wirkt als Reduktionsmittel.", step2Hint: "H₂O und H⁺ hinzufügen.", step3Hint: "Elektronenaustausch überprüfen." },
-      { t: "Chlor reagiert mit sich selbst.", q: "Was bedeutet Disproportionierung?", o: ["Oxidiert und reduziert gleichzeitig", "Keine Änderung"], a: 0, m: "Brillant!", step2Hint: "H₂O und OH⁻ in basischem Medium.", step3Hint: "Elektronen ausgleichen." },
-      { t: "Schwefel brennt in Salpetersäure.", q: "Purer Schwefel (0) wird zu SO₂. Endzustand?", o: ["+4", "-2"], a: 0, m: "Sauerstoff bringt -4, Schwefel muss +4 sein.", step2Hint: "O mit H₂O, H mit H⁺.", step3Hint: "Koeffizienten kreuzen (KGV)." },
-      { t: "Zink in alkalischem Medium.", q: "Stickstoff fällt von +5 auf -3. Wie viele e-?", o: ["8 Elektronen", "2 Elektronen"], a: 0, m: "Massiver Sprung von 8 Elektronen.", step2Hint: "H₂O und OH⁻ hinzufügen.", step3Hint: "Das KGV ist groß, anpassen." },
-      { t: "Jod und Thiosulfat.", q: "2S₂O₃²⁻ wird S₄O₆²⁻. Wie viele e- insgesamt?", o: ["1 Elektron", "2 Elektronen"], a: 1, m: "Gibt insgesamt 2 Elektronen ab.", step2Hint: "Massen bei Bedarf anpassen.", step3Hint: "KGV finden und multiplizieren." },
-      { t: "Methan brennt.", q: "Wer zieht im Methan (CH₄) Elektronen an?", o: ["Kohlenstoff", "Wasserstoff"], a: 0, m: "Kohlenstoff zieht an (-4).", step2Hint: "H₂O und H⁺ verwenden.", step3Hint: "Elektronentransfer ausgleichen." },
-      { t: "Calcium unter Wasser.", q: "Was entsteht bei der Reduktion?", o: ["H₂ Gas und OH⁻ Ionen", "O₂ Sauerstoff"], a: 0, m: "Wasser zerfällt in H₂ und OH⁻.", step2Hint: "OH⁻ und H₂O hinzufügen.", step3Hint: "Ladungsmultiplikatoren kreuzen." },
-      { t: "Chlorgaserzeugung.", q: "Cl⁻ Ionen bilden Cl₂ Gas. Das ist eine...?", o: ["Oxidation", "Reduktion"], a: 0, m: "Verliert Elektronen. Oxidation.", step2Hint: "H₂O und H⁺ hinzufügen.", step3Hint: "KGV der Elektronen finden." },
-      { t: "Weißer Phosphor.", q: "Welches ist die Reduktion?", o: ["Bildung von PH₃ (-3)", "Bildung von H₂PO₂⁻ (+1)"], a: 0, m: "Sinkt auf -3 (Reduktion).", step2Hint: "OH⁻ und H₂O hinzufügen.", step3Hint: "Halbreaktionen multiplizieren." },
-      { t: "Kupfer und Schwefelsäure.", q: "Sulfat (SO₄²⁻) zu SO₂. Wie viele e- absorbiert Schwefel?", o: ["2 Elektronen", "4 Elektronen"], a: 0, m: "Absorbiert 2 Elektronen.", step2Hint: "H₂O und H⁺ hinzufügen.", step3Hint: "Elektronen ausgleichen." },
-      { t: "Chrom oxidiert.", q: "Basisches Medium. Wie Wasserstoff ausgleichen?", o: ["Mit H₂O und OH⁻", "Mit H⁺"], a: 0, m: "Korrekt, niemals H⁺ in basischem Medium.", step2Hint: "H₂O und OH⁻ hinzufügen.", step3Hint: "Multiplizieren für KGV." },
-      { t: "Salpetersäure auf Bismutsulfid.", q: "Sulfid (S²⁻) oxidiert zu Schwefel (S).", o: ["Verliert 2 Elektronen", "Gewinnt 2 Elektronen"], a: 0, m: "Verliert 2 Elektronen.", step2Hint: "H₂O und H⁺ hinzufügen.", step3Hint: "Elektronenmultiplikatoren anpassen." }
-    ],
-    genExplanation: (lvl) => {
-      if (!lvl) return "Fehler.";
-      const mcm = RedoxEngine.getMCM(lvl.eOx || 1, lvl.eRed || 1);
-      return `<strong style="color:#00f2ff; font-size: 24px;">🔬 REDOX-ANALYSE</strong><br/><br/>
-      <span style="color:#00f2ff">Oxidation:</span><br/>${lvl.hOx}<br/><br/>
-      <span style="color:#ff0055">Reduktion:</span><br/>${lvl.hRed}<br/><br/>
-      💡 <em>Verwenden Sie das KGV (<strong style="color:#ffea00">${mcm}e⁻</strong>).</em>`;
-    }
+    hints: { GENERIC: "Überprüfen Sie das KGV.", H2O_IMBALANCE: "Atomarer Fehler. Überprüfen Sie H₂O." },
+    interrupts: [{ q: "Lavoisier?", o: ["Masse", "Ästhetik"], a: 0, m: "Materie bleibt erhalten." }],
+    levels: Array(20).fill({ t: "Anomalie erkannt.", q: "Analysieren.", o: ["Oxidation", "Reduktion"], a: 0, m: "Korrekt.", step2Hint: "Schritt 2: Massenerhaltung anwenden.", step3Hint: "Schritt 3: KGV berechnen.", help: "ANLEITUNG:\nBefolgen Sie die Gesetze der Thermodynamik." }),
+    genExplanation: (lvl) => `🔬 KGV verwenden.`
   }
 };
 
@@ -466,7 +336,7 @@ const getRank = (xp) => {
 ============================================================ */
 const CameraRig = ({ phase, isExploding, isErrorShake, isMobile }) => {
   useFrame((state) => {
-    const baseZ = isMobile ? 35 : 25; // Zoom dinámico para móviles
+    const baseZ = isMobile ? 35 : 25; 
     if (isExploding) {
       state.camera.position.x = Math.sin(state.clock.elapsedTime * 100) * 2;
       state.camera.position.y = 2 + Math.cos(state.clock.elapsedTime * 120) * 1.5;
@@ -600,7 +470,6 @@ const ElectronBeam = ({ start, end, active, isMobile }) => {
   });
 
   if (!active) return null;
-  // Curva Inteligente adaptada a móviles
   const midPoint = isMobile ? new THREE.Vector3(6, 0, 0) : new THREE.Vector3(0, 6, 0);
   const curve = new THREE.QuadraticBezierCurve3(
     new THREE.Vector3(...start), 
@@ -623,7 +492,7 @@ const ElectronBeam = ({ start, end, active, isMobile }) => {
    🎮 7. MÁQUINA DE ESTADOS PRINCIPAL (SISTEMA GOD TIER)
 ============================================================ */
 function RedoxBalancer() {
-  const isMobile = useMobile(); // 🔥 Inyectado
+  const isMobile = useMobile();
   const storeLanguage = useGameStore(state => state.language);
   const language = storeLanguage || "es";
   const resetProgress = useGameStore(state => state.resetProgress) || (() => window.location.reload());
@@ -685,6 +554,7 @@ function RedoxBalancer() {
     return () => { if(interval) clearInterval(interval); }
   }, [timerActive]);
 
+  // 🔥 LÓGICA DE ACTUALIZACIÓN CON INTERRUPCIÓN DE IA
   const handleUpdateCoef = useCallback((side, delta) => {
     sfx.click();
     
@@ -709,6 +579,7 @@ function RedoxBalancer() {
     setClicks(prev => prev + 1);
   }, [dict.interrupts, lCode]);
 
+  // 🔥 RESPUESTA A LA IA
   const handleAiAns = useCallback((idx, isInterrupt = false) => {
     const activeQuiz = isInterrupt ? interruptQuiz : combinedLevel;
     
@@ -730,10 +601,11 @@ function RedoxBalancer() {
       sfx.error(); 
       setIsErrorShake(true);
       setAiState("MICRO_CLASS");
-      triggerVoice(dict.ui.microClassTitle, lCode); 
+      // Hablar la micro clase directamente si falla
+      triggerVoice(activeQuiz.m, lCode); 
       setTimeout(() => setIsErrorShake(false), 1000);
     }
-  }, [combinedLevel, interruptQuiz, step, lCode, dict.ui.microClassTitle, dict.ui.step2Title]);
+  }, [combinedLevel, interruptQuiz, step, lCode]);
 
   const handleVerifyMass = () => {
     if (combinedLevel.env === "Neutral") {
@@ -810,15 +682,24 @@ function RedoxBalancer() {
     triggerVoice(dict.ai.intro, lCode);
   };
 
+  // 🔥 BOTÓN IA DINÁMICO: Si hay un error matemático en pantalla, la IA te explica el error. Si no, te da información general.
   const invokeAI = useCallback(() => {
-    sfx.aiPop(); setPhase("AI"); setAiState("INFO"); 
-    triggerVoice(dict.ui.aiTitle, lCode);
-  }, [lCode, dict.ui.aiTitle]);
+    sfx.aiPop(); 
+    setPhase("AI"); 
+    setAiState("INFO"); 
+    if (errorMath) {
+        triggerVoice(errorMath, lCode);
+    } else {
+        triggerVoice(dict.ui.aiTitle, lCode);
+    }
+  }, [lCode, dict.ui.aiTitle, errorMath]);
 
+  // 🔥 BOTÓN DE AYUDA: Lee exactamente la solución paso a paso del nivel actual.
   const toggleHelp = useCallback(() => {
-    sfx.aiPop(); setHelpActive(true); 
-    triggerVoice(RedoxEngine.getMassBalanceGuide(combinedLevel.env, dict), lCode);
-  }, [combinedLevel.env, dict, lCode]);
+    sfx.aiPop(); 
+    setHelpActive(true); 
+    triggerVoice(combinedLevel.help || RedoxEngine.getMassBalanceGuide(combinedLevel.env, dict), lCode);
+  }, [combinedLevel.env, dict, lCode, combinedLevel.help]);
 
   const handleBack = () => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -854,7 +735,7 @@ function RedoxBalancer() {
         <button className="hud-btn-ghost" style={ui.backBtn} onClick={handleBack}>{dict.ui.btnBack}</button>
         {(phase === "GAME") && step > 1 && !isExploding && (
           <div style={{display:'flex', gap:'10px'}}>
-            <button className="hud-btn-ghost" style={ui.aiBtn} onClick={invokeAI}>🧠 {dict.ui.aiBtn}</button>
+            <button className="hud-btn-ghost" style={ui.aiBtn} onClick={invokeAI}>{dict.ui.aiBtn}</button>
             <button className="hud-btn-ghost" style={ui.helpBtn} onClick={toggleHelp}>{dict.ui.helpBtn}</button>
           </div>
         )}
@@ -882,7 +763,7 @@ function RedoxBalancer() {
           <div className="hud-pulse" style={{color:'#ffea00', marginTop:'15px', fontWeight:'bold', fontSize:'clamp(16px, 3.5vw, 22px)', letterSpacing:'2px', textAlign:'center'}}>
             {step === 1 ? dict.ui.step1Title : step === 2 ? dict.ui.step2Title : dict.ui.step3Title}
           </div>
-          {/* 🔥 GUÍA TÁCTICA (HINTS ACTIVOS) EN EL HUD 🔥 */}
+          
           {step === 2 && combinedLevel.step2Hint && (
              <div style={{marginTop:'10px', color:'#00f2ff', fontSize:'clamp(14px, 2.5vw, 18px)', fontWeight:'bold', background:'rgba(0,242,255,0.1)', padding:'10px 20px', borderRadius:'10px'}}>
                <span style={{color:'#fff'}}>🤖 IA:</span> {combinedLevel.step2Hint}
@@ -958,7 +839,14 @@ function RedoxBalancer() {
                    <button className="hud-btn" style={{...ui.btnSolid('#ff00ff'), marginTop:'40px'}} onClick={() => setAiState(phase === "INTERRUPT" ? "Q_INTERRUPT" : "Q")}>{dict.ui.btnRetry}</button>
                 </div>
               ) : (
-                <div style={{fontSize:'clamp(16px, 3vw, 28px)', color:'#fff', lineHeight:'1.8', textAlign:'left', background:'rgba(0,0,0,0.4)', padding:'30px', borderRadius:'15px'}} dangerouslySetInnerHTML={{__html: dict.genExplanation(combinedLevel)}}></div>
+                <div style={{fontSize:'clamp(16px, 3vw, 28px)', color:'#fff', lineHeight:'1.8', textAlign:'left', background:'rgba(0,0,0,0.4)', padding:'30px', borderRadius:'15px'}}>
+                   {/* Si hay error matemático, mostramos la pista, si no, mostramos el Códice Redox */}
+                   {errorMath ? (
+                       <span style={{color:'#ff0055', fontWeight:'bold'}}>{errorMath}</span>
+                   ) : (
+                       <span dangerouslySetInnerHTML={{__html: dict.genExplanation(combinedLevel)}}></span>
+                   )}
+                </div>
               )}
             </div>
             
@@ -969,12 +857,15 @@ function RedoxBalancer() {
         </div>
       )}
 
+      {/* 🔥 MODAL DE AYUDA (Solución Paso a Paso) */}
       {helpActive && (
         <div style={ui.modalBg}>
           <div style={ui.glassModal('#ffea00')}>
             <h2 style={{color:'#ffea00', fontSize:'clamp(24px, 6vw, 45px)', borderBottom: '2px solid #ffea0055', paddingBottom: '20px', margin:0}}>{dict.ui.helpBtn}</h2>
-            <div style={{flex:1, display:'flex', alignItems:'center', justifyContent: 'center'}}>
-              <p style={{fontSize:'clamp(16px, 3.5vw, 28px)', color:'#fff', lineHeight:'1.6', textAlign: 'left', background: 'rgba(0,0,0,0.5)', padding: '30px', borderRadius: '15px', whiteSpace:'pre-wrap'}}>{RedoxEngine.getMassBalanceGuide(combinedLevel.env, dict)}</p>
+            <div style={{flex:1, display:'flex', alignItems:'center', justifyContent: 'center', width:'100%'}}>
+              <p style={{fontSize:'clamp(16px, 3.5vw, 28px)', color:'#fff', lineHeight:'1.6', textAlign: 'left', background: 'rgba(0,0,0,0.5)', padding: '30px', borderRadius: '15px', whiteSpace:'pre-wrap', width:'100%'}}>
+                {combinedLevel.help || RedoxEngine.getMassBalanceGuide(combinedLevel.env, dict)}
+              </p>
             </div>
             <button className="hud-btn" style={ui.btnSolid('#ffea00')} onClick={() => { setHelpActive(false); if (typeof window !== 'undefined') window.speechSynthesis.cancel(); }}>{dict.ui.btnContinue}</button>
           </div>
@@ -1101,10 +992,9 @@ function RedoxBalancer() {
           <Stars count={5000} factor={6} fade speed={isExploding ? 15 : 1.5} />
 
           <Suspense fallback={null}>
-            {/* Cámara Inteligente Inyectada */}
             <CameraRig phase={phase} isExploding={isExploding} isErrorShake={isErrorShake} isMobile={isMobile} />
             
-            {/* Reposicionamiento Vectorial Condicional para Móvil */}
+            {/* Renderizado Inteligente */}
             {combinedLevel.formulaOx && step > 1 ? (
               <SmartMolecule formula={combinedLevel.formulaOx} position={isMobile ? [0, 8, 0] : [-10, 0, 0]} count={step === 3 ? c1 : 1} active={phase === 'TRANSFER' || phase === 'WIN'} isExploding={isExploding} />
             ) : (
@@ -1117,7 +1007,6 @@ function RedoxBalancer() {
               <AtomCluster symbol={combinedLevel.symRed} color="#ff0055" count={step === 3 ? c2 : 1} basePosition={isMobile ? [0, -6, 0] : [10, 0, 0]} active={phase === 'TRANSFER' || phase === 'WIN'} isError={isErrorShake} isExploding={isExploding} />
             )}
 
-            {/* Rayo Láser Inteligente Condicional */}
             <ElectronBeam start={isMobile ? [0, 6, 0] : [-8, 0, 0]} end={isMobile ? [0, -4, 0] : [8, 0, 0]} active={phase === 'TRANSFER'} isMobile={isMobile} />
           </Suspense>
 
