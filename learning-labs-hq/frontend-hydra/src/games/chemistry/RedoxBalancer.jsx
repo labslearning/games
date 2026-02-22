@@ -11,7 +11,7 @@ import { useGameStore } from '../../store/useGameStore';
 class GameErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false, errorMsg: "" }; }
   static getDerivedStateFromError(error) { return { hasError: true, errorMsg: error.toString() }; }
-  componentDidCatch(error, errorInfo) { console.error("GameErrorBoundary:", error, errorInfo); }
+  componentDidCatch(error, errorInfo) { console.error("GameErrorBoundary atrapó un error:", error, errorInfo); }
   render() {
     if (this.state.hasError) {
       return (
@@ -27,7 +27,7 @@ class GameErrorBoundary extends React.Component {
 }
 
 /* ============================================================
-   🧠 2. MOTOR QUÍMICO PURO (MASAS Y CARGAS)
+   🧠 2. MOTOR QUÍMICO PURO (MASAS Y CARGAS SEPARADAS)
 ============================================================ */
 class RedoxEngine {
   static validateMass(userH2O, userH, userOH, levelData) {
@@ -69,10 +69,10 @@ class RedoxEngine {
     return (a * b) / gcd(a, b);
   }
 
-  static getMassBalanceGuide(env) {
-    if (env === "Ácido") return "Medio Ácido: \n1. Iguala O con H₂O.\n2. Iguala H con H⁺.";
-    if (env === "Básico") return "Medio Básico: \n1. Iguala O con H₂O.\n2. Iguala H con H₂O y añade OH⁻.";
-    return "Medio Neutro: \nLos átomos ya están balanceados en este nivel.";
+  static getMassBalanceGuide(env, langDict) {
+    if (env === "Ácido") return langDict?.guideAcid || "";
+    if (env === "Básico") return langDict?.guideBasic || "";
+    return langDict?.guideNeutral || "";
   }
 
   static parseMolecule(formula) {
@@ -131,7 +131,6 @@ class QuantumAudio {
   explosion() { this._play('sawtooth', 800, 20, 1.0, 0.6, 'noise', 500); }
   scan() { this._play('square', 1000, 2000, 0.3, 0.1, 'sine'); }
 }
-
 const sfx = new QuantumAudio();
 
 let globalUtterance = null;
@@ -146,13 +145,15 @@ const triggerVoice = (text, langCode) => {
       globalUtterance.lang = langCode || 'es-ES'; 
       globalUtterance.rate = 1.05; 
       globalUtterance.pitch = 1.0;
+      globalUtterance.onend = () => { globalUtterance = null; };
+      globalUtterance.onerror = () => { window.speechSynthesis.cancel(); globalUtterance = null; };
       window.speechSynthesis.speak(globalUtterance);
     } catch (e) { }
-  }, 100);
+  }, 50);
 };
 
 /* ============================================================
-   🌍 4. BASE DE DATOS QUÍMICA INTEGRAL (20 NIVELES)
+   🌍 4. BASE DE DATOS QUÍMICA INTEGRAL (20 NIVELES GLOBALES)
 ============================================================ */
 const CHEM_DB = [
   { eq: "Zn + Cu²⁺ ➔ Zn²⁺ + Cu", hOx: "Zn ➔ Zn²⁺ + 2e⁻", hRed: "Cu²⁺ + 2e⁻ ➔ Cu", eOx: 2, eRed: 2, symOx: "Zn", symRed: "Cu", formulaOx: "Zn", formulaRed: "Cu", cOx: 1, cRed: 1, env: "Neutral", ansH2O: 0, ansH: 0, ansOH: 0 },
@@ -179,7 +180,7 @@ const CHEM_DB = [
 const totalLevels = CHEM_DB.length;
 
 /* ============================================================
-   🌍 5. DICCIONARIO TRADUCIDO Y LÓGICA SOCRÁTICA
+   🌍 5. DICCIONARIOS INDEPENDIENTES Y COMPLETOS (SIN ARRAYS REPETIDOS)
 ============================================================ */
 const DICT = {
   es: {
@@ -188,47 +189,53 @@ const DICT = {
       theoryTitle: "BRIEFING TÁCTICO", theoryBtn: "ENTRAR AL NÚCLEO ➔", diagTitle: "ANÁLISIS COGNITIVO IA", 
       btnCheck: "SINTETIZAR Y VERIFICAR", btnBack: "⬅ ABORTAR", btnNext: "SIGUIENTE CRISIS ➔", 
       btnRetry: "REINTENTAR", aiTitle: "🤖 TUTOR IA SOCRÁTICO", btnContinue: "ENTENDIDO, IA", 
-      react: "MULTIPLICADOR OXIDACIÓN", prod: "MULTIPLICADOR REDUCCIÓN",
+      react: "MULTIPLICADOR DE LA OXIDACIÓN", prod: "MULTIPLICADOR DE LA REDUCCIÓN",
       mission: "NIVEL", scan: "ESCANEAR ÁTOMOS", eLost: "e- Liberados", eGained: "e- Absorbidos", status: "ESTADO:",
       explTitle: "¡COLAPSO ESTRUCTURAL!", explMsg: "La descompensación provocó una fisión masiva en el reactor.",
       statsTitle: "SEPARACIÓN DE SEMIRREACCIONES", timeTaken: "Tiempo", clicksUsed: "Ajustes", 
       successTitle: "¡SISTEMA ESTABILIZADO!", successMessage: "Masa y carga en equilibrio perfecto.",
       helpBtn: "🤖 AYUDA", aiBtn: "🧠 CONSULTAR IA",
       step1Title: "FASE 1: IDENTIFICACIÓN SOCRÁTICA", step2Title: "FASE 2: BALANCE DE MASAS ATÓMICAS", step3Title: "FASE 3: BALANCE DE CARGAS Y CRUCE",
-      microClassTitle: "📚 MICRO-CLASE DE REFUERZO"
+      microClassTitle: "📚 MICRO-CLASE DE REFUERZO",
+      neutralTitle: "MEDIO NEUTRO", neutralDesc: "Este sistema no requiere H₂O ni Iones.", btnSkip: "AVANZAR A CARGAS"
     },
+    guideAcid: "💡 Guía Ácida:\n1. Iguala Oxígenos añadiendo H₂O.\n2. Balancea Hidrógenos añadiendo H⁺.",
+    guideBasic: "💡 Guía Básica:\n1. Iguala Oxígenos añadiendo H₂O.\n2. Balancea Hidrógenos añadiendo H₂O y añade OH⁻ al lado opuesto.",
+    guideNeutral: "💡 Guía Neutral:\nLos átomos base están estables. Solo debes enfocarte en igualar los electrones en la Fase 3.",
+    ai: { intro: "Protocolo activado. Analiza la ecuación.", correct: "Análisis perfecto.", explosion: "¡Ruptura crítica de contención!" },
     hints: { 
       NOT_SIMPLIFIED: "Los electrones coinciden, pero debes usar la mínima expresión entera.", 
-      EXCESS_LOST: "Estás liberando demasiados electrones. Aumenta la Reducción.", 
-      DEFICIT_LOST: "Faltan electrones. Aumenta la Oxidación.", 
-      GENERIC: "Fallo en la transferencia. Revisa el MCM de los electrones." 
+      EXCESS_LOST: "Estás liberando demasiados electrones. Aumenta el multiplicador de la Reducción.", 
+      DEFICIT_LOST: "Faltan electrones. Aumenta el multiplicador de la Oxidación.", 
+      GENERIC: "Fallo en la transferencia de energía. Revisa el MCM de los electrones.",
+      H2O_IMBALANCE: "Error en el balance atómico. Revisa cuidadosamente el H₂O y los iones."
     },
     interrupts: [
-      { q: "¿Para qué sirve balancear la masa antes que la carga?", o: ["Para que los átomos no desaparezcan (Ley de Lavoisier)", "Para que se vea bonito"], a: 0, m: "La materia no se crea ni se destruye. Debes igualar los átomos de O y H antes de mover los electrones." },
-      { q: "Si estás en medio ÁCIDO y te faltan Oxígenos, ¿qué agregas?", o: ["Agrego iones OH⁻", "Agrego moléculas de H₂O"], a: 1, m: "En medio ácido NUNCA agregas OH⁻. Usas el Agua (H₂O) para los Oxígenos." },
-      { q: "Si la Oxidación libera 2e- y la Reducción absorbe 3e-, ¿Cuál es su MCM?", o: ["6 electrones", "5 electrones"], a: 0, m: "El Mínimo Común Múltiplo entre 2 y 3 es 6. Debes cruzar multiplicadores para llegar a 6." }
+      { q: "¿Por qué se balancea la masa antes que la carga?", o: ["Conservación de la Materia", "Por estética"], a: 0, m: "Ley de Lavoisier: La materia no se crea ni se destruye. Debes igualar los átomos antes de mover la energía (electrones)." },
+      { q: "En medio ÁCIDO, si te faltan Oxígenos, ¿qué agregas?", o: ["Iones OH⁻", "Moléculas de H₂O"], a: 1, m: "En medio ácido NUNCA se usan hidroxilos (OH⁻). Siempre usas H₂O para compensar el Oxígeno faltante." },
+      { q: "Si la Oxidación libera 2e- y la Reducción absorbe 3e-, ¿Cuál es su MCM?", o: ["6 electrones", "5 electrones"], a: 0, m: "El Mínimo Común Múltiplo entre 2 y 3 es 6. Debes multiplicar cada semirreacción por el coeficiente necesario para llegar a 6." }
     ],
     levels: [
       { t: "Pila de Daniell. El Zinc se disuelve y el Cobre absorbe su energía.", q: "Fase 1: Identifica la oxidación (pierde e-)", o: ["El Cobre (Cu)", "El Zinc (Zn)"], a: 1, m: "¡Correcto! El Zinc pasa de 0 a +2. Perder electrones es oxidarse." },
-      { t: "El Magnesio reacciona violentamente con iones de Plata.", q: "Identifica la reducción: ¿Cuántos e- necesita Ag⁺ para ser Plata neutra?", o: ["1 electrón", "2 electrones"], a: 0, m: "¡Bien! Absorbe 1 electrón." },
-      { t: "Aluminio disolviéndose en medio ácido, liberando gas hidrógeno.", q: "El Aluminio pierde 3e- y el Hidrógeno gana 1e-. ¿Cuál es el MCM?", o: ["3 electrones", "6 electrones"], a: 0, m: "¡Exacto! El MCM es 3." },
+      { t: "El Magnesio reacciona violentamente con iones de Plata.", q: "Identifica la reducción: ¿Cuántos e- necesita la Plata (Ag⁺) para neutralizarse?", o: ["1 electrón", "2 electrones"], a: 0, m: "¡Bien! Absorbe 1 electrón." },
+      { t: "Aluminio disolviéndose en medio ácido, liberando gas hidrógeno.", q: "El Aluminio pierde 3e- y el Hidrógeno gana 1e-. ¿Cuál es el Mínimo Común Múltiplo (MCM)?", o: ["3 electrones", "6 electrones"], a: 0, m: "¡Exacto! El MCM es 3. Tendrás que multiplicar el Hidrógeno por 3 en la Fase 3." },
       { t: "Corrosión masiva del hierro estructural en contacto con oxígeno.", q: "Al dividir la reacción: ¿qué rol juega el oxígeno gaseoso (O₂)?", o: ["Reductor", "Oxidante"], a: 1, m: "Correcto, el Oxígeno gana electrones, oxidando al Hierro." },
-      { t: "Acumulador de plomo desestabilizado. Riesgo de explosión ácida.", q: "El Plomo está en dos estados. ¿El PbO₂ actúa como...?", o: ["Oxidante", "Reductor"], a: 0, m: "Exacto, el PbO₂ se reduce." },
-      { t: "Permanganato altamente reactivo oxidando hierro en ácido.", q: "El Manganeso pasa de +7 en el MnO₄⁻ a +2. ¿Cuántos e- gana?", o: ["5 electrones", "7 electrones"], a: 0, m: "Gana 5e-. Luego balancearás oxígenos con agua." },
-      { t: "Dicromato generando cloro gas venenoso.", q: "La molécula de Cr₂O₇²⁻ tiene DOS Cromos. Si cada uno gana 3e-, ¿el total es?", o: ["3 electrones", "6 electrones"], a: 1, m: "¡Excelente! 2 átomos x 3e- = 6e-." },
-      { t: "Ácido Nítrico atacando el cableado de cobre principal.", q: "El Nitrato (NO₃⁻) pasa a (NO). ¿Qué pierde en el proceso?", o: ["Oxígenos", "Hidrógenos"], a: 0, m: "Pierde 2 oxígenos. Usa H₂O para compensar en Fase 2." },
-      { t: "Peróxido inestable frente a Permanganato. Fuego inminente.", q: "¿Qué hace el Peróxido (H₂O₂) aquí?", o: ["Reduce al Permanganato", "Oxida al Permanganato"], a: 0, m: "Actúa como reductor, forzando al Manganeso a reducirse." },
-      { t: "Cloro reaccionando consigo mismo (Dismutación en medio Básico).", q: "¿Qué es una dismutación?", o: ["Se oxida y reduce a la vez", "No cambia de estado"], a: 0, m: "¡Brillante! El Cl₂ se divide en Cl⁻ y ClO₃⁻." },
-      { t: "Azufre ardiendo en ácido nítrico, nublando la visión.", q: "El Azufre puro (0) pasa a SO₂. ¿Cuál es su estado final?", o: ["+4", "-2"], a: 0, m: "El Oxígeno aporta -4, por lo que el Azufre debe ser +4." },
-      { t: "Zinc en alcalino forzando a los nitratos a formar gas amonio.", q: "El Nitrógeno cae de +5 (NO₃⁻) a -3 (NH₄⁺). ¿Cuántos e- absorbe?", o: ["8 electrones", "2 electrones"], a: 0, m: "Salto masivo de 8 electrones." },
+      { t: "Acumulador de plomo desestabilizado. Riesgo de explosión ácida.", q: "El Plomo está en dos estados. ¿El PbO₂ actúa como...?", o: ["Oxidante", "Reductor"], a: 0, m: "Exacto, el PbO₂ se reduce absorbiendo electrones." },
+      { t: "Permanganato altamente reactivo oxidando hierro en ácido.", q: "El Manganeso pasa de +7 en el MnO₄⁻ a +2. ¿Cuántos e- gana?", o: ["5 electrones", "7 electrones"], a: 0, m: "Gana 5e-. Luego balancearás los oxígenos con agua." },
+      { t: "Dicromato generando cloro gas venenoso.", q: "La molécula de Cr₂O₇²⁻ tiene DOS Cromos. Si cada uno gana 3e-, ¿el total es?", o: ["3 electrones", "6 electrones"], a: 1, m: "¡Excelente! 2 átomos x 3e- = 6e- totales." },
+      { t: "Ácido Nítrico atacando el cableado de cobre principal.", q: "El Nitrato (NO₃⁻) pasa a Monóxido de Nitrógeno (NO). ¿Qué pierde?", o: ["Oxígenos", "Hidrógenos"], a: 0, m: "Pierde 2 oxígenos. Usa H₂O para compensar en Fase 2." },
+      { t: "Peróxido inestable frente a Permanganato. Fuego inminente.", q: "¿Qué hace el Peróxido (H₂O₂) aquí?", o: ["Reduce al Permanganato", "Oxida al Permanganato"], a: 0, m: "Actúa como reductor atípico, forzando al Manganeso a reducirse." },
+      { t: "Cloro reaccionando consigo mismo (Dismutación en medio Básico).", q: "¿Qué es una reacción de dismutación?", o: ["Se oxida y reduce a la vez", "No cambia de estado"], a: 0, m: "¡Brillante! El Cl₂ se divide asumiendo ambos roles." },
+      { t: "Azufre ardiendo en ácido nítrico, nublando la visión.", q: "El Azufre puro (0) pasa a SO₂. ¿Cuál es su estado final?", o: ["+4", "-2"], a: 0, m: "El Oxígeno aporta -4 en total, por lo que el Azufre debe ser +4." },
+      { t: "Zinc en alcalino forzando a los nitratos a formar gas amonio.", q: "El Nitrógeno cae de +5 a -3. ¿Cuántos e- absorbe?", o: ["8 electrones", "2 electrones"], a: 0, m: "Un salto masivo de 8 electrones." },
       { t: "Yodo y Tiosulfato desbalanceados. Falla en el sistema de vida.", q: "Oxidación: 2S₂O₃²⁻ a S₄O₆²⁻. ¿Cuántos e- se liberan en total?", o: ["1 electrón", "2 electrones"], a: 1, m: "Se liberan 2 electrones en total para la reacción." },
-      { t: "Metano ardiendo sin control en los motores principales.", q: "En el Metano (CH₄), ¿quién atrae la nube de electrones?", o: ["El Carbono", "El Hidrógeno"], a: 0, m: "El Carbono atrae los electrones, dándole estado de -4." },
+      { t: "Metano ardiendo sin control en los motores principales.", q: "En el Metano (CH₄), ¿quién atrae la nube de electrones?", o: ["El Carbono", "El Hidrógeno"], a: 0, m: "El Carbono es más electronegativo, atrayendo densidad de electrones." },
       { t: "Calcio sumergido generando gas hidrógeno explosivo.", q: "El Calcio dona electrones al agua. ¿Qué se produce en la reducción?", o: ["Gas H₂ y iones OH⁻", "Oxígeno O₂"], a: 0, m: "El agua se rompe liberando H₂ y OH⁻." },
-      { t: "Generación letal de cloro gas usando Permanganato y HCl.", q: "Los iones Cl⁻ se unen para formar gas Cl₂. ¿Esto es...?", o: ["Oxidación", "Reducción"], a: 0, m: "Pasan de -1 a 0, perdiendo electrones." },
-      { t: "Fósforo blanco generando Fosfina tóxica en base fuerte.", q: "Dismutación del P₄ a (PH₃) y (H₂PO₂⁻). ¿Cuál es la reducción?", o: ["Formación de PH₃ (-3)", "Formación de H₂PO₂⁻ (+1)"], a: 0, m: "Bajar a -3 requiere absorber electrones." },
-      { t: "Cobre atacado por Ácido Sulfúrico caliente.", q: "El Sulfato (SO₄²⁻) pasa a SO₂. ¿Cuántos electrones absorbe el Azufre?", o: ["2 electrones", "4 electrones"], a: 0, m: "Absorbe 2 electrones." },
-      { t: "Cromo oxidándose con Yodato. Toxicidad alcalina extrema.", q: "En medio Básico. ¿Cómo balancearás los Hidrógenos en la Fase 2?", o: ["Usando H₂O y OH⁻", "Añadiendo H⁺"], a: 0, m: "Correcto, en medio básico jamás se usan protones libres (H⁺)." },
-      { t: "Ataque de ácido nítrico sobre Sulfuro de Bismuto.", q: "El Sulfuro (S²⁻) se oxida a Azufre elemental (S). ¿Pierde o gana energía?", o: ["Pierde 2 electrones", "Gana 2 electrones"], a: 0, m: "Al subir de -2 a 0, cede 2 electrones." }
+      { t: "Generación letal de cloro gas usando Permanganato y HCl.", q: "Los iones Cl⁻ se unen para formar gas Cl₂. ¿Esto es una...?", o: ["Oxidación", "Reducción"], a: 0, m: "Pasan de -1 a 0, perdiendo electrones. Es una oxidación pura." },
+      { t: "Fósforo blanco generando Fosfina tóxica en base fuerte.", q: "Dismutación del P₄ a (PH₃) y (H₂PO₂⁻). ¿Cuál representa la reducción?", o: ["Formación de PH₃ (-3)", "Formación de H₂PO₂⁻ (+1)"], a: 0, m: "Bajar a -3 requiere absorber electrones. Esa es la semirreacción de reducción." },
+      { t: "Cobre atacado por Ácido Sulfúrico caliente.", q: "El Sulfato (SO₄²⁻) pasa a SO₂. ¿Cuántos electrones absorbe el Azufre (pasa de +6 a +4)?", o: ["2 electrones", "4 electrones"], a: 0, m: "Absorbe 2 electrones, empatando perfectamente con los 2 que pierde el Cobre." },
+      { t: "Cromo oxidándose con Yodato. Toxicidad alcalina extrema.", q: "Estamos en medio Básico. ¿Cómo balancearás los Hidrógenos en la Fase 2?", o: ["Usando H₂O y OH⁻", "Añadiendo H⁺"], a: 0, m: "Correcto, en medio básico jamás se usan protones libres (H⁺)." },
+      { t: "Ataque de ácido nítrico sobre Sulfuro de Bismuto.", q: "El Sulfuro (S²⁻) se separa y se oxida a Azufre elemental (S). ¿Pierde o gana energía?", o: ["Pierde 2 electrones", "Gana 2 electrones"], a: 0, m: "Al subir de -2 a 0, está cediendo 2 electrones al sistema." }
     ],
     genExplanation: (lvl) => {
       if (!lvl) return "Error de carga.";
@@ -236,7 +243,7 @@ const DICT = {
       return `<strong style="color:#00f2ff; font-size: 24px;">🔬 CÓDICE REDOX</strong><br/><br/>
       <span style="color:#00f2ff">Semirreacción de Oxidación:</span><br/>${lvl.hOx}<br/><br/>
       <span style="color:#ff0055">Semirreacción de Reducción:</span><br/>${lvl.hRed}<br/><br/>
-      💡 <em>En la Fase 3, multiplica cada bloque para llegar al MCM de <strong style="color:#ffea00">${mcm}e⁻</strong>.</em>`;
+      💡 <em>En la Fase 3, encuentra el MCM de los electrones (<strong style="color:#ffea00">${mcm}e⁻</strong>) y multiplica las ecuaciones para igualarlo.</em>`;
     }
   },
   en: {
@@ -252,25 +259,184 @@ const DICT = {
       successTitle: "SYSTEM STABILIZED!", successMessage: "Perfect mass and charge equilibrium.",
       helpBtn: "🤖 HELP", aiBtn: "🧠 ASK AI",
       step1Title: "PHASE 1: AI IDENTIFICATION", step2Title: "PHASE 2: ATOMIC MASS BALANCE", step3Title: "PHASE 3: CHARGE BALANCE & CROSSING",
-      microClassTitle: "📚 REINFORCEMENT MICRO-CLASS"
+      microClassTitle: "📚 REINFORCEMENT MICRO-CLASS",
+      neutralTitle: "NEUTRAL MEDIUM", neutralDesc: "This system does not require H₂O or Ions.", btnSkip: "PROCEED TO CHARGES"
     },
+    guideAcid: "💡 Acidic Guide:\n1. Balance O with H₂O.\n2. Balance H with H⁺.",
+    guideBasic: "💡 Basic Guide:\n1. Balance O with H₂O.\n2. Balance H with H₂O and add OH⁻ to the opposite side.",
+    guideNeutral: "💡 Neutral Guide:\nBase atoms are stable. Skip to Phase 3.",
+    ai: { intro: "Protocol active. Analyze equation.", correct: "Perfect analysis.", explosion: "Critical containment breach!" },
     hints: { 
       NOT_SIMPLIFIED: "Electrons match, but coefficients are not in the simplest integer ratio.", 
       EXCESS_LOST: "Releasing too many electrons. Increase the Reduction multiplier.", 
       DEFICIT_LOST: "Missing electrons. Increase the Oxidation multiplier.", 
-      GENERIC: "Energy transfer failed. Check the Least Common Multiple (LCM)." 
+      GENERIC: "Energy transfer failed. Check the Least Common Multiple (LCM).",
+      H2O_IMBALANCE: "Atomic balance error. Check H₂O and ions carefully."
     },
     interrupts: [
-      { q: "Why balance mass before charge?", o: ["So atoms don't disappear (Conservation of Mass)", "To make it look pretty"], a: 0, m: "Matter cannot be created or destroyed. You must balance O and H before moving electrons." },
+      { q: "Why balance mass before charge?", o: ["Conservation of Mass", "To make it look pretty"], a: 0, m: "Matter cannot be created or destroyed. You must balance O and H before moving electrons." },
       { q: "In an ACIDIC medium, missing Oxygens are balanced with?", o: ["OH⁻ ions", "H₂O molecules"], a: 1, m: "In an acidic medium, you NEVER use OH⁻. You use Water (H₂O) for Oxygens." },
       { q: "If Oxidation loses 2e- and Reduction gains 3e-, what is the LCM?", o: ["6 electrons", "5 electrons"], a: 0, m: "The Least Common Multiple between 2 and 3 is 6. Cross-multiply to reach 6." }
     ],
-    levels: Array(20).fill({ t: "Chemical reaction detected.", q: "What happens to the elements?", o: ["Oxidation", "Reduction"], a: 0, m: "Correct." }),
-    genExplanation: (lvl) => `<strong style="color:#00f2ff; font-size: 24px;">🔬 REDOX ANALYSIS</strong><br/>Use the Least Common Multiple to balance electrons.`
+    levels: [
+      { t: "Daniell Cell. Zinc dissolves and Copper absorbs its energy.", q: "Phase 1: Split the equation. Which element oxidizes (loses electrons)?", o: ["Copper (Cu)", "Zinc (Zn)"], a: 1, m: "Correct! Zinc goes from 0 to +2. Losing electrons is oxidation." },
+      { t: "Magnesium reacts violently with Silver ions.", q: "Identify the reduction: How many electrons does ONE Ag⁺ molecule need to become neutral Silver?", o: ["1 electron", "2 electrons"], a: 0, m: "Good! It absorbs 1 electron." },
+      { t: "Aluminum dissolving in acid, releasing hydrogen gas.", q: "Aluminum loses 3e- and Hydrogen gains 1e-. What is the Least Common Multiple (LCM)?", o: ["3 electrons", "6 electrons"], a: 0, m: "Exactly! The LCM is 3. You'll multiply Hydrogen by 3 in Phase 3." },
+      { t: "Massive corrosion of structural iron in contact with oxygen.", q: "Splitting the reaction: what role does oxygen gas (O₂) play?", o: ["Reducing Agent", "Oxidizing Agent"], a: 1, m: "Correct, Oxygen gains electrons, oxidizing the Iron." },
+      { t: "Destabilized lead accumulator. Acid explosion risk.", q: "Attention: Lead is in two different states. PbO₂ acts as...?", o: ["Oxidizer", "Reducer"], a: 0, m: "Exact, PbO₂ is reduced, absorbing electrons." },
+      { t: "Highly reactive Permanganate oxidizing iron in acid.", q: "Manganese goes from +7 in MnO₄⁻ to +2. How many e- does it gain?", o: ["5 electrons", "7 electrons"], a: 0, m: "Gains 5e-. In the next phase you'll balance its oxygens with water." },
+      { t: "Dichromate generating poisonous chlorine gas.", q: "The Cr₂O₇²⁻ molecule has TWO Chromium atoms. If each gains 3e-, the total absorbed is?", o: ["3 electrons", "6 electrons"], a: 1, m: "Excellent! Being two atoms, the entire molecule demands 6 electrons." },
+      { t: "Nitric Acid attacking main copper wiring.", q: "Nitrate (NO₃⁻) becomes Nitrogen Monoxide (NO). What does it lose in the process?", o: ["Oxygens", "Hydrogens"], a: 0, m: "Loses 2 oxygens. In Phase 2 you must compensate by adding H₂O." },
+      { t: "Unstable Peroxide facing Permanganate. Imminent fire.", q: "What does Peroxide (H₂O₂) do here?", o: ["Reduces Permanganate", "Oxidizes Permanganate"], a: 0, m: "Acts as an atypical reducing agent, forcing Manganese to reduce." },
+      { t: "Chlorine reacting with itself (Disproportionation in Basic medium).", q: "What does disproportionation mean?", o: ["Oxidizes and reduces simultaneously", "Does not change state"], a: 0, m: "Brilliant! One part of Cl₂ becomes Cl⁻ and another ClO₃⁻." },
+      { t: "Sulfur burning in nitric acid, clouding vision.", q: "Pure Sulfur (0) goes to SO₂. What is its final oxidation state?", o: ["+4", "-2"], a: 0, m: "Oxygen brings -4 in total, so Sulfur must be +4." },
+      { t: "Zinc in alkaline forcing nitrates to form ammonia gas.", q: "Nitrogen drops drastically from +5 to -3. How many electrons are absorbed?", o: ["8 electrons", "2 electrons"], a: 0, m: "A massive jump of 8 electrons." },
+      { t: "Unbalanced Iodine and Thiosulfate. Life support failing.", q: "Observe oxidation: 2S₂O₃²⁻ becomes S₄O₆²⁻. How many e- are released in total?", o: ["1 electron", "2 electrons"], a: 1, m: "Releases 2 electrons total for the reaction." },
+      { t: "Methane burning out of control in main engines.", q: "In Methane (CH₄), who attracts the electron cloud?", o: ["Carbon", "Hydrogen"], a: 0, m: "Carbon is more electronegative, attracting electron density." },
+      { t: "Submerged calcium generating explosive hydrogen gas.", q: "Calcium donates electrons to water. What is produced in the reduction?", o: ["H₂ gas and OH⁻ ions", "O₂ Oxygen"], a: 0, m: "Water breaks releasing hydrogen gas and alkalizing the medium." },
+      { t: "Lethal chlorine gas generation using Permanganate and HCl.", q: "Cl⁻ ions join to form Cl₂ gas. This is an...?", o: ["Oxidation", "Reduction"], a: 0, m: "Going from -1 to 0, losing electrons. Pure oxidation." },
+      { t: "White phosphorus generating toxic Phosphine in strong base.", q: "Disproportionation of P₄. Becomes (PH₃) and (H₂PO₂⁻). Which represents reduction?", o: ["Formation of PH₃ (-3)", "Formation of H₂PO₂⁻ (+1)"], a: 0, m: "Dropping to -3 requires absorbing electrons." },
+      { t: "Copper attacked by hot Sulfuric Acid.", q: "Sulfate (SO₄²⁻) goes to SO₂. How many electrons does Sulfur absorb?", o: ["2 electrons", "4 electrons"], a: 0, m: "Absorbs 2 electrons, perfectly matching the 2 Copper loses." },
+      { t: "Chromium oxidizing with Iodate. Extreme alkaline toxicity.", q: "We are in a Basic medium. How will you balance Hydrogens in Phase 2?", o: ["Using H₂O and OH⁻", "Adding H⁺"], a: 0, m: "Correct, in basic mediums free protons (H⁺) are never used." },
+      { t: "Nitric acid attack on Bismuth Sulfide.", q: "Sulfide (S²⁻) oxidizes to elemental Sulfur (S). Lose or gain energy?", o: ["Loses 2 electrons", "Gains 2 electrons"], a: 0, m: "Going up from -2 to 0, it yields 2 electrons." }
+    ],
+    genExplanation: (lvl) => {
+      if (!lvl) return "Loading Error.";
+      const mcm = RedoxEngine.getMCM(lvl.eOx || 1, lvl.eRed || 1);
+      return `<strong style="color:#00f2ff; font-size: 24px;">🔬 REDOX ANALYSIS</strong><br/><br/>
+      <span style="color:#00f2ff">Oxidation Half-Reaction:</span><br/>${lvl.hOx}<br/><br/>
+      <span style="color:#ff0055">Reduction Half-Reaction:</span><br/>${lvl.hRed}<br/><br/>
+      💡 <em>In Phase 3, find the LCM of electrons (<strong style="color:#ffea00">${mcm}e⁻</strong>) and multiply equations to match it.</em>`;
+    }
+  },
+  fr: {
+    ui: { 
+      start: "LANCER LA CAMPAGNE", title: "REDOX BALANCER: TIER DIEU", rank: "RANG", xp: "XP", 
+      theoryTitle: "BRIEFING TACTIQUE", theoryBtn: "ENTRER DANS LE NOYAU ➔", diagTitle: "ANALYSE DE L'IA", 
+      btnCheck: "SYNTHÉTISER & VÉRIFIER", btnBack: "⬅ ABANDONNER", btnNext: "CRISE SUIVANTE ➔", 
+      btnRetry: "RÉESSAYER", aiTitle: "🤖 IA SOCRATIQUE", btnContinue: "COMPRIS, IA", 
+      react: "MULTIPLICATEUR D'OXYDATION", prod: "MULTIPLICATEUR DE RÉDUCTION",
+      mission: "MISSION", scan: "SCANNER", eLost: "e- Perdus", eGained: "e- Gagnés", status: "STATUT:",
+      explTitle: "EFFONDREMENT STRUCTUREL!", explMsg: "Le déséquilibre électronique a provoqué une fission du noyau.",
+      statsTitle: "SÉPARATION DES DEMI-RÉACTIONS", timeTaken: "Temps", clicksUsed: "Clics", 
+      successTitle: "SYSTÈME STABILISÉ!", successMessage: "Équilibre parfait de la masse et de la charge.",
+      helpBtn: "🤖 AIDE", aiBtn: "🧠 DEMANDER À L'IA",
+      step1Title: "PHASE 1: IDENTIFICATION", step2Title: "PHASE 2: BILAN DE MASSE", step3Title: "PHASE 3: BILAN DE CHARGE",
+      microClassTitle: "📚 MICRO-COURS DE RENFORCEMENT",
+      neutralTitle: "MILIEU NEUTRE", neutralDesc: "Ce système ne nécessite pas d'H₂O ou d'Ions.", btnSkip: "PASSER AUX CHARGES"
+    },
+    guideAcid: "💡 Guide Acide:\n1. Équilibrer O avec H₂O.\n2. Équilibrer H avec H⁺.",
+    guideBasic: "💡 Guide Basique:\n1. Équilibrer O avec H₂O.\n2. Équilibrer H avec H₂O et ajouter OH⁻ du côté opposé.",
+    guideNeutral: "💡 Guide Neutre:\nLes atomes de base sont stables. Passez à la Phase 3.",
+    ai: { intro: "Protocole actif. Analysez l'équation.", correct: "Analyse parfaite.", explosion: "Rupture critique!" },
+    hints: { 
+      NOT_SIMPLIFIED: "Les électrons correspondent, mais réduisez les coefficients.", 
+      EXCESS_LOST: "Trop d'électrons libérés. Augmentez le réducteur.", 
+      DEFICIT_LOST: "Manque d'électrons. Augmentez l'oxydant.", 
+      GENERIC: "Échec du transfert. Vérifiez le PPCM des électrons.",
+      H2O_IMBALANCE: "Erreur de masse. Vérifiez soigneusement H₂O et les ions."
+    },
+    interrupts: [
+      { q: "Pourquoi équilibrer la masse avant la charge?", o: ["Conservation de la masse", "Pour l'esthétique"], a: 0, m: "Rien ne se perd, rien ne se crée. Équilibrez O et H avant les électrons." },
+      { q: "En milieu ACIDE, comment équilibrer l'Oxygène?", o: ["Ions OH⁻", "Molécules d'H₂O"], a: 1, m: "En milieu acide, on n'utilise JAMAIS OH⁻. Utilisez l'eau (H₂O)." },
+      { q: "Si l'Oxydation perd 2e- et la Réduction gagne 3e-, quel est le PPCM?", o: ["6 électrons", "5 électrons"], a: 0, m: "Le PPCM entre 2 et 3 est 6." }
+    ],
+    levels: [
+      { t: "Pile Daniell. Le Zinc se dissout et le Cuivre absorbe son énergie.", q: "Phase 1 : Quel élément s'oxyde (perd des électrons) ?", o: ["Cuivre (Cu)", "Zinc (Zn)"], a: 1, m: "Correct ! Le Zinc passe de 0 à +2." },
+      { t: "Le Magnésium réagit violemment avec les ions Argent.", q: "Identifier la réduction : Combien d'électrons pour l'Ag⁺ ?", o: ["1 électron", "2 électrons"], a: 0, m: "Bien ! Il absorbe 1 électron." },
+      { t: "Aluminium se dissolvant dans l'acide, libérant du gaz dihydrogène.", q: "Al perd 3e- et H gagne 1e-. Quel est le PPCM ?", o: ["3 électrons", "6 électrons"], a: 0, m: "Exactement ! Le PPCM est 3." },
+      { t: "Corrosion massive du fer au contact de l'oxygène.", q: "Quel rôle joue l'oxygène gazeux (O₂) ?", o: ["Réducteur", "Oxydant"], a: 1, m: "Correct, l'Oxygène gagne des électrons." },
+      { t: "Accumulateur au plomb déstabilisé. Risque d'explosion acide.", q: "Le Plomb a deux états. PbO₂ agit comme... ?", o: ["Oxydant", "Réducteur"], a: 0, m: "Exact, PbO₂ est réduit." },
+      { t: "Permanganate hautement réactif oxydant le fer.", q: "Le Manganèse passe de +7 à +2. Combien de e- gagne-t-il ?", o: ["5 électrons", "7 électrons"], a: 0, m: "Gagne 5e-." },
+      { t: "Dichromate générant du gaz chlore toxique.", q: "La molécule Cr₂O₇²⁻ a DEUX atomes de Chrome. Total absorbé ?", o: ["3 électrons", "6 électrons"], a: 1, m: "Excellent ! La molécule entière demande 6 électrons." },
+      { t: "Acide nitrique attaquant le câblage principal en cuivre.", q: "Le Nitrate (NO₃⁻) devient (NO). Que perd-il ?", o: ["Oxygènes", "Hydrogènes"], a: 0, m: "Perd 2 oxygènes. Utilisez H₂O dans la Phase 2." },
+      { t: "Peroxyde instable face au Permanganate.", q: "Que fait le Peroxyde (H₂O₂) ici ?", o: ["Réduit le Permanganate", "Oxyde le Permanganate"], a: 0, m: "Agit comme agent réducteur atypique." },
+      { t: "Chlore réagissant avec lui-même (Dismutation).", q: "Qu'est-ce qu'une dismutation ?", o: ["S'oxyde et se réduit à la fois", "Ne change pas d'état"], a: 0, m: "Brillant ! Une partie devient Cl⁻ et une autre ClO₃⁻." },
+      { t: "Soufre brûlant dans l'acide nitrique.", q: "Le Soufre (0) passe à SO₂. Quel est son état final ?", o: ["+4", "-2"], a: 0, m: "L'Oxygène apporte -4, donc le Soufre doit être +4." },
+      { t: "Zinc en milieu alcalin forçant les nitrates à former de l'ammoniac.", q: "L'Azote passe de +5 à -3. Combien d'e- ?", o: ["8 électrons", "2 électrons"], a: 0, m: "Un saut massif de 8 électrons." },
+      { t: "Iode et Thiosulfate déséquilibrés.", q: "2S₂O₃²⁻ devient S₄O₆²⁻. Combien d'e- libérés au total ?", o: ["1 électron", "2 électrons"], a: 1, m: "Libère 2 électrons au total." },
+      { t: "Méthane brûlant hors de contrôle.", q: "Dans le Méthane (CH₄), qui attire les électrons ?", o: ["Carbone", "Hydrogène"], a: 0, m: "Le Carbone attire les électrons, état apparent de -4." },
+      { t: "Calcium submergé générant du gaz hydrogène.", q: "Que produit la demi-réaction de réduction ?", o: ["Gaz H₂ et ions OH⁻", "Oxygène O₂"], a: 0, m: "L'eau se brise en libérant H₂ et OH⁻." },
+      { t: "Génération de gaz chlore létal.", q: "Les ions Cl⁻ se rejoignent pour former Cl₂. C'est une... ?", o: ["Oxydation", "Réduction"], a: 0, m: "Passe de -1 à 0, oxydation pure." },
+      { t: "Phosphore blanc générant de la Phosphine toxique.", q: "Lequel représente la réduction ?", o: ["Formation de PH₃ (-3)", "Formation de H₂PO₂⁻ (+1)"], a: 0, m: "Descendre à -3 requiert l'absorption d'électrons." },
+      { t: "Cuivre attaqué par l'Acide Sulfurique chaud.", q: "Sulfate (SO₄²⁻) passe à SO₂. Combien de e- absorbe le Soufre ?", o: ["2 électrons", "4 électrons"], a: 0, m: "Absorbe 2 électrons." },
+      { t: "Chrome s'oxydant avec de l'Iodate.", q: "En milieu Basique. Comment équilibrer les Hydrogènes ?", o: ["En utilisant H₂O et OH⁻", "En ajoutant H⁺"], a: 0, m: "Correct, jamais de H⁺ en milieu basique." },
+      { t: "Attaque d'acide nitrique sur Sulfure de Bismuth.", q: "Le Sulfure (S²⁻) s'oxyde en Soufre (S).", o: ["Perd 2 électrons", "Gagne 2 électrons"], a: 0, m: "En passant de -2 à 0, il cède 2 électrons." }
+    ],
+    genExplanation: (lvl) => {
+      if (!lvl) return "Erreur.";
+      const mcm = RedoxEngine.getMCM(lvl.eOx || 1, lvl.eRed || 1);
+      return `<strong style="color:#00f2ff; font-size: 24px;">🔬 ANALYSE REDOX</strong><br/><br/>
+      <span style="color:#00f2ff">Oxydation:</span><br/>${lvl.hOx}<br/><br/>
+      <span style="color:#ff0055">Réduction:</span><br/>${lvl.hRed}<br/><br/>
+      💡 <em>En Phase 3, utilisez le PPCM de <strong style="color:#ffea00">${mcm}e⁻</strong>.</em>`;
+    }
+  },
+  de: {
+    ui: { 
+      start: "KAMPAGNE STARTEN", title: "REDOX BALANCER: GOTT-STUFE", rank: "RANG", xp: "XP", 
+      theoryTitle: "TAKTISCHES BRIEFING", theoryBtn: "KERN BETRETEN ➔", diagTitle: "KI-ANALYSE", 
+      btnCheck: "SYNTHETISIEREN & PRÜFEN", btnBack: "⬅ ABBRECHEN", btnNext: "NÄCHSTE KRISE ➔", 
+      btnRetry: "WIEDERHOLEN", aiTitle: "🤖 SOKRATISCHE KI", btnContinue: "VERSTANDEN, KI", 
+      react: "OXIDATIONSMULTIPLIKATOR", prod: "REDUKTIONSMULTIPLIKATOR",
+      mission: "MISSION", scan: "ATOME SCANNEN", eLost: "e- Verloren", eGained: "e- Gewonnen", status: "STATUS:",
+      explTitle: "STRUKTURELLER KOLLAPS!", explMsg: "Massives Elektronenungleichgewicht verursachte Kernspaltung.",
+      statsTitle: "HALBREAKTIONSTEILUNG", timeTaken: "Zeit", clicksUsed: "Klicks", 
+      successTitle: "SYSTEM STABILISIERT!", successMessage: "Perfektes Masse- und Ladungsgleichgewicht.",
+      helpBtn: "🤖 HILFE", aiBtn: "🧠 KI FRAGEN",
+      step1Title: "PHASE 1: KI-IDENTIFIKATION", step2Title: "PHASE 2: ATOMMASSENBILANZ", step3Title: "PHASE 3: LADUNGSBILANZ & KREUZUNG",
+      microClassTitle: "📚 VERSTÄRKUNGS-MIKROKLASSE",
+      neutralTitle: "NEUTRALES MEDIUM", neutralDesc: "Dieses System erfordert kein H₂O oder Ionen.", btnSkip: "WEITER ZU LADUNGEN"
+    },
+    guideAcid: "💡 Saure Anleitung:\n1. O mit H₂O ausgleichen.\n2. H mit H⁺ ausgleichen.",
+    guideBasic: "💡 Basische Anleitung:\n1. O mit H₂O ausgleichen.\n2. H mit H₂O ausgleichen und OH⁻ auf die gegenüberliegende Seite geben.",
+    guideNeutral: "💡 Neutrale Anleitung:\nBasisatome sind stabil. Springen Sie zu Phase 3.",
+    ai: { intro: "Protokoll aktiv. Analysiere Gleichung.", correct: "Perfekte Analyse.", explosion: "Kritischer Sicherheitsbruch!" },
+    hints: { 
+      NOT_SIMPLIFIED: "Elektronen stimmen überein, aber vereinfachen Sie die Koeffizienten.", 
+      EXCESS_LOST: "Zu viele Elektronen freigesetzt. Erhöhen Sie die Reduktion.", 
+      DEFICIT_LOST: "Fehlende Elektronen. Erhöhen Sie die Oxidation.", 
+      GENERIC: "Energieübertragung fehlgeschlagen. Überprüfen Sie das KGV.",
+      H2O_IMBALANCE: "Fehler beim Atomausgleich. Überprüfen Sie H₂O und Ionen."
+    },
+    interrupts: [
+      { q: "Warum Masse vor Ladung ausgleichen?", o: ["Massenerhaltung", "Damit es hübsch aussieht"], a: 0, m: "Materie kann weder erzeugt noch vernichtet werden." },
+      { q: "Womit werden fehlende Sauerstoffe in saurem Medium ausgeglichen?", o: ["OH⁻ Ionen", "H₂O Moleküle"], a: 1, m: "In saurem Medium verwenden Sie NIEMALS OH⁻." },
+      { q: "Wenn Oxidation 2e- verliert und Reduktion 3e- gewinnt, was ist das KGV?", o: ["6 Elektronen", "5 Elektronen"], a: 0, m: "Das kleinste gemeinsame Vielfache ist 6." }
+    ],
+    levels: [
+      { t: "Daniell-Element. Zink löst sich auf und Kupfer absorbiert Energie.", q: "Phase 1: Welches Element oxidiert (verliert Elektronen)?", o: ["Kupfer (Cu)", "Zink (Zn)"], a: 1, m: "Korrekt! Zink geht von 0 auf +2." },
+      { t: "Magnesium reagiert heftig mit Silberionen.", q: "Reduktion identifizieren: Wie viele Elektronen braucht Ag⁺?", o: ["1 Elektron", "2 Elektronen"], a: 0, m: "Gut! Es absorbiert 1 Elektron." },
+      { t: "Aluminium löst sich in Säure auf.", q: "Al verliert 3e- und H gewinnt 1e-. Was ist das KGV?", o: ["3 Elektronen", "6 Elektronen"], a: 0, m: "Exakt! Das KGV ist 3." },
+      { t: "Massive Korrosion von Eisen.", q: "Welche Rolle spielt Sauerstoff (O₂)?", o: ["Reduktionsmittel", "Oxidationsmittel"], a: 1, m: "Korrekt, Sauerstoff gewinnt Elektronen." },
+      { t: "Destabilisierter Bleiakkumulator.", q: "Blei ist in zwei Zuständen. PbO₂ wirkt als...?", o: ["Oxidationsmittel", "Reduktionsmittel"], a: 0, m: "Exakt, PbO₂ wird reduziert." },
+      { t: "Permanganat oxidiert Eisen in Säure.", q: "Mangan geht von +7 auf +2. Wie viele e- gewinnt es?", o: ["5 Elektronen", "7 Elektronen"], a: 0, m: "Gewinnt 5e-." },
+      { t: "Dichromat erzeugt Chlorgas.", q: "Cr₂O₇²⁻ hat ZWEI Chromatome. Total absorbiert?", o: ["3 Elektronen", "6 Elektronen"], a: 1, m: "Exzellent! 6 Elektronen." },
+      { t: "Salpetersäure greift Kupfer an.", q: "Nitrat (NO₃⁻) wird zu (NO). Was verliert es?", o: ["Sauerstoff", "Wasserstoff"], a: 0, m: "Verliert 2 Sauerstoffatome." },
+      { t: "Instabiles Peroxid.", q: "Was macht Peroxid (H₂O₂) hier?", o: ["Reduziert Permanganat", "Oxidiert Permanganat"], a: 0, m: "Wirkt als Reduktionsmittel." },
+      { t: "Chlor reagiert mit sich selbst.", q: "Was bedeutet Disproportionierung?", o: ["Oxidiert und reduziert gleichzeitig", "Keine Änderung"], a: 0, m: "Brillant!" },
+      { t: "Schwefel brennt in Salpetersäure.", q: "Purer Schwefel (0) wird zu SO₂. Endzustand?", o: ["+4", "-2"], a: 0, m: "Sauerstoff bringt -4, Schwefel muss +4 sein." },
+      { t: "Zink in alkalischem Medium.", q: "Stickstoff fällt von +5 auf -3. Wie viele e-?", o: ["8 Elektronen", "2 Elektronen"], a: 0, m: "Massiver Sprung von 8 Elektronen." },
+      { t: "Jod und Thiosulfat.", q: "2S₂O₃²⁻ wird S₄O₆²⁻. Wie viele e- insgesamt?", o: ["1 Elektron", "2 Elektronen"], a: 1, m: "Gibt insgesamt 2 Elektronen ab." },
+      { t: "Methan brennt.", q: "Wer zieht im Methan (CH₄) Elektronen an?", o: ["Kohlenstoff", "Wasserstoff"], a: 0, m: "Kohlenstoff zieht an (-4)." },
+      { t: "Calcium unter Wasser.", q: "Was entsteht bei der Reduktion?", o: ["H₂ Gas und OH⁻ Ionen", "O₂ Sauerstoff"], a: 0, m: "Wasser zerfällt in H₂ und OH⁻." },
+      { t: "Chlorgaserzeugung.", q: "Cl⁻ Ionen bilden Cl₂ Gas. Das ist eine...?", o: ["Oxidation", "Reduktion"], a: 0, m: "Verliert Elektronen. Oxidation." },
+      { t: "Weißer Phosphor.", q: "Welches ist die Reduktion?", o: ["Bildung von PH₃ (-3)", "Bildung von H₂PO₂⁻ (+1)"], a: 0, m: "Sinkt auf -3 (Reduktion)." },
+      { t: "Kupfer und Schwefelsäure.", q: "Sulfat (SO₄²⁻) zu SO₂. Wie viele e- absorbiert Schwefel?", o: ["2 Elektronen", "4 Elektronen"], a: 0, m: "Absorbiert 2 Elektronen." },
+      { t: "Chrom oxidiert.", q: "Basisches Medium. Wie Wasserstoff ausgleichen?", o: ["Mit H₂O und OH⁻", "Mit H⁺"], a: 0, m: "Korrekt, niemals H⁺ in basischem Medium." },
+      { t: "Salpetersäure auf Bismutsulfid.", q: "Sulfid (S²⁻) oxidiert zu Schwefel (S).", o: ["Verliert 2 Elektronen", "Gewinnt 2 Elektronen"], a: 0, m: "Verliert 2 Elektronen." }
+    ],
+    genExplanation: (lvl) => {
+      if (!lvl) return "Fehler.";
+      const mcm = RedoxEngine.getMCM(lvl.eOx || 1, lvl.eRed || 1);
+      return `<strong style="color:#00f2ff; font-size: 24px;">🔬 REDOX-ANALYSE</strong><br/><br/>
+      <span style="color:#00f2ff">Oxidation:</span><br/>${lvl.hOx}<br/><br/>
+      <span style="color:#ff0055">Reduktion:</span><br/>${lvl.hRed}<br/><br/>
+      💡 <em>Verwenden Sie das KGV (<strong style="color:#ffea00">${mcm}e⁻</strong>).</em>`;
+    }
   }
 };
-DICT.fr = { ...DICT.en, ui: { ...DICT.en.ui, title: "ÉQUILIBRE QUANTIQUE" } };
-DICT.de = { ...DICT.en, ui: { ...DICT.en.ui, title: "QUANTEN-BALANCE" } };
+
 const LANG_MAP = { es: 'es-ES', en: 'en-US', fr: 'fr-FR', de: 'de-DE' };
 
 const getRank = (xp) => {
@@ -285,12 +451,12 @@ const getRank = (xp) => {
 const CameraRig = ({ phase, isExploding, isErrorShake }) => {
   useFrame((state) => {
     if (isExploding) {
-      state.camera.position.x = Math.sin(state.clock.elapsedTime * 60) * 1.0;
-      state.camera.position.y = 2 + Math.cos(state.clock.elapsedTime * 70) * 1.0;
-      state.camera.position.z = THREE.MathUtils.lerp(state.camera.position.z, 20, 0.1);
+      state.camera.position.x = Math.sin(state.clock.elapsedTime * 100) * 2;
+      state.camera.position.y = 2 + Math.cos(state.clock.elapsedTime * 120) * 1.5;
+      state.camera.position.z = THREE.MathUtils.lerp(state.camera.position.z, 20, 0.2);
     } else if (isErrorShake) {
-      state.camera.position.x = Math.sin(state.clock.elapsedTime * 40) * 0.2;
-      state.camera.position.y = 2 + Math.cos(state.clock.elapsedTime * 50) * 0.2;
+      state.camera.position.x = Math.sin(state.clock.elapsedTime * 50) * 0.3;
+      state.camera.position.y = 2 + Math.cos(state.clock.elapsedTime * 60) * 0.3;
     } else if (phase === 'TRANSFER' || phase === 'WIN') {
       state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, Math.sin(state.clock.elapsedTime * 60) * 0.4, 0.5);
       state.camera.position.y = THREE.MathUtils.lerp(state.camera.position.y, 2 + Math.cos(state.clock.elapsedTime * 70) * 0.4, 0.5);
@@ -433,10 +599,12 @@ const ElectronBeam = ({ start, end, active }) => {
    🎮 7. MÁQUINA DE ESTADOS PRINCIPAL (SISTEMA GOD TIER)
 ============================================================ */
 function RedoxBalancer() {
-  // Manejo de variables del store de forma segura y directa
-  const language = useGameStore(state => state.language) || "es";
+  // LECTURA DIRECTA DE ZUSTAND
+  const storeLanguage = useGameStore(state => state.language);
+  const language = storeLanguage || "es";
   const resetProgress = useGameStore(state => state.resetProgress) || (() => window.location.reload());
 
+  // SELECCIÓN DEL DICCIONARIO
   const safeLang = DICT[language] ? language : 'es';
   const dict = DICT[safeLang];
   const lCode = LANG_MAP[safeLang];
@@ -444,8 +612,8 @@ function RedoxBalancer() {
   const [phase, setPhase] = useState("BOOT");
   const [levelIdx, setLevelIdx] = useState(0);
   
-  // Fases de la Misión (1=IA, 2=Masas, 3=Cargas)
-  const [step, setStep] = useState(1);
+  // ESTADOS CLAVES DE MISIONES
+  const [step, setStep] = useState(1); 
   const [actionCount, setActionCount] = useState(0); 
   const [interruptQuiz, setInterruptQuiz] = useState(null); 
   
@@ -470,7 +638,6 @@ function RedoxBalancer() {
   const [isExploding, setIsExploding] = useState(false);
   const [helpActive, setHelpActive] = useState(false);
 
-  // Data del Nivel actual
   const rawLevel = CHEM_DB[levelIdx] || CHEM_DB[0];
   const aiLevelData = dict.levels[levelIdx] || dict.levels[0];
   const combinedLevel = { ...rawLevel, ...aiLevelData };
@@ -497,7 +664,7 @@ function RedoxBalancer() {
     return () => { if(interval) clearInterval(interval); }
   }, [timerActive]);
 
-  // Lógica de botones y contador para la IA Socrática
+  // 🔥 LÓGICA DE ACTUALIZACIÓN CON INTERRUPCIÓN DE IA (6 CLICKS)
   const handleUpdateCoef = useCallback((side, delta) => {
     sfx.click();
     
@@ -508,7 +675,7 @@ function RedoxBalancer() {
         setInterruptQuiz(randomQ);
         setPhase("INTERRUPT");
         setAiState("Q_INTERRUPT");
-        triggerVoice("Atención. Interrupción de rutina. Vamos a evaluar tu progreso.", lCode);
+        triggerVoice(randomQ.q, lCode); 
         return 0; 
       }
       return next;
@@ -522,7 +689,7 @@ function RedoxBalancer() {
     setClicks(prev => prev + 1);
   }, [dict.interrupts, lCode]);
 
-  // Validación de Respuestas IA (Paso 1 o Interrupción de 6 clics)
+  // 🔥 VALIDACIÓN DE LA IA (Paso 1 Inicial o Interrupción de 6 clics)
   const handleAiAns = useCallback((idx, isInterrupt = false) => {
     const activeQuiz = isInterrupt ? interruptQuiz : combinedLevel;
     
@@ -536,23 +703,23 @@ function RedoxBalancer() {
         setPhase("GAME"); 
         if (!isInterrupt && step === 1) setStep(2); 
         setTimerActive(true); 
-      }, 4000);
+      }, 3500);
     } else {
       sfx.error(); 
       setIsErrorShake(true);
       setAiState("MICRO_CLASS");
-      triggerVoice("Fallo detectado. Iniciando micro-clase de refuerzo.", lCode); 
+      triggerVoice(dict.ui.microClassTitle, lCode); 
       setTimeout(() => setIsErrorShake(false), 1000);
     }
-  }, [combinedLevel, interruptQuiz, step, lCode]);
+  }, [combinedLevel, interruptQuiz, step, lCode, dict.ui.microClassTitle]);
 
-  // Validación de Masas (Agua, Protones, Hidroxilos)
+  // 🔥 VALIDACIÓN FASE 2: BALANCE DE MASAS EXCLUSIVO
   const handleVerifyMass = () => {
     if (combinedLevel.env === "Neutral") {
         sfx.levelUp(); 
         setStep(3); 
         setErrorMath(""); 
-        triggerVoice("Medio Neutro. Avanzando a balance de cargas.", lCode);
+        triggerVoice(dict.ui.step3Title, lCode);
         return;
     }
 
@@ -561,7 +728,7 @@ function RedoxBalancer() {
       sfx.levelUp(); 
       setStep(3); 
       setErrorMath(""); 
-      triggerVoice("Masa atómica estabilizada. Iguala ahora la transferencia electrónica.", lCode);
+      triggerVoice(dict.ui.step3Title, lCode);
     } else {
       sfx.error(); 
       setIsErrorShake(true); 
@@ -571,7 +738,7 @@ function RedoxBalancer() {
     }
   };
 
-  // Validación de Cargas (Electrones Finales)
+  // 🔥 VALIDACIÓN FASE 3: BALANCE DE CARGAS (FINAL)
   const handleVerifyCharge = () => {
     setTimerActive(false);
     const result = RedoxEngine.validateCharge(c1, c2, combinedLevel);
@@ -625,23 +792,27 @@ function RedoxBalancer() {
 
   const invokeAI = useCallback(() => {
     sfx.aiPop(); setPhase("AI"); setAiState("INFO"); 
-    triggerVoice("Desplegando análisis estequiométrico.", lCode);
-  }, [lCode]);
+    triggerVoice(dict.ui.aiTitle, lCode);
+  }, [lCode, dict.ui.aiTitle]);
 
   const toggleHelp = useCallback(() => {
     sfx.aiPop(); setHelpActive(true); 
-    triggerVoice("Desplegando guía táctica de balanceo.", lCode);
-  }, [lCode]);
+    triggerVoice(RedoxEngine.getMassBalanceGuide(combinedLevel.env, dict), lCode);
+  }, [combinedLevel.env, dict, lCode]);
 
-  const toggleScanner = useCallback(() => { sfx.scan(); }, []);
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+    resetProgress();
+    window.location.reload(); 
+  };
 
   /* ================= VISTAS UI ================= */
   if (phase === "BOOT") return (
     <div style={ui.overlayFull}>
       <div className="hud-glitch-text" style={ui.glitchText}>PROTOCOLO NANO-CORE V28</div>
       <h1 className="hud-glow" style={ui.titleGlow}>{dict.ui.title}</h1>
-      <p style={{color:'#ffea00', letterSpacing:'5px', fontSize:'22px', marginBottom:'50px', fontWeight:'bold'}}>
-        CAMPAÑA IÓN-ELECTRÓN: {totalLevels} MISIONES
+      <p style={{color:'#ffea00', letterSpacing:'5px', fontSize:'22px', marginBottom:'50px', fontWeight:'bold', textAlign:'center'}}>
+        {totalLevels} {dict.ui.mission}S
       </p>
       <button className="hud-btn" style={ui.btnHex('#00f2ff')} onClick={() => { sfx.click(); loadLevel(0); }}>{dict.ui.start}</button>
     </div>
@@ -652,15 +823,15 @@ function RedoxBalancer() {
       <h1 className="hud-glow" style={{...ui.titleGlow, color: '#ff0000', textShadow: '0 0 50px #ff0000'}}>{dict.ui.explTitle}</h1>
       <p style={{fontSize:'30px', color:'#fff', margin:'30px 0'}}>{dict.ui.explMsg}</p>
       <button className="hud-btn" style={ui.btnHex('#ff0000')} onClick={() => loadLevel(levelIdx)}>{dict.ui.btnRetry}</button>
-      <button className="hud-btn-ghost" style={{...ui.btnGhost, marginTop:'30px'}} onClick={() => window.location.reload()}>{dict.ui.btnBack}</button>
+      <button className="hud-btn-ghost" style={{...ui.btnGhost, marginTop:'30px'}} onClick={handleBack}>{dict.ui.btnBack}</button>
     </div>
   );
 
   return (
     <div style={ui.screen}>
       {/* HEADER DE NAVEGACIÓN Y AYUDA */}
-      <div style={ui.topControls}>
-        <button className="hud-btn-ghost" style={ui.backBtn} onClick={() => window.location.reload()}>{dict.ui.btnBack}</button>
+      <div style={ui.topRowWrapper}>
+        <button className="hud-btn-ghost" style={ui.backBtn} onClick={handleBack}>{dict.ui.btnBack}</button>
         {(phase === "GAME") && step > 1 && !isExploding && (
           <div style={{display:'flex', gap:'15px'}}>
             <button className="hud-btn-ghost" style={ui.aiBtn} onClick={invokeAI}>🧠 {dict.ui.aiBtn}</button>
@@ -670,7 +841,7 @@ function RedoxBalancer() {
       </div>
 
       {/* HUD SUPERIOR: FÓRMULA Y RANGO */}
-      <div style={ui.topHud}>
+      <div style={ui.topHudWrapper}>
         <div style={ui.glassPanel}>
           <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', width: '100%', marginBottom:'10px', borderBottom:'1px solid #444', paddingBottom:'15px'}}>
             <div style={ui.levelBadge}>{dict.ui.mission} {levelIdx + 1} / {totalLevels}</div>
@@ -694,30 +865,34 @@ function RedoxBalancer() {
         </div>
       </div>
 
-      {/* 🔬 PANEL LATERAL CON SEMIRREACCIONES DIVIDIDAS (SOLO EN FASE 2 Y 3) */}
+      {/* 🔬 PANEL LATERAL (SOLO EN FASE 2 Y 3) */}
       {(phase === "GAME" || phase === "TRANSFER" || phase === "AI" || phase === "INTERRUPT") && step >= 2 && (
         <div style={ui.liveStatsPanel}>
           <h3 style={{margin:'0 0 15px 0', color:'#fff', letterSpacing:'2px', fontSize:'18px', borderBottom:'1px solid #555', paddingBottom:'10px'}}>{dict.ui.statsTitle}</h3>
+          
           <div style={{color:'#00f2ff', fontWeight:'bold', fontSize:'16px'}}>Oxidación (Cede e-):</div>
           <div style={{color:'#fff', fontSize:'14px', marginBottom:'15px'}}>{combinedLevel.hOx}</div>
+          
           <div style={{color:'#ff0055', fontWeight:'bold', fontSize:'16px'}}>Reducción (Absorbe e-):</div>
           <div style={{color:'#fff', fontSize:'14px'}}>{combinedLevel.hRed}</div>
           
           {step === 3 && (
             <div style={{marginTop:'20px', borderTop:'1px solid #555', paddingTop:'15px'}}>
-              <div style={{color:'#00f2ff', fontWeight:'bold', fontSize:'18px'}}>Liberados: {eLost}</div>
-              <div style={{color:'#ff0055', fontWeight:'bold', fontSize:'18px', marginTop:'5px'}}>Absorbidos: {eGained}</div>
+              <div style={{color:'#00f2ff', fontWeight:'bold', fontSize:'18px'}}>{dict.ui.eLost}: {eLost}</div>
+              <div style={{color:'#ff0055', fontWeight:'bold', fontSize:'18px', marginTop:'5px'}}>{dict.ui.eGained}: {eGained}</div>
             </div>
           )}
         </div>
       )}
 
-      {/* MODALES TEORÍA / WIN */}
+      {/* MODAL TEORÍA INICIAL */}
       {phase === "THEORY" && (
         <div style={ui.modalBg}>
           <div style={ui.glassModal('#00f2ff')}>
             <h2 style={{color: '#00f2ff', letterSpacing:'6px', borderBottom: '2px solid #00f2ff55', paddingBottom: '20px', fontSize:'45px', margin:0}}>{dict.ui.theoryTitle}</h2>
-            <p style={{fontSize:'34px', lineHeight:'1.6', margin:'30px 0', color: '#fff'}}>{combinedLevel?.t}</p>
+            <div style={{flex:1, display:'flex', flexDirection:'column', justifyContent:'center'}}>
+              <p style={{fontSize:'34px', lineHeight:'1.6', margin:'30px 0', color: '#fff'}}>{combinedLevel?.t}</p>
+            </div>
             <button className="hud-btn" style={ui.btnSolid('#00f2ff')} onClick={() => { setPhase("GAME"); setTimerActive(true); }}>{dict.ui.theoryBtn}</button>
           </div>
         </div>
@@ -745,16 +920,15 @@ function RedoxBalancer() {
               ) : aiState === "FEEDBACK" ? (
                 <div style={{marginTop:'20px'}}>
                   <p style={{fontSize:'40px', color:'#0f0', margin:'40px 0', fontWeight:'bold'}}>{phase === "INTERRUPT" ? interruptQuiz?.m : combinedLevel.m}</p>
-                  <p className="hud-pulse" style={{color:'#aaa', fontSize:'24px', marginTop:'20px'}}>Reanudando Sistemas...</p>
                 </div>
               ) : aiState === "MICRO_CLASS" ? (
                 <div style={{marginTop:'20px'}}>
                    <h3 style={{color: '#f00', fontSize: '32px'}}>{dict.ui.microClassTitle}</h3>
                    <p style={{color: '#fff', fontSize: '26px', lineHeight:'1.5'}}>{phase === "INTERRUPT" ? interruptQuiz?.m : combinedLevel.m}</p>
-                   <button className="hud-btn" style={{...ui.btnSolid('#ff00ff'), marginTop:'40px'}} onClick={() => setAiState(phase === "INTERRUPT" ? "Q_INTERRUPT" : "Q")}>REINTENTAR RESPUESTA</button>
+                   <button className="hud-btn" style={{...ui.btnSolid('#ff00ff'), marginTop:'40px'}} onClick={() => setAiState(phase === "INTERRUPT" ? "Q_INTERRUPT" : "Q")}>{dict.ui.btnRetry}</button>
                 </div>
               ) : (
-                <div style={{fontSize:'24px', color:'#fff', lineHeight:'1.8', textAlign:'left', background:'rgba(0,0,0,0.4)', padding:'30px', borderRadius:'15px'}} dangerouslySetInnerHTML={{__html: dict.genExplanation(combinedLevel)}}></div>
+                <div style={{fontSize:'28px', color:'#fff', lineHeight:'1.8', textAlign:'left', background:'rgba(0,0,0,0.4)', padding:'30px', borderRadius:'15px'}} dangerouslySetInnerHTML={{__html: dict.genExplanation(combinedLevel)}}></div>
               )}
             </div>
             
@@ -765,6 +939,7 @@ function RedoxBalancer() {
         </div>
       )}
 
+      {/* MODAL AYUDA */}
       {helpActive && (
         <div style={ui.modalBg}>
           <div style={ui.glassModal('#ffea00')}>
@@ -777,6 +952,7 @@ function RedoxBalancer() {
         </div>
       )}
 
+      {/* MODAL VICTORIA */}
       {phase === "WIN" && (
         <div style={ui.modalBg}>
           <div style={ui.glassModal('#0f0')}>
@@ -801,10 +977,9 @@ function RedoxBalancer() {
             {/* FASE 1: BLOQUEO HASTA USAR IA */}
             {step === 1 && (
               <div style={{textAlign:'center', width:'100%'}}>
-                 <h2 style={{color:'#ff00ff', fontSize:'32px', marginBottom:'15px', textShadow: '0 0 10px #ff00ff'}}>PASO 1: IDENTIFICACIÓN</h2>
-                 <p style={{color:'#fff', fontSize:'24px', marginBottom:'30px'}}>⚠️ <em>Debes consultar al Tutor IA para analizar la ecuación antes de poder balancearla.</em></p>
-                 <button className="hud-btn" style={ui.mainCheck('#ff00ff')} onClick={() => { setPhase("AI"); setAiState("Q"); triggerVoiceSafe(combinedLevel.q); }}>
-                    🧠 INICIAR ANÁLISIS IA
+                 <h2 style={{color:'#ff00ff', fontSize:'32px', marginBottom:'15px', textShadow: '0 0 10px #ff00ff'}}>{dict.ui.step1Title}</h2>
+                 <button className="hud-btn" style={ui.mainCheck('#ff00ff')} onClick={() => { setPhase("AI"); setAiState("Q"); triggerVoice(combinedLevel.q, lCode); }}>
+                    {dict.ui.aiBtn}
                  </button>
               </div>
             )}
@@ -812,11 +987,12 @@ function RedoxBalancer() {
             {/* FASE 2: HABILITA MASAS (AGUA, H+, OH-) */}
             {step === 2 && (
               <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
-                 {/* Si el medio es Neutro, un botón para saltar de fase */}
+                 {/* Medio Neutro */}
                  {combinedLevel.env === "Neutral" ? (
                    <div style={{textAlign: 'center'}}>
-                     <p style={{fontSize:'24px', color:'#ffea00', marginBottom:'20px'}}>Este es un Medio Neutro. No se requiere balancear átomos de Oxígeno ni Hidrógeno libres.</p>
-                     <button className="hud-btn" style={ui.mainCheck('#ffea00')} onClick={handleVerifyMass}>AVANZAR A FASE DE CARGAS</button>
+                     <h2 style={{color:'#ffea00', fontSize:'32px', marginBottom:'15px', textShadow: '0 0 10px #ffea00'}}>{dict.ui.neutralTitle}</h2>
+                     <p style={{fontSize:'24px', color:'#fff', marginBottom:'20px'}}>{dict.ui.neutralDesc}</p>
+                     <button className="hud-btn" style={ui.mainCheck('#ffea00')} onClick={handleVerifyMass}>{dict.ui.btnSkip}</button>
                    </div>
                  ) : (
                    <>
@@ -825,7 +1001,7 @@ function RedoxBalancer() {
                        
                        {/* Botón H2O */}
                        <div style={ui.controlGroup}>
-                          <span style={{color:'#fff', fontSize:'24px', fontWeight:'bold'}}>H₂O (Agua)</span>
+                          <span style={{color:'#fff', fontSize:'24px', fontWeight:'bold'}}>H₂O</span>
                           <div style={{display:'flex', gap:'15px', marginTop:'10px'}}>
                              <button className="hud-btn-ghost" style={ui.microBtn('#fff')} onClick={()=>handleUpdateCoef('h2o', -1)}>-</button>
                              <span style={ui.val('#fff', '36px')}>{cH2O}</span>
@@ -836,7 +1012,7 @@ function RedoxBalancer() {
                        {/* Botón H+ */}
                        {combinedLevel.env === "Ácido" && (
                          <div style={ui.controlGroup}>
-                            <span style={{color:'#ffaa00', fontSize:'24px', fontWeight:'bold'}}>H⁺ (Protones)</span>
+                            <span style={{color:'#ffaa00', fontSize:'24px', fontWeight:'bold'}}>H⁺</span>
                             <div style={{display:'flex', gap:'15px', marginTop:'10px'}}>
                                <button className="hud-btn-ghost" style={ui.microBtn('#ffaa00')} onClick={()=>handleUpdateCoef('h', -1)}>-</button>
                                <span style={ui.val('#ffaa00', '36px')}>{cH}</span>
@@ -848,7 +1024,7 @@ function RedoxBalancer() {
                        {/* Botón OH- */}
                        {combinedLevel.env === "Básico" && (
                          <div style={ui.controlGroup}>
-                            <span style={{color:'#ff00aa', fontSize:'24px', fontWeight:'bold'}}>OH⁻ (Hidroxilos)</span>
+                            <span style={{color:'#ff00aa', fontSize:'24px', fontWeight:'bold'}}>OH⁻</span>
                             <div style={{display:'flex', gap:'15px', marginTop:'10px'}}>
                                <button className="hud-btn-ghost" style={ui.microBtn('#ff00aa')} onClick={()=>handleUpdateCoef('oh', -1)}>-</button>
                                <span style={ui.val('#ff00aa', '36px')}>{cOH}</span>
@@ -858,7 +1034,7 @@ function RedoxBalancer() {
                        )}
                      </div>
                      {errorMath && <div style={{color:'#f00', marginTop:'20px', fontWeight:'bold', fontSize:'18px'}}>{errorMath}</div>}
-                     <button className="hud-btn" style={{...ui.mainCheck('#ffea00'), marginTop:'30px'}} onClick={handleVerifyMass}>VERIFICAR BALANCE DE MASA</button>
+                     <button className="hud-btn" style={{...ui.mainCheck('#ffea00'), marginTop:'30px'}} onClick={handleVerifyMass}>{dict.ui.step2Title}</button>
                    </>
                  )}
               </div>
@@ -950,16 +1126,16 @@ export default function SafeRedoxBalancer() {
 // 🎨 ESTILOS "GOD TIER UI" MEJORADOS (FLEX-WRAP PARA EVITAR OVERLAP)
 const ui = {
   screen: { position:'absolute', inset:0, overflow:'hidden', background:'#000', fontFamily:'Orbitron, sans-serif' },
-  overlayFull: { display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100vh', background:'radial-gradient(circle at center, #001122 0%, #000 100%)', zIndex:3000, position:'relative' },
+  overlayFull: { display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100vh', background:'radial-gradient(circle at center, #001122 0%, #000 100%)', zIndex:9999, position:'relative' },
   glitchText: { color: '#00f2ff', fontSize: '28px', letterSpacing: '20px', marginBottom: '10px', fontWeight: '900' },
   titleGlow: { color:'#00f2ff', fontSize:'80px', letterSpacing:'10px', textShadow:'0 0 50px rgba(0, 242, 255, 0.8)', margin:'0 0 20px 0', textAlign: 'center', fontWeight: '900' },
   btnHex: (c) => ({ padding:'25px 60px', background:`linear-gradient(45deg, rgba(0,0,0,0.9), ${c}44)`, border:`3px solid ${c}`, color:c, fontSize:'28px', fontWeight:'900', cursor:'pointer', borderRadius:'15px', fontFamily:'Orbitron', transition:'all 0.3s ease', boxShadow: `0 0 40px ${c}66`, letterSpacing: '3px' }),
   btnGhost: { padding:'15px 40px', background:'transparent', border:'2px solid #555', color:'#aaa', fontSize:'20px', cursor:'pointer', borderRadius:'15px', fontFamily:'Orbitron', transition:'0.3s', fontWeight: 'bold', letterSpacing: '2px' },
-  topControls: { position: 'absolute', top: '30px', left: '30px', right: '30px', display: 'flex', justifyContent: 'space-between', zIndex: 500, pointerEvents: 'none' },
+  topRowWrapper: { position: 'absolute', top: '30px', left: '30px', right: '30px', display: 'flex', justifyContent: 'space-between', zIndex: 500, pointerEvents: 'none' },
   backBtn: { padding:'10px 20px', background:'rgba(255,0,85,0.15)', border:'2px solid #ff0055', color:'#ff0055', cursor:'pointer', borderRadius:'10px', fontFamily:'Orbitron', fontWeight:'900', backdropFilter: 'blur(10px)', letterSpacing: '2px', transition: '0.3s', boxShadow: '0 0 20px rgba(255,0,85,0.4)', pointerEvents: 'auto' },
   helpBtn: { padding:'10px 20px', background:'rgba(255,234,0,0.15)', border:'2px solid #ffea00', color:'#ffea00', cursor:'pointer', borderRadius:'10px', fontFamily:'Orbitron', fontWeight:'900', backdropFilter: 'blur(10px)', letterSpacing: '2px', transition: '0.3s', boxShadow: '0 0 20px rgba(255,234,0,0.4)', pointerEvents: 'auto' },
   aiBtn: { padding:'10px 20px', background:'rgba(255,0,255,0.15)', border:'2px solid #ff00ff', color:'#ff00ff', cursor:'pointer', borderRadius:'10px', fontFamily:'Orbitron', fontWeight:'900', backdropFilter: 'blur(10px)', letterSpacing: '2px', transition: '0.3s', boxShadow: '0 0 20px rgba(255,0,255,0.4)', pointerEvents: 'auto' },
-  topHud: { position:'absolute', top:'90px', left:'0', width: '100%', display: 'flex', justifyContent: 'center', zIndex:100, pointerEvents:'none' },
+  topHudWrapper: { position:'absolute', top:'90px', left:'0', width: '100%', display: 'flex', justifyContent: 'center', zIndex:100, pointerEvents:'none' },
   glassPanel: { background:'rgba(0,15,30,0.85)', border:'2px solid #00f2ff', padding:'30px 60px', borderRadius:'25px', textAlign:'center', backdropFilter:'blur(20px)', boxShadow:'0 0 60px rgba(0,242,255,0.3)', display: 'flex', flexDirection: 'column', alignItems: 'center' },
   levelBadge: { background:'#ff0055', color:'#fff', padding:'8px 20px', borderRadius:'8px', display:'inline-block', fontSize:'18px', fontWeight:'900', letterSpacing:'2px' },
   formula: { fontSize:'50px', fontWeight:'900', letterSpacing:'4px', display: 'flex', alignItems: 'center', marginTop:'10px', color:'#fff' },
@@ -971,8 +1147,7 @@ const ui = {
   microBtn: (c) => ({ width:'50px', height:'50px', borderRadius:'50%', border:`2px solid ${c}88`, background:'#111', color:c, fontSize:'30px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', paddingBottom:'5px', pointerEvents:'auto' }),
   val: (c, size='70px') => ({ fontSize:size, fontWeight:'900', color:c, width:'80px', textAlign:'center', textShadow:`0 0 30px ${c}` }),
   mainCheck: (c='#00f2ff') => ({ padding:'25px 60px', background:c, border:'none', color:'#000', fontWeight:'900', fontSize:'24px', cursor:'pointer', borderRadius:'20px', fontFamily:'Orbitron', boxShadow:`0 0 60px ${c}88`, letterSpacing: '4px', transition:'0.3s', pointerEvents:'auto' }),
-  scanBtn: { padding:'12px', background:'rgba(255,234,0,0.1)', border:'2px solid #ffea00', color:'#ffea00', fontWeight:'bold', fontSize:'14px', borderRadius:'8px', cursor:'pointer', fontFamily:'Orbitron', transition:'0.3s', boxShadow: '0 0 10px rgba(255,234,0,0.3)', pointerEvents:'auto' },
-  modalBg: { position:'absolute', inset:0, zIndex:2000, display:'flex', alignItems:'center', justifyContent: 'center', background:'rgba(0,5,15,0.95)', backdropFilter:'blur(40px)', pointerEvents:'auto' },
+  modalBg: { position:'fixed', inset:0, zIndex:9999, display:'flex', alignItems:'center', justifyContent: 'center', background:'rgba(0,5,15,0.95)', backdropFilter:'blur(40px)', pointerEvents:'auto' },
   glassModal: (c) => ({ border:`2px solid ${c}`, background:'rgba(0,15,30,0.85)', padding:'50px 80px', borderRadius:'40px', textAlign:'center', maxWidth:'1200px', maxHeight:'90vh', width:'90%', boxShadow:`0 0 100px ${c}66`, backdropFilter:'blur(20px)', display: 'flex', flexDirection: 'column', alignItems: 'center' }),
   grid: { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'30px', marginTop:'40px', width:'100%' },
   btnOpt: { padding:'30px', background:'rgba(255,255,255,0.03)', border:'2px solid #555', color:'#fff', borderRadius:'15px', fontSize:'24px', cursor:'pointer', fontFamily:'Orbitron', transition:'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900' },
