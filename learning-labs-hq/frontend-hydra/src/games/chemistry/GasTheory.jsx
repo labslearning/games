@@ -223,28 +223,29 @@ const QuantumPiston = ({ temp, volume, pressure, isCritical }) => {
       <Sparkles count={250} scale={[4.8, volume, 4.8]} position={[0, volume / 2, 0]} size={10} speed={particleSpeed} color={particleColor} />
       <Sparkles count={150} scale={[4.0, volume - 0.5, 4.0]} position={[0, volume / 2, 0]} size={4} speed={particleSpeed * 1.5} color="#ffffff" opacity={0.5} />
       
-      {/* 🔹 Telemetría Holográfica (HTML dentro del WebGL) */}
+      {/* 🔹 Telemetría Holográfica (HTML dentro del WebGL adaptada) */}
       <Html position={[3.8, 5, 0]} center zIndexRange={[100, 0]}>
-        <div style={{
+        <div className="telemetry-panel" style={{
           background: isCritical ? 'rgba(255,0,0,0.2)' : 'rgba(0,10,25,0.85)', 
           border: `1px solid ${isCritical ? '#ff0000' : '#00f2ff55'}`,
           borderLeft: `4px solid ${particleColor}`, 
-          padding: '20px', borderRadius: '12px', color: '#fff', fontFamily: 'Orbitron',
-          width: '260px', backdropFilter: 'blur(15px)', 
+          padding: 'clamp(10px, 2vw, 20px)', borderRadius: '12px', color: '#fff', fontFamily: 'Orbitron',
+          width: 'clamp(180px, 50vw, 260px)', backdropFilter: 'blur(15px)', 
           boxShadow: `0 0 40px ${particleColor}44`,
           transition: 'all 0.1s ease',
-          animation: isCritical ? 'glitch-anim 0.2s infinite' : 'none'
+          animation: isCritical ? 'glitch-anim 0.2s infinite' : 'none',
+          boxSizing: 'border-box'
         }}>
           <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '3px', borderBottom: '1px solid #333', paddingBottom: '5px', marginBottom: '15px', fontWeight:'bold' }}>
             {isCritical ? '⚠️ RIESGO ESTRUCTURAL' : 'SISTEMA NOMINAL'}
           </div>
-          <div style={{ fontSize: '30px', fontWeight: '900', color: isHot ? '#ff0055' : '#0f0', textShadow:'0 0 10px currentColor' }}>
+          <div style={{ fontSize: 'clamp(20px, 5vw, 30px)', fontWeight: '900', color: isHot ? '#ff0055' : '#0f0', textShadow:'0 0 10px currentColor' }}>
             T: {temp.toFixed(0)}<span style={{fontSize:'14px', color:'#aaa'}}> K</span>
           </div>
-          <div style={{ fontSize: '30px', fontWeight: '900', color: '#00f2ff', textShadow:'0 0 10px currentColor' }}>
+          <div style={{ fontSize: 'clamp(20px, 5vw, 30px)', fontWeight: '900', color: '#00f2ff', textShadow:'0 0 10px currentColor' }}>
             V: {volume.toFixed(1)}<span style={{fontSize:'14px', color:'#aaa'}}> L</span>
           </div>
-          <div style={{ fontSize: '30px', fontWeight: '900', color: isCritical ? '#ff0000' : '#ffea00', textShadow:'0 0 10px currentColor' }}>
+          <div style={{ fontSize: 'clamp(20px, 5vw, 30px)', fontWeight: '900', color: isCritical ? '#ff0000' : '#ffea00', textShadow:'0 0 10px currentColor' }}>
             P: {pressure.toFixed(2)}<span style={{fontSize:'14px', color:'#aaa'}}> atm</span>
           </div>
           <div style={{ marginTop: '15px', fontSize: '12px', color: isCritical ? '#ff0000' : '#00f2ff', textAlign: 'center', background: isCritical ? 'rgba(255,0,0,0.1)' : 'rgba(0,242,255,0.1)', padding: '8px', borderRadius: '6px', fontWeight:'bold', letterSpacing:'2px' }}>
@@ -358,8 +359,8 @@ export default function GasTheory() {
 
   if (phase === "END") return (
     <div style={ui.overlayFull}>
-      <h1 style={{color: '#0f0', fontSize: '70px', textShadow: '0 0 50px #0f0', letterSpacing: '10px', textAlign:'center', margin:'0 20px'}}>{d.ui.winTitle}</h1>
-      <button style={{...ui.btnHex('#0f0'), marginTop: '50px'}} onClick={handleBack}>{d.ui.btnBack}</button>
+      <h1 style={{color: '#0f0', fontSize: 'clamp(32px, 8vw, 70px)', textShadow: '0 0 50px #0f0', letterSpacing: 'clamp(2px, 2vw, 10px)', textAlign:'center', margin:'0', width: '100%', boxSizing: 'border-box'}}>{d.ui.winTitle}</h1>
+      <button style={{...ui.btnHex('#0f0'), marginTop: 'clamp(30px, 6vh, 50px)'}} onClick={handleBack}>{d.ui.btnBack}</button>
     </div>
   );
 
@@ -370,9 +371,9 @@ export default function GasTheory() {
       {/* TOP HUD CIBERNÉTICO */}
       <div style={ui.topHud}>
         <div style={ui.badge}>{d.ui.exp} {levelIdx + 1} / {d.levels.length}</div>
-        <h2 style={{color:'#00f2ff', margin:'10px 0', fontSize:'40px', letterSpacing:'6px', textShadow:'0 0 20px rgba(0,242,255,0.8)'}}>{lvl.name}</h2>
+        <h2 style={{color:'#00f2ff', margin:'10px 0', fontSize:'clamp(24px, 6vw, 40px)', letterSpacing:'clamp(2px, 1vw, 6px)', textShadow:'0 0 20px rgba(0,242,255,0.8)'}}>{lvl.name}</h2>
         {phase === "EXECUTION" && (
-          <div style={{background: 'rgba(255,234,0,0.15)', border: '2px solid #ffea00', padding: '12px 30px', borderRadius: '10px', color:'#ffea00', fontWeight: '900', display:'inline-block', fontSize:'18px', letterSpacing:'2px', boxShadow:'0 0 20px rgba(255,234,0,0.4)'}}>
+          <div style={{background: 'rgba(255,234,0,0.15)', border: '2px solid #ffea00', padding: 'clamp(8px, 2vw, 12px) clamp(15px, 4vw, 30px)', borderRadius: '10px', color:'#ffea00', fontWeight: '900', display:'inline-block', fontSize:'clamp(12px, 3vw, 18px)', letterSpacing:'clamp(1px, 0.5vw, 2px)', boxShadow:'0 0 20px rgba(255,234,0,0.4)', marginTop: '5px'}}>
             ⚡ {d.ui.targetMsg} {lvl.targetText} a {lvl.cond} {lvl.targetVal}
           </div>
         )}
@@ -382,8 +383,8 @@ export default function GasTheory() {
       {phase === "THEORY" && (
         <div style={ui.modalBg}>
           <div style={ui.glassModal('#00f2ff')}>
-            <h2 style={{color: '#00f2ff', letterSpacing:'6px', borderBottom: '2px solid #00f2ff55', paddingBottom: '15px', fontSize:'35px'}}>{d.ui.theoryTitle}</h2>
-            <p style={{fontSize:'28px', lineHeight:'1.7', margin:'50px 0', color: '#fff'}}>{lvl.th}</p>
+            <h2 style={{color: '#00f2ff', letterSpacing:'clamp(2px, 1vw, 6px)', borderBottom: '2px solid #00f2ff55', paddingBottom: '15px', fontSize:'clamp(20px, 5vw, 35px)', margin: '0'}}>{d.ui.theoryTitle}</h2>
+            <p style={{fontSize:'clamp(16px, 4vw, 28px)', lineHeight:'1.7', margin:'clamp(20px, 4vh, 50px) 0', color: '#fff'}}>{lvl.th}</p>
             <button style={ui.btnSolid('#00f2ff')} onClick={() => { setPhase("AI"); triggerVoice(d.ai.intro, lCode); }}>{d.ui.theoryBtn}</button>
           </div>
         </div>
@@ -393,19 +394,19 @@ export default function GasTheory() {
       {phase === "AI" && (
         <div style={ui.modalBg}>
           <div style={ui.glassModal('#ff00ff')}>
-            <h2 style={{color:'#ff00ff', letterSpacing:'6px', borderBottom: '2px solid #ff00ff55', paddingBottom: '15px', fontSize:'35px'}}>
+            <h2 style={{color:'#ff00ff', letterSpacing:'clamp(2px, 1vw, 6px)', borderBottom: '2px solid #ff00ff55', paddingBottom: '15px', fontSize:'clamp(20px, 5vw, 35px)', margin: '0'}}>
               {microClassActive ? d.ui.microTitle : d.ui.diagTitle}
             </h2>
             {!microClassActive ? (
               <>
-                <p style={{fontSize:'32px', margin:'50px 0', color: '#fff', fontWeight: '900'}}>{lvl.q}</p>
+                <p style={{fontSize:'clamp(18px, 4.5vw, 32px)', margin:'clamp(20px, 4vh, 50px) 0', color: '#fff', fontWeight: '900'}}>{lvl.q}</p>
                 <div style={ui.grid}>
                   {lvl.o.map((opt, i) => <button key={i} style={ui.btnOpt} onClick={() => handleAnswer(i)}>{opt}</button>)}
                 </div>
               </>
             ) : (
               <>
-                <p style={{color:'#ffea00', fontSize:'30px', lineHeight:'1.6', margin:'50px 0', fontWeight:'bold'}}>{lvl.m}</p>
+                <p style={{color:'#ffea00', fontSize:'clamp(16px, 4vw, 30px)', lineHeight:'1.6', margin:'clamp(20px, 4vh, 50px) 0', fontWeight:'bold'}}>{lvl.m}</p>
                 <button style={ui.btnSolid('#ff00ff')} onClick={() => { setPhase("AI"); setMicroClassActive(false); window.speechSynthesis.cancel(); }}>{d.ui.btnContinue}</button>
               </>
             )}
@@ -418,7 +419,7 @@ export default function GasTheory() {
         <div style={ui.dockPanel}>
           {lvl.ctrl === 't' ? (
             <div style={ui.sliderContainer}>
-              <div style={{color:'#ff0055', marginBottom:'20px', fontWeight:'900', letterSpacing:'3px', fontSize:'22px', textShadow:'0 0 10px #ff0055'}}>🔥 INYECCIÓN TÉRMICA (K)</div>
+              <div style={{color:'#ff0055', marginBottom:'20px', fontWeight:'900', letterSpacing:'clamp(1px, 1vw, 3px)', fontSize:'clamp(14px, 3.5vw, 22px)', textShadow:'0 0 10px #ff0055'}}>🔥 INYECCIÓN TÉRMICA (K)</div>
               <input type="range" min="0" max="1000" value={temp} onChange={(e) => { 
                 setTemp(Number(e.target.value)); 
                 if(Number(e.target.value) > 800) sfx.valve(); 
@@ -426,7 +427,7 @@ export default function GasTheory() {
             </div>
           ) : (
             <div style={ui.sliderContainer}>
-              <div style={{color:'#00f2ff', marginBottom:'20px', fontWeight:'900', letterSpacing:'3px', fontSize:'22px', textShadow:'0 0 10px #00f2ff'}}>⚙️ PRENSA HIDRÁULICA (L)</div>
+              <div style={{color:'#00f2ff', marginBottom:'20px', fontWeight:'900', letterSpacing:'clamp(1px, 1vw, 3px)', fontSize:'clamp(14px, 3.5vw, 22px)', textShadow:'0 0 10px #00f2ff'}}>⚙️ PRENSA HIDRÁULICA (L)</div>
               <input type="range" min="1" max="10" step="0.1" value={vol} onChange={(e) => { 
                 setVol(Number(e.target.value)); 
                 if(Number(e.target.value) < 2) sfx.valve(); 
@@ -441,8 +442,8 @@ export default function GasTheory() {
       {phase === "SYNTHESIS" && (
         <div style={ui.modalBg}>
           <div style={ui.glassModal('#0f0')}>
-            <h2 style={{color:'#0f0', letterSpacing:'6px', borderBottom: '2px solid #0f05', paddingBottom: '15px', fontSize:'35px'}}>{d.ui.synthTitle}</h2>
-            <p style={{fontSize:'32px', lineHeight:'1.7', margin:'50px 0', color: '#fff', fontWeight:'bold'}}>{lvl.rw}</p>
+            <h2 style={{color:'#0f0', letterSpacing:'clamp(2px, 1vw, 6px)', borderBottom: '2px solid #0f05', paddingBottom: '15px', fontSize:'clamp(20px, 5vw, 35px)', margin: '0'}}>{d.ui.synthTitle}</h2>
+            <p style={{fontSize:'clamp(16px, 4.5vw, 32px)', lineHeight:'1.7', margin:'clamp(20px, 4vh, 50px) 0', color: '#fff', fontWeight:'bold'}}>{lvl.rw}</p>
             <button style={ui.btnSolid('#0f0')} onClick={() => loadLevel(levelIdx + 1)}>{d.ui.btnNext}</button>
           </div>
         </div>
@@ -479,32 +480,32 @@ export default function GasTheory() {
   );
 }
 
-// 🎨 ESTILOS "GOD TIER ABSOLUTO"
+// 🎨 ESTILOS "GOD TIER ABSOLUTO" REFORZADO A MOBILE FIRST
 const ui = {
-  screen: { position:'absolute', inset:0, overflow:'hidden', background:'#000', fontFamily:'Orbitron, sans-serif', color:'#fff' },
-  overlayFull: { display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100vh', background:'radial-gradient(circle at center, #001122 0%, #000 100%)', zIndex:1000, position:'relative' },
-  glitchText: { color: '#00f2ff', fontSize: '24px', letterSpacing: '25px', marginBottom: '0px', fontWeight: 'bold' },
-  titleGlow: { color:'#00f2ff', fontSize:'80px', letterSpacing:'15px', textShadow:'0 0 60px rgba(0, 242, 255, 0.8)', margin:'0 0 30px 0', textAlign: 'center', fontWeight: '900' },
+  screen: { position:'absolute', inset:0, overflow:'hidden', background:'#000', fontFamily:'Orbitron, sans-serif', color:'#fff', width: '100vw', height: '100dvh', display: 'flex', flexDirection: 'column' },
+  overlayFull: { display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100dvh', width: '100vw', background:'radial-gradient(circle at center, #001122 0%, #000 100%)', zIndex:1000, position:'relative', padding: '20px', boxSizing: 'border-box', textAlign: 'center' },
+  glitchText: { color: '#00f2ff', fontSize: 'clamp(14px, 3vw, 24px)', letterSpacing: 'clamp(10px, 3vw, 25px)', marginBottom: '0px', fontWeight: 'bold' },
+  titleGlow: { color:'#00f2ff', fontSize:'clamp(32px, 8vw, 80px)', letterSpacing:'clamp(3px, 2vw, 15px)', textShadow:'0 0 60px rgba(0, 242, 255, 0.8)', margin:'0 0 30px 0', textAlign: 'center', fontWeight: '900' },
   
-  btnHex: (c) => ({ padding:'30px 80px', background:`linear-gradient(45deg, rgba(0,0,0,0.9), ${c}33)`, border:`3px solid ${c}`, color:c, fontSize:'26px', fontWeight:'900', cursor:'pointer', borderRadius:'15px', fontFamily:'Orbitron', transition:'all 0.3s ease', boxShadow: `0 0 30px ${c}55`, letterSpacing: '4px' }),
-  btnGhost: { marginTop:'30px', padding:'15px 50px', background:'transparent', border:'2px solid #555', color:'#aaa', fontSize:'18px', cursor:'pointer', borderRadius:'10px', fontFamily:'Orbitron', transition:'0.3s', fontWeight: 'bold', letterSpacing: '2px' },
+  btnHex: (c) => ({ padding:'clamp(15px, 4vw, 30px) clamp(30px, 6vw, 80px)', background:`linear-gradient(45deg, rgba(0,0,0,0.9), ${c}33)`, border:`3px solid ${c}`, color:c, fontSize:'clamp(16px, 4vw, 26px)', fontWeight:'900', cursor:'pointer', borderRadius:'15px', fontFamily:'Orbitron', transition:'all 0.3s ease', boxShadow: `0 0 30px ${c}55`, letterSpacing: 'clamp(2px, 1vw, 4px)', width: '100%', maxWidth: '400px' }),
+  btnGhost: { marginTop:'clamp(15px, 4vh, 30px)', padding:'clamp(10px, 3vw, 15px) clamp(20px, 5vw, 50px)', background:'transparent', border:'2px solid #555', color:'#aaa', fontSize:'clamp(14px, 3vw, 18px)', cursor:'pointer', borderRadius:'10px', fontFamily:'Orbitron', transition:'0.3s', fontWeight: 'bold', letterSpacing: '2px' },
   
-  backBtn: { position:'absolute', top:'40px', left:'40px', zIndex:500, padding:'15px 35px', background:'rgba(255,0,85,0.15)', border:'2px solid #ff0055', color:'#ff0055', cursor:'pointer', borderRadius:'10px', fontFamily:'Orbitron', fontWeight:'900', backdropFilter: 'blur(8px)', letterSpacing: '2px', boxShadow: '0 0 20px rgba(255,0,85,0.3)' },
+  backBtn: { position:'absolute', top:'max(15px, env(safe-area-inset-top))', left:'clamp(15px, 4vw, 40px)', zIndex:500, padding:'clamp(10px, 2vw, 15px) clamp(15px, 3vw, 35px)', background:'rgba(255,0,85,0.15)', border:'2px solid #ff0055', color:'#ff0055', cursor:'pointer', borderRadius:'10px', fontFamily:'Orbitron', fontWeight:'900', backdropFilter: 'blur(8px)', letterSpacing: '1px', boxShadow: '0 0 20px rgba(255,0,85,0.3)', fontSize: 'clamp(12px, 3vw, 16px)' },
   
-  topHud: { position:'absolute', top:'40px', left:'50%', transform: 'translateX(-50%)', zIndex:100, textAlign: 'center', width: '100%', pointerEvents:'none' },
-  badge: { background:'#00f2ff', color:'#000', padding:'10px 25px', borderRadius:'8px', display:'inline-block', fontSize:'18px', fontWeight:'900', letterSpacing: '3px', boxShadow: '0 0 20px #00f2ff' },
+  topHud: { position:'absolute', top:'max(70px, calc(env(safe-area-inset-top) + 60px))', left:'50%', transform: 'translateX(-50%)', zIndex:100, textAlign: 'center', width: '95%', maxWidth: '800px', pointerEvents:'none' },
+  badge: { background:'#00f2ff', color:'#000', padding:'clamp(6px, 2vw, 10px) clamp(15px, 4vw, 25px)', borderRadius:'8px', display:'inline-block', fontSize:'clamp(14px, 3vw, 18px)', fontWeight:'900', letterSpacing: 'clamp(1px, 1vw, 3px)', boxShadow: '0 0 20px #00f2ff' },
   
-  dockPanel: { position:'absolute', bottom:'50px', left:'50%', transform:'translateX(-50%)', zIndex:150, background:'rgba(0,15,30,0.9)', padding:'50px 80px', borderRadius:'30px', border:'2px solid #00f2ff', textAlign:'center', display:'flex', alignItems:'center', gap:'80px', pointerEvents:'auto', backdropFilter: 'blur(25px)', boxShadow: '0 30px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,242,255,0.1)' },
-  sliderContainer: { display:'flex', flexDirection:'column', alignItems:'center', width:'500px' },
+  dockPanel: { position:'absolute', bottom:'max(20px, env(safe-area-inset-bottom))', left:'50%', transform:'translateX(-50%)', zIndex:150, background:'rgba(0,15,30,0.9)', padding:'clamp(20px, 4vw, 50px) clamp(20px, 5vw, 80px)', borderRadius:'clamp(15px, 4vw, 30px)', border:'2px solid #00f2ff', textAlign:'center', display:'flex', alignItems:'center', justifyContent: 'center', gap:'clamp(20px, 4vw, 80px)', pointerEvents:'auto', backdropFilter: 'blur(25px)', boxShadow: '0 30px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,242,255,0.1)', width: '95%', maxWidth: '900px', flexWrap: 'wrap', boxSizing: 'border-box' },
+  sliderContainer: { display:'flex', flexDirection:'column', alignItems:'center', width:'100%', flex: '1 1 250px' },
   cyberSlider: (c) => ({ width:'100%', cursor:'pointer', accentColor: c, height: '16px', borderRadius: '8px', outline: 'none', background: 'rgba(255,255,255,0.15)', boxShadow: `0 0 15px ${c}66` }),
-  checkBtn: { padding:'30px 60px', background:'#00f2ff', border:'none', color:'#000', fontWeight:'900', fontSize:'24px', borderRadius:'15px', cursor:'pointer', fontFamily:'Orbitron', boxShadow:'0 0 40px rgba(0, 242, 255, 0.8)', letterSpacing: '3px' },
+  checkBtn: { padding:'clamp(15px, 4vw, 30px) clamp(20px, 5vw, 60px)', background:'#00f2ff', border:'none', color:'#000', fontWeight:'900', fontSize:'clamp(16px, 4vw, 24px)', borderRadius:'15px', cursor:'pointer', fontFamily:'Orbitron', boxShadow:'0 0 40px rgba(0, 242, 255, 0.8)', letterSpacing: 'clamp(1px, 1vw, 3px)', flex: '1 1 200px', minHeight: '60px' },
   
-  modalBg: { position:'absolute', inset:0, zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,5,15,0.92)', backdropFilter:'blur(30px)', pointerEvents:'auto' },
-  glassModal: (c) => ({ border:`3px solid ${c}`, background:'rgba(0, 15, 30, 0.85)', padding:'80px', borderRadius:'35px', textAlign:'center', maxWidth:'1200px', width:'90%', boxShadow:`0 0 100px ${c}55`, backdropFilter: 'blur(15px)' }),
+  modalBg: { position:'absolute', inset:0, zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,5,15,0.92)', backdropFilter:'blur(30px)', pointerEvents:'auto', padding: 'clamp(15px, 4vw, 30px)', boxSizing: 'border-box' },
+  glassModal: (c) => ({ border:`clamp(1px, 0.5vw, 3px) solid ${c}`, background:'rgba(0, 15, 30, 0.85)', padding:'clamp(25px, 6vw, 80px)', borderRadius:'clamp(20px, 4vw, 35px)', textAlign:'center', maxWidth:'1000px', width:'100%', boxShadow:`0 0 100px ${c}55`, backdropFilter: 'blur(15px)', maxHeight: '85dvh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center', boxSizing: 'border-box' }),
   
-  grid: { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'35px', marginTop:'50px' },
-  btnOpt: { padding:'30px', background:'rgba(255,255,255,0.03)', border:'2px solid #555', color:'#fff', borderRadius:'15px', fontSize:'24px', cursor:'pointer', fontFamily:'Orbitron', transition:'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' },
-  btnSolid: (c) => ({ marginTop:'60px', padding:'30px 90px', background:c, color:'#000', fontWeight:'900', fontSize:'26px', borderRadius:'15px', border:'none', cursor:'pointer', fontFamily:'Orbitron', letterSpacing: '4px', boxShadow: `0 0 50px ${c}88` })
+  grid: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))', gap:'clamp(15px, 3vw, 35px)', marginTop:'clamp(20px, 5vh, 50px)', width: '100%' },
+  btnOpt: { padding:'clamp(15px, 3vw, 30px)', background:'rgba(255,255,255,0.03)', border:'2px solid #555', color:'#fff', borderRadius:'15px', fontSize:'clamp(14px, 3.5vw, 24px)', cursor:'pointer', fontFamily:'Orbitron', transition:'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', minHeight: '60px' },
+  btnSolid: (c) => ({ marginTop:'clamp(20px, 4vh, 60px)', padding:'clamp(15px, 3vw, 30px) clamp(20px, 5vw, 90px)', background:c, color:'#000', fontWeight:'900', fontSize:'clamp(16px, 4vw, 26px)', borderRadius:'15px', border:'none', cursor:'pointer', fontFamily:'Orbitron', letterSpacing: 'clamp(2px, 1vw, 4px)', boxShadow: `0 0 50px ${c}88`, width: '100%' })
 };
 
 // Necesario inyectar estilos globales sutiles para el input range y animaciones glitch si no existieran en App.css
@@ -518,5 +519,17 @@ styleSheet.innerText = `
     80% { transform: translate(2px, -2px) }
     100% { transform: translate(0) }
   }
+  
+  /* Ajuste responsivo de emergencia para el panel 3D en pantallas de menos de 400px (iPhone SE, etc) */
+  @media (max-width: 450px) {
+    .telemetry-panel {
+      transform: scale(0.85);
+      transform-origin: left top;
+    }
+  }
+  
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(0, 242, 255, 0.4); border-radius: 10px; }
 `;
 document.head.appendChild(styleSheet);
