@@ -208,7 +208,8 @@ const HolographicEquation = ({ core, isStable }) => {
   );
 };
 
-const AtomicCore = React.memo(({ core, hitPulse }) => {
+// 🔥 FIX: Le pasamos isMobile al componente 3D para que acomode su telemetría
+const AtomicCore = React.memo(({ core, hitPulse, isMobile }) => {
   const groupRef = useRef();
   const meshRef = useRef();
   const isStable = core.currentCharge === core.target;
@@ -265,8 +266,8 @@ const AtomicCore = React.memo(({ core, hitPulse }) => {
    🎮 5. MÁQUINA DE ESTADOS PRINCIPAL
 ============================================================ */
 export default function RedoxLab() {
-  const isMobile = useMobile(); // 🔥 Inyección del Hook de Responsividad
-  const { language } = useGameStore();
+  const isMobile = useMobile(); // 🔥 Inyección del Hook
+  const { language, resetProgress } = useGameStore(); 
   
   const safeLang = I18N[language] ? language : 'es';
   const dict = I18N[safeLang];
@@ -285,8 +286,8 @@ export default function RedoxLab() {
   const qData = dict.questions[missionIdx];
 
   const handleBack = () => {
-    window.speechSynthesis?.cancel();
-    window.location.href = '/'; 
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    resetProgress();
   };
 
   const handleStartBoot = () => {
@@ -483,7 +484,7 @@ export default function RedoxLab() {
 
       {/* 🎯 FASE 2: EJECUCIÓN */}
       {phase === "EXECUTION" && !isStable && (
-        <div style={ui.bottomCenter}>
+        <div style={ui.bottomCenter(isMobile)}>
           {!config.isGalvanic ? (
             <div className="nano-btn-group" style={ui.btnGroup(isMobile)}>
               <button style={ui.fireBtn(isMobile, '#00f2ff')} onClick={() => handleFire("reduce")} disabled={laserActive}>{dict.ui.btnInject}</button>
@@ -508,35 +509,34 @@ export default function RedoxLab() {
 
       {/* 🌌 MOTOR 3D PROFUNDO (CÁMARA Y VECTORES DINÁMICOS) */}
       <div style={{position:'absolute', inset:0, zIndex:1, pointerEvents:'none'}}>
-        {/* 🔥 FIX CÁMARA MOBILE: Si es movil la alejamos a 26 para que se vea todo en vertical */}
-        <Canvas camera={{position:[0, 0, isMobile ? 26 : 15], fov:45}}>
+        {/* 🔥 FIX CÁMARA MOBILE: Si es movil la alejamos a 28 para que se vea todo en vertical y nada se tape */}
+        <Canvas camera={{position:[0, isMobile ? 1 : 0, isMobile ? 28 : 16], fov:45}}>
           <color attach="background" args={['#000308']} />
           <Stars count={5000} factor={4} fade />
           <ambientLight intensity={0.8} />
           
           <Suspense fallback={null}>
-            {/* Si es móvil, la telemetría holográfica se dibuja ARRIBA del pistón para no taparlo */}
+            {/* Si es móvil, la telemetría se dibuja arriba del pistón */}
             {isMobile && phase === "EXECUTION" && (
-              <Html position={[0, 6.5, 0]} center zIndexRange={[100, 0]}>
+              <Html position={[0, 6.8, 0]} center zIndexRange={[100, 0]}>
                 <div style={{
                   background: isCritical ? 'rgba(255,0,0,0.2)' : 'rgba(0,10,25,0.85)', 
                   border: `1px solid ${isCritical ? '#ff0000' : '#00f2ff55'}`,
-                  borderLeft: `4px solid ${isCritical ? '#ff0000' : '#00f2ff'}`, 
-                  padding: '10px 20px', borderRadius: '12px', color: '#fff', fontFamily: 'Orbitron',
-                  width: '260px', backdropFilter: 'blur(15px)', 
-                  boxShadow: `0 0 40px ${isCritical ? '#ff0000' : '#00f2ff'}44`,
+                  padding: '10px', borderRadius: '12px', color: '#fff', fontFamily: 'Orbitron',
+                  width: '200px', backdropFilter: 'blur(15px)', 
+                  boxShadow: `0 0 20px ${isCritical ? '#ff0000' : '#00f2ff'}44`,
                   transform: 'scale(0.85)',
                   animation: isCritical ? 'glitch-anim 0.2s infinite' : 'none'
                 }}>
-                  <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '3px', borderBottom: '1px solid #333', paddingBottom: '5px', marginBottom: '10px', fontWeight:'bold', textAlign: 'center' }}>
+                  <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '2px', borderBottom: '1px solid #333', paddingBottom: '5px', marginBottom: '5px', fontWeight:'bold', textAlign: 'center' }}>
                     {isCritical ? '⚠️ RIESGO ESTRUCTURAL' : 'SISTEMA NOMINAL'}
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <div style={{ fontSize: '24px', fontWeight: '900', color: '#00f2ff' }}>T: {temp.toFixed(0)}</div>
-                    <div style={{ fontSize: '24px', fontWeight: '900', color: '#ffea00' }}>V: {volume.toFixed(1)}</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 10px' }}>
+                    <div style={{ fontSize: '20px', fontWeight: '900', color: '#00f2ff' }}>T:{temp.toFixed(0)}</div>
+                    <div style={{ fontSize: '20px', fontWeight: '900', color: '#ffea00' }}>V:{volume.toFixed(1)}</div>
                   </div>
-                  <div style={{ fontSize: '24px', fontWeight: '900', color: isCritical ? '#ff0000' : '#0f0', textAlign: 'center', marginTop: '5px' }}>
-                    P: {pressure.toFixed(2)}
+                  <div style={{ fontSize: '20px', fontWeight: '900', color: isCritical ? '#ff0000' : '#0f0', textAlign: 'center', marginTop: '5px' }}>
+                    P:{pressure.toFixed(2)}
                   </div>
                 </div>
               </Html>
@@ -546,9 +546,9 @@ export default function RedoxLab() {
               // Si es Batería (Jefe) y es Celular, apilamos los núcleos verticalmente para que quepan
               let pos = c.pos || [0, 0, 0];
               if (config.isGalvanic && isMobile) {
-                pos = i === 0 ? [0, 4, 0] : [0, -4, 0];
+                pos = i === 0 ? [0, 3.5, 0] : [0, -3.5, 0];
               }
-              return <AtomicCore key={i} core={{...c, pos}} hitPulse={hitPulse}/>
+              return <AtomicCore key={i} core={{...c, pos}} hitPulse={hitPulse} isMobile={isMobile}/>
             })}
             
             {/* Láser Vertical en Móvil, Horizontal en PC */}
@@ -618,7 +618,7 @@ const ui = {
   nextBtn: (isMobile, c) => ({ padding: '15px 20px', background: c, border: 'none', color: '#000', fontSize: 'clamp(16px, 4.5vw, 22px)', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '10px', boxShadow: `0 0 30px ${c}`, width: '100%', minHeight: '60px', marginTop: '15px' }),
   
   // Área Inferior de Ejecución (Disparos)
-  bottomCenter: { position: 'absolute', bottom: 'max(20px, env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', zIndex: 150, pointerEvents: 'auto', width: '95%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '15px', boxSizing: 'border-box' },
+  bottomCenter: (isMobile) => ({ position: 'absolute', bottom: 'max(10px, env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', zIndex: 150, pointerEvents: 'auto', width: isMobile ? '95%' : 'auto', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '10px', boxSizing: 'border-box' }),
   fireBtn: (isMobile, c) => ({ padding: '15px 20px', background: 'rgba(0,0,0,0.95)', border: `3px solid ${c}`, color: c, fontSize: 'clamp(16px, 4.5vw, 24px)', fontWeight: '900', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '30px', boxShadow: `0 0 40px ${c}66`, letterSpacing: '2px', width: '100%', minHeight: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }),
   
   flash: { position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.3)', pointerEvents: 'none', zIndex: 999 }
@@ -643,7 +643,6 @@ if (typeof document !== 'undefined' && !document.getElementById("nano-styles-mob
       .nano-glass-title { font-size: 22px !important; }
       .nano-grid { grid-template-columns: 1fr !important; }
       .nano-title { font-size: 32px !important; padding: 0 10px; }
-      .telemetry-panel { display: none !important; } /* Ocultamos el dash original en móviles, React dibuja uno encima del pistón */
     }
   `;
   document.head.appendChild(styleSheet);
