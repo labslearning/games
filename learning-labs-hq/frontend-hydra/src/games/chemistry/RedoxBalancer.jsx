@@ -55,12 +55,15 @@ class RedoxEngine {
 
   static validateCharge(userCoef1, userCoef2, levelData) {
     if (!levelData) return { isBalanced: false, errorType: "ERROR" };
+    
     const eLostTotal = userCoef1 * (levelData.eOx || 1);
     const eGainedTotal = userCoef2 * (levelData.eRed || 1);
     const isChargeBalanced = eLostTotal === eGainedTotal;
+    
     const targetMCM = this.getMCM(levelData.eOx, levelData.eRed);
     const expectedCoef1 = targetMCM / (levelData.eOx || 1);
     const expectedCoef2 = targetMCM / (levelData.eRed || 1);
+    
     const isSimplified = userCoef1 === expectedCoef1 && userCoef2 === expectedCoef2;
     const isBalanced = isChargeBalanced && isSimplified;
 
@@ -76,6 +79,12 @@ class RedoxEngine {
     if (!a || !b) return 1;
     const gcd = (x, y) => (!y ? x : gcd(y, x % y));
     return (a * b) / gcd(a, b);
+  }
+
+  static getMassBalanceGuide(env, langDict) {
+    if (env === "Ácido") return langDict?.guideAcid || "";
+    if (env === "Básico") return langDict?.guideBasic || "";
+    return langDict?.guideNeutral || "";
   }
 
   static parseMolecule(formula) {
@@ -237,7 +246,7 @@ const DICT = {
   },
   en: {
     ui: { 
-      start: "START CAMPAIGN", title: "REDOX BALANCER", rank: "RANK", xp: "XP", 
+      start: "START CAMPAIGN", title: "REDOX BALANCER: GOD TIER", rank: "RANK", xp: "XP", 
       theoryTitle: "TACTICAL BRIEFING", theoryBtn: "ENTER CORE ➔", diagTitle: "AI ANALYSIS", 
       btnCheck: "SYNTHESIZE & VERIFY", btnBack: "⬅ ABORT", btnNext: "NEXT CRISIS ➔", 
       btnRetry: "RETRY", aiTitle: "🤖 SOCRATIC AI", btnContinue: "UNDERSTOOD", 
@@ -259,7 +268,9 @@ const DICT = {
       H2O_IMBALANCE: "Atomic error: Mass conservation law violated. Verify Oxygen (H₂O) and Hydrogen (H⁺/OH⁻)."
     },
     interrupts: [
-      { q: "Why balance mass before charge?", o: ["Conservation of Mass", "Aesthetics"], a: 0, m: "Lavoisier's Law: Matter cannot be created or destroyed. We must equalize atoms before moving energy." }
+      { q: "Why balance mass before charge?", o: ["Conservation of Mass", "Aesthetics"], a: 0, m: "Lavoisier's Law: Matter cannot be created or destroyed. We must equalize atoms before moving energy." },
+      { q: "In an ACIDIC medium, missing Oxygens are balanced with?", o: ["OH⁻ ions", "H₂O molecules"], a: 1, m: "In an acidic medium, you NEVER use OH⁻. You use Water (H₂O) for Oxygens." },
+      { q: "If Oxidation loses 2e- and Reduction gains 3e-, what is the LCM?", o: ["6 electrons", "5 electrons"], a: 0, m: "The Least Common Multiple between 2 and 3 is 6. Cross-multiply to reach 6." }
     ],
     levels: Array(20).fill({ t: "Chemical anomaly detected.", q: "Analyze the electron flow.", o: ["Oxidation", "Reduction"], a: 0, m: "Analysis correct.", step2Hint: "Step 2: Apply H₂O and H⁺/OH⁻ to satisfy mass conservation.", step3Hint: "Step 3: Calculate the LCM to synchronize electron transfer." }),
     genExplanation: (lvl) => `<strong style="color:#00f2ff;">🔬 REDOX REPORT</strong><br/>Analyze the mathematical LCM.`
@@ -305,6 +316,7 @@ const DICT = {
     genExplanation: (lvl) => `🔬 KGV verwenden.`
   }
 };
+
 const LANG_MAP = { es: 'es-ES', en: 'en-US', fr: 'fr-FR', de: 'de-DE' };
 
 const getRank = (xp) => {
@@ -318,7 +330,7 @@ const getRank = (xp) => {
 ============================================================ */
 const CameraRig = ({ phase, isExploding, isErrorShake, isMobile }) => {
   useFrame((state) => {
-    const baseZ = isMobile ? 35 : 25; // Zoom adaptativo
+    const baseZ = isMobile ? 35 : 25; // Zoom dinámico para móviles
     if (isExploding) {
       state.camera.position.x = Math.sin(state.clock.elapsedTime * 100) * 2;
       state.camera.position.y = 2 + Math.cos(state.clock.elapsedTime * 120) * 1.5;
@@ -396,6 +408,7 @@ const SmartMolecule = ({ formula, position, scale = 1, active, isExploding, coun
   const core = atomsData[0];
   const satellites = atomsData.slice(1);
   const coreColor = RedoxEngine.getAtomColor(core.symbol);
+
   const safeCount = Math.max(1, Math.min(count || 1, 10));
   
   return (
@@ -474,7 +487,7 @@ const ElectronBeam = ({ start, end, active, isMobile }) => {
    🎮 7. MÁQUINA DE ESTADOS PRINCIPAL (SISTEMA GOD TIER)
 ============================================================ */
 function RedoxBalancer() {
-  const isMobile = useMobile(); // Hook inyectado
+  const isMobile = useMobile(); // 🔥 Inyectado
   const storeLanguage = useGameStore(state => state.language);
   const language = storeLanguage || "es";
   const resetProgress = useGameStore(state => state.resetProgress) || (() => window.location.reload());
@@ -538,6 +551,7 @@ function RedoxBalancer() {
 
   const handleUpdateCoef = useCallback((side, delta) => {
     sfx.click();
+    
     setActionCount(prev => {
       const next = prev + 1;
       if (next >= 6) {
@@ -561,10 +575,12 @@ function RedoxBalancer() {
 
   const handleAiAns = useCallback((idx, isInterrupt = false) => {
     const activeQuiz = isInterrupt ? interruptQuiz : combinedLevel;
+    
     if (idx === activeQuiz.a) {
       sfx.success(); 
       setAiState("FEEDBACK");
       triggerVoice(activeQuiz.m, lCode);
+      
       setTimeout(() => { 
         if (!isMounted.current) return; 
         setPhase("GAME"); 
@@ -591,6 +607,7 @@ function RedoxBalancer() {
         triggerVoice(combinedLevel.step3Hint || dict.ui.step3Title, lCode);
         return;
     }
+
     const isMassOk = RedoxEngine.validateMass(cH2O, cH, cOH, combinedLevel);
     if (isMassOk) {
       sfx.levelUp(); 
@@ -609,6 +626,7 @@ function RedoxBalancer() {
   const handleVerifyCharge = () => {
     setTimerActive(false);
     const result = RedoxEngine.validateCharge(c1, c2, combinedLevel);
+
     if (result.isBalanced) {
       sfx.transfer();
       setPhase("TRANSFER");
@@ -625,12 +643,15 @@ function RedoxBalancer() {
       setStreak(0);
       sfx.error(); 
       setIsErrorShake(true); 
+
       let feedback = dict.hints.GENERIC;
       if(result.errorType === "NOT_SIMPLIFIED") feedback = dict.hints.NOT_SIMPLIFIED;
       else if(result.errorType === "EXCESS_LOST") feedback = dict.hints.EXCESS_LOST;
       else if(result.errorType === "DEFICIT_LOST") feedback = dict.hints.DEFICIT_LOST;
+
       setErrorMath(feedback);
       triggerVoice(feedback, lCode);
+      
       if (result.eDiff > 12) {
         sfx.explosion(); setIsExploding(true);
         setTimeout(() => { if(isMounted.current) setPhase("GAMEOVER"); }, 3000);
@@ -704,7 +725,7 @@ function RedoxBalancer() {
       </div>
 
       {/* HUD SUPERIOR: FÓRMULA, RANGO Y GUÍA TÁCTICA */}
-      <div style={ui.topHud}>
+      <div style={ui.topHudWrapper}>
         <div style={ui.glassPanel}>
           <div style={{display:'flex', flexWrap: 'wrap', justifyContent:'space-between', alignItems:'center', width: '100%', marginBottom:'10px', borderBottom:'1px solid #444', paddingBottom:'15px', gap: '10px'}}>
             <div style={ui.levelBadge}>{dict.ui.mission} {levelIdx + 1} / {totalLevels}</div>
@@ -743,10 +764,13 @@ function RedoxBalancer() {
       {(phase === "GAME" || phase === "TRANSFER" || phase === "AI" || phase === "INTERRUPT") && step >= 2 && !isMobile && (
         <div style={ui.liveStatsPanel}>
           <h3 style={{margin:'0 0 15px 0', color:'#fff', letterSpacing:'2px', fontSize:'clamp(14px, 2vw, 18px)', borderBottom:'1px solid #555', paddingBottom:'10px'}}>{dict.ui.statsTitle}</h3>
+          
           <div style={{color:'#00f2ff', fontWeight:'bold', fontSize:'16px'}}>Oxidación (Cede e-):</div>
           <div style={{color:'#fff', fontSize:'14px', marginBottom:'15px'}}>{combinedLevel.hOx}</div>
+          
           <div style={{color:'#ff0055', fontWeight:'bold', fontSize:'16px'}}>Reducción (Absorbe e-):</div>
           <div style={{color:'#fff', fontSize:'14px'}}>{combinedLevel.hRed}</div>
+          
           {step === 3 && (
             <div style={{marginTop:'20px', borderTop:'1px solid #555', paddingTop:'15px'}}>
               <div style={{color:'#00f2ff', fontWeight:'bold', fontSize:'18px'}}>{dict.ui.eLost}: {eLost}</div>
@@ -775,6 +799,7 @@ function RedoxBalancer() {
           <div style={ui.glassModal('#ff00ff')}>
             <h2 style={{color:'#ff00ff', letterSpacing:'6px', borderBottom: '2px solid #ff00ff55', paddingBottom: '20px', fontSize:'clamp(24px, 6vw, 45px)', margin:0}}>{dict.ui.aiTitle}</h2>
             <div style={{flex:1, overflowY:'auto', width:'100%', padding:'20px'}}>
+              
               {(aiState === "Q" || aiState === "Q_INTERRUPT") ? (
                 <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
                   <p style={{fontSize:'clamp(18px, 4vw, 32px)', margin:'20px 0', color: '#fff', fontWeight:'900'}}>
@@ -800,6 +825,7 @@ function RedoxBalancer() {
                 <div style={{fontSize:'clamp(16px, 3vw, 28px)', color:'#fff', lineHeight:'1.8', textAlign:'left', background:'rgba(0,0,0,0.4)', padding:'30px', borderRadius:'15px'}} dangerouslySetInnerHTML={{__html: dict.genExplanation(combinedLevel)}}></div>
               )}
             </div>
+            
             {aiState === "INFO" && (
               <button className="hud-btn" style={ui.btnSolid('#ff00ff')} onClick={()=>{setPhase("GAME"); setTimerActive(true); if (typeof window !== 'undefined') window.speechSynthesis.cancel();}}>{dict.ui.btnContinue}</button>
             )}
@@ -835,7 +861,7 @@ function RedoxBalancer() {
         </div>
       )}
 
-      {/* 🔥 DOCK DE CONTROLES INFERIORES DINÁMICO POR FASES 🔥 */}
+      {/* 🔥 DOCK DE CONTROLES INFERIORES DINÁMICO POR FASES */}
       {(phase === "GAME" || phase === "TRANSFER" || isExploding) && !helpActive && (
         <div style={ui.dockContainer}>
           <div style={ui.dock}>
@@ -860,6 +886,7 @@ function RedoxBalancer() {
                  ) : (
                    <>
                      <div style={{display:'flex', gap:'clamp(15px, 4vw, 40px)', flexWrap: 'wrap', justifyContent: 'center'}}>
+                       
                        <div style={ui.controlGroup}>
                           <span style={{color:'#fff', fontSize:'clamp(16px, 3vw, 24px)', fontWeight:'bold'}}>H₂O</span>
                           <div style={{display:'flex', gap:'15px', marginTop:'10px'}}>
@@ -868,6 +895,7 @@ function RedoxBalancer() {
                              <button className="hud-btn-ghost" style={ui.microBtn('#fff')} onClick={()=>handleUpdateCoef('h2o', 1)}>+</button>
                           </div>
                        </div>
+                       
                        {combinedLevel.env === "Ácido" && (
                          <div style={ui.controlGroup}>
                             <span style={{color:'#ffaa00', fontSize:'clamp(16px, 3vw, 24px)', fontWeight:'bold'}}>H⁺</span>
@@ -878,6 +906,7 @@ function RedoxBalancer() {
                             </div>
                          </div>
                        )}
+
                        {combinedLevel.env === "Básico" && (
                          <div style={ui.controlGroup}>
                             <span style={{color:'#ff00aa', fontSize:'clamp(16px, 3vw, 24px)', fontWeight:'bold'}}>OH⁻</span>
@@ -967,6 +996,7 @@ function RedoxBalancer() {
   );
 }
 
+// 🛡️ EXPORT FINAL
 export default function SafeRedoxBalancer() {
   return (
     <GameErrorBoundary>
@@ -1127,16 +1157,16 @@ const ui = {
 };
 
 // ANIMACIONES CSS Y EVENTOS
-if (typeof document !== 'undefined' && !document.getElementById("redox-styles-v35")) {
+if (typeof document !== 'undefined' && !document.getElementById("redox-styles-v36")) {
   const styleSheet = document.createElement("style");
-  styleSheet.id = "redox-styles-v35";
+  styleSheet.id = "redox-styles-v36";
   styleSheet.innerText = `
-    @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.02); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes pulse { 0% { transform: scale(1); opacity: 1; box-shadow: 0 0 20px #ff0000; } 50% { transform: scale(1.02); opacity: 0.8; box-shadow: 0 0 60px #ff0000; } 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 20px #ff0000; } }
     .hud-pulse { animation: pulse 1s infinite; }
     .hud-btn:active { transform: scale(0.95); }
     .hud-btn-ghost:active { transform: scale(0.95); }
     .hud-btn-ghost:hover { border-color: #00f2ff !important; background: rgba(0,242,255,0.1) !important; color: #fff !important; }
-    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 10px; }
     ::-webkit-scrollbar-thumb { background: #00f2ff55; border-radius: 10px; }
     ::-webkit-scrollbar-thumb:hover { background: #00f2ff; }
