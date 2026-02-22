@@ -1,24 +1,28 @@
-import React, { Suspense, useEffect, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stars, Text, Sparkles, Center, Grid, Html } from '@react-three/drei';
-import { EffectComposer, Bloom, Vignette, ChromaticAberration, Scanline, Glitch } from '@react-three/postprocessing';
-import { GlitchMode } from 'postprocessing';
+import { OrbitControls, Stars, Text, Sphere, Float, MeshDistortMaterial, ContactShadows, Sparkles, Line, Html } from '@react-three/drei';
+import { EffectComposer, Bloom, Scanline, ChromaticAberration, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useGameStore } from '../../store/useGameStore';
 
 /* ============================================================
-   📱 HOOK DE RESPONSIVIDAD 3D (MOBILE FIRST)
+   📱 HOOK DE RESPONSIVIDAD 3D (MOBILE FIRST + LANDSCAPE)
 ============================================================ */
 function useMobile() {
-  const [isMobile, setIsMobile] = useState(false);
+  const [deviceState, setDeviceState] = useState({ isMobile: false, isLandscape: false });
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const checkDevice = () => {
+      setDeviceState({
+        isMobile: window.innerWidth <= 768,
+        isLandscape: window.innerWidth > window.innerHeight
+      });
+    };
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
   }, []);
-  return isMobile;
+  return deviceState;
 }
 
 /* ============================================================
@@ -61,7 +65,7 @@ class SafeAudioEngine {
   success() { this._play('sine', 440, 880, 0.4, 0.2); setTimeout(()=>this._play('sine', 880, 1760, 0.5, 0.2), 150); }
   error() { this._play('sawtooth', 150, 50, 0.4, 0.3); }
   valve() { this._play('noise', 1500, 200, 0.15, 0.05); } 
-  rumble(intensity) { this._play('sawtooth', 60, 40, 0.2, intensity * 0.5); }
+  rumble(intensity) { this._play('sawtooth', 60, 40, 0.2, intensity * 0.5); } 
 }
 const sfx = new SafeAudioEngine();
 
@@ -159,7 +163,7 @@ const CameraController = ({ isCritical }) => {
 /* ============================================================
    ⚛️ 4. SIMULADOR 3D FÍSICO: EL PISTÓN CUÁNTICO TIER-GOD
 ============================================================ */
-const QuantumPiston = ({ temp, volume, pressure, isCritical }) => {
+const QuantumPiston = ({ temp, volume, pressure, isCritical, isMobile, isLandscape }) => {
   const isHot = temp > 500;
   const isCold = temp < 200;
   
@@ -181,6 +185,10 @@ const QuantumPiston = ({ temp, volume, pressure, isCritical }) => {
       pistonRef.current.position.y = THREE.MathUtils.lerp(pistonRef.current.position.y, targetY, 0.1);
     }
   });
+
+  // 🔥 Posición Inteligente de Telemetría (Dash) 
+  // Mobile Vertical: Arriba. Mobile Horizontal: Derecha. PC: Derecha.
+  const htmlPos = isMobile ? (isLandscape ? [6, 2, 0] : [0, 11, 0]) : [3.8, 5, 0];
 
   return (
     <group position={[0, -4, 0]}>
@@ -235,32 +243,37 @@ const QuantumPiston = ({ temp, volume, pressure, isCritical }) => {
       <Sparkles count={250} scale={[4.8, volume, 4.8]} position={[0, volume / 2, 0]} size={10} speed={particleSpeed} color={particleColor} />
       <Sparkles count={150} scale={[4.0, volume - 0.5, 4.0]} position={[0, volume / 2, 0]} size={4} speed={particleSpeed * 1.5} color="#ffffff" opacity={0.5} />
       
-      {/* 🔹 Telemetría Holográfica (HTML dentro del WebGL adaptada) */}
-      <Html position={[3.8, 5, 0]} center zIndexRange={[100, 0]}>
+      {/* 🔹 Telemetría Holográfica Adaptativa */}
+      <Html position={htmlPos} center zIndexRange={[100, 0]}>
         <div className="telemetry-panel" style={{
           background: isCritical ? 'rgba(255,0,0,0.2)' : 'rgba(0,10,25,0.85)', 
           border: `1px solid ${isCritical ? '#ff0000' : '#00f2ff55'}`,
-          borderLeft: `4px solid ${particleColor}`, 
+          borderLeft: isMobile && !isLandscape ? 'none' : `4px solid ${particleColor}`, 
+          borderTop: isMobile && !isLandscape ? `4px solid ${particleColor}` : 'none',
           padding: 'clamp(10px, 2vw, 20px)', borderRadius: '12px', color: '#fff', fontFamily: 'Orbitron',
-          width: 'clamp(180px, 50vw, 260px)', backdropFilter: 'blur(15px)', 
+          width: isMobile && !isLandscape ? 'auto' : 'clamp(180px, 50vw, 260px)', 
+          minWidth: isMobile && !isLandscape ? '280px' : 'auto',
+          backdropFilter: 'blur(15px)', 
           boxShadow: `0 0 40px ${particleColor}44`,
           transition: 'all 0.1s ease',
           animation: isCritical ? 'glitch-anim 0.2s infinite' : 'none',
           boxSizing: 'border-box'
         }}>
-          <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '3px', borderBottom: '1px solid #333', paddingBottom: '5px', marginBottom: '15px', fontWeight:'bold' }}>
+          <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '3px', borderBottom: '1px solid #333', paddingBottom: '5px', marginBottom: '15px', fontWeight:'bold', textAlign: isMobile && !isLandscape ? 'center' : 'left' }}>
             {isCritical ? '⚠️ RIESGO ESTRUCTURAL' : 'SISTEMA NOMINAL'}
           </div>
-          <div style={{ fontSize: 'clamp(20px, 5vw, 30px)', fontWeight: '900', color: isHot ? '#ff0055' : '#0f0', textShadow:'0 0 10px currentColor' }}>
-            T: {temp.toFixed(0)}<span style={{fontSize:'14px', color:'#aaa'}}> K</span>
+          <div className="tel-body" style={{ display: 'flex', flexDirection: isMobile && !isLandscape ? 'row' : 'column', gap: isMobile && !isLandscape ? '20px' : '0', justifyContent: 'center' }}>
+            <div style={{ fontSize: 'clamp(20px, 5vw, 30px)', fontWeight: '900', color: isHot ? '#ff0055' : '#0f0', textShadow:'0 0 10px currentColor' }}>
+              T: {temp.toFixed(0)}<span style={{fontSize:'14px', color:'#aaa'}}> K</span>
+            </div>
+            <div style={{ fontSize: 'clamp(20px, 5vw, 30px)', fontWeight: '900', color: '#00f2ff', textShadow:'0 0 10px currentColor' }}>
+              V: {volume.toFixed(1)}<span style={{fontSize:'14px', color:'#aaa'}}> L</span>
+            </div>
+            <div style={{ fontSize: 'clamp(20px, 5vw, 30px)', fontWeight: '900', color: isCritical ? '#ff0000' : '#ffea00', textShadow:'0 0 10px currentColor' }}>
+              P: {pressure.toFixed(2)}<span style={{fontSize:'14px', color:'#aaa'}}> atm</span>
+            </div>
           </div>
-          <div style={{ fontSize: 'clamp(20px, 5vw, 30px)', fontWeight: '900', color: '#00f2ff', textShadow:'0 0 10px currentColor' }}>
-            V: {volume.toFixed(1)}<span style={{fontSize:'14px', color:'#aaa'}}> L</span>
-          </div>
-          <div style={{ fontSize: 'clamp(20px, 5vw, 30px)', fontWeight: '900', color: isCritical ? '#ff0000' : '#ffea00', textShadow:'0 0 10px currentColor' }}>
-            P: {pressure.toFixed(2)}<span style={{fontSize:'14px', color:'#aaa'}}> atm</span>
-          </div>
-          <div style={{ marginTop: '15px', fontSize: '12px', color: isCritical ? '#ff0000' : '#00f2ff', textAlign: 'center', background: isCritical ? 'rgba(255,0,0,0.1)' : 'rgba(0,242,255,0.1)', padding: '8px', borderRadius: '6px', fontWeight:'bold', letterSpacing:'2px' }}>
+          <div style={{ display: isMobile && !isLandscape ? 'none' : 'block', marginTop: '15px', fontSize: '12px', color: isCritical ? '#ff0000' : '#00f2ff', textAlign: 'center', background: isCritical ? 'rgba(255,0,0,0.1)' : 'rgba(0,242,255,0.1)', padding: '8px', borderRadius: '6px', fontWeight:'bold', letterSpacing:'2px' }}>
             PV = nRT ENGINE
           </div>
         </div>
@@ -273,9 +286,9 @@ const QuantumPiston = ({ temp, volume, pressure, isCritical }) => {
    🎮 5. MÁQUINA DE ESTADOS PRINCIPAL (EL CEREBRO FSM)
 ============================================================ */
 export default function GasTheory() {
+  const { isMobile, isLandscape } = useMobile(); // 🔥 Hook avanzado de Responsividad
   const { language, resetProgress } = useGameStore(); 
   
-  // Resolución Nativa de Idioma a Prueba de Fallos
   const safeLang = DICT[language] ? language : 'es';
   const d = DICT[safeLang];
   const lCode = LANG_MAP[safeLang] || 'es-ES';
@@ -283,6 +296,9 @@ export default function GasTheory() {
   const [phase, setPhase] = useState("BOOT");
   const [levelIdx, setLevelIdx] = useState(0);
   const [microClassActive, setMicroClassActive] = useState(false);
+  
+  // 🔥 FIX BUG "SE QUEDA PEGADO": Estado para mostrar visualmente que fue correcto
+  const [isCorrectAnswer, setIsCorrectAnswer] = useState(false);
   
   // Físicas (K de Gases Ideales ajustada a 10 para balance visual)
   const K = 10;
@@ -325,6 +341,8 @@ export default function GasTheory() {
     }
     setLevelIdx(idx);
     setTemp(300); setVol(5); 
+    setIsCorrectAnswer(false);
+    setMicroClassActive(false);
     setPhase("THEORY");
     triggerVoice(d.levels[idx].th, lCode);
   };
@@ -332,8 +350,14 @@ export default function GasTheory() {
   const handleAnswer = (idx) => {
     if (idx === lvl.a) {
       sfx.success(); 
-      triggerVoice(d.ui.aiCorrect, lCode);
-      setTimeout(() => setPhase("EXECUTION"), 1500);
+      setIsCorrectAnswer(true); // Evita que se quede "pegado" visualmente
+      triggerVoice(d.ai.correct, lCode);
+      setTimeout(() => {
+        if (isMounted.current) {
+          setPhase("EXECUTION");
+          setIsCorrectAnswer(false);
+        }
+      }, 1500);
     } else {
       sfx.error(); 
       setMicroClassActive(true); 
@@ -396,8 +420,8 @@ export default function GasTheory() {
         <div style={ui.modalBg}>
           <div style={ui.glassModal('#00f2ff')}>
             <h2 style={{color: '#00f2ff', letterSpacing:'clamp(2px, 1vw, 6px)', borderBottom: '2px solid #00f2ff55', paddingBottom: '15px', fontSize:'clamp(20px, 5vw, 35px)', margin: '0'}}>{d.ui.theoryTitle}</h2>
-            <p style={{fontSize:'clamp(16px, 4vw, 28px)', lineHeight:'1.7', margin:'clamp(20px, 4vh, 50px) 0', color: '#fff'}}>{lvl.th}</p>
-            <button style={ui.btnSolid('#00f2ff')} onClick={() => { setPhase("AI"); triggerVoice(d.ai.intro, lCode); }}>{d.ui.theoryBtn}</button>
+            <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 22px)', lineHeight:'1.5', margin: 'clamp(20px, 4vh, 40px) 0'}}>{lvl.th}</p>
+            <button style={ui.nextBtn('#00f2ff')} onClick={() => { setPhase("AI"); triggerVoice(d.ai.intro, lCode); }}>{d.ui.theoryBtn}</button>
           </div>
         </div>
       )}
@@ -410,17 +434,23 @@ export default function GasTheory() {
               {microClassActive ? d.ui.microTitle : d.ui.diagTitle}
             </h2>
             {!microClassActive ? (
-              <>
-                <p style={{fontSize:'clamp(18px, 4.5vw, 32px)', margin:'clamp(20px, 4vh, 50px) 0', color: '#fff', fontWeight: '900'}}>{lvl.q}</p>
-                <div style={ui.grid}>
-                  {lvl.o.map((opt, i) => <button key={i} style={ui.btnOpt} onClick={() => handleAnswer(i)}>{opt}</button>)}
+              isCorrectAnswer ? (
+                <div style={{marginTop:'40px'}}>
+                  <h2 style={{color:'#0f0', fontSize:'clamp(24px, 6vw, 40px)', textShadow:'0 0 20px #0f0'}}>✅ {d.ai.correct}</h2>
                 </div>
-              </>
+              ) : (
+                <div style={{marginTop: '20px'}}>
+                  <p style={{fontSize:'clamp(16px, 4.5vw, 24px)', margin:'0', color: '#fff', fontWeight: '900'}}>{lvl.q}</p>
+                  <div className="nano-grid" style={ui.gridOptions}>
+                    {lvl.o.map((opt, i) => <button key={i} style={ui.actionBtn('#ff00ff')} onClick={() => handleAnswer(i)}>{opt}</button>)}
+                  </div>
+                </div>
+              )
             ) : (
-              <>
-                <p style={{color:'#ffea00', fontSize:'clamp(16px, 4vw, 30px)', lineHeight:'1.6', margin:'clamp(20px, 4vh, 50px) 0', fontWeight:'bold'}}>{lvl.m}</p>
-                <button style={ui.btnSolid('#ff00ff')} onClick={() => { setPhase("AI"); setMicroClassActive(false); window.speechSynthesis.cancel(); }}>{d.ui.btnContinue}</button>
-              </>
+              <div style={{marginTop: '20px'}}>
+                <p style={{color:'#ffea00', fontSize:'clamp(16px, 4vw, 22px)', lineHeight:'1.6', margin:'0', fontWeight:'bold'}}>{lvl.m}</p>
+                <button style={ui.nextBtn('#0f0')} onClick={() => { setPhase("EXECUTION"); setMicroClassActive(false); window.speechSynthesis.cancel(); }}>{d.ui.btnContinue}</button>
+              </div>
             )}
           </div>
         </div>
@@ -428,7 +458,7 @@ export default function GasTheory() {
 
       {/* DOCK DE CONTROLES FÍSICOS (EXECUTION) */}
       {phase === "EXECUTION" && (
-        <div style={ui.dockPanel}>
+        <div className="dock-panel" style={ui.bottomCenter}>
           {lvl.ctrl === 't' ? (
             <div style={ui.sliderContainer}>
               <div style={{color:'#ff0055', marginBottom:'20px', fontWeight:'900', letterSpacing:'clamp(1px, 1vw, 3px)', fontSize:'clamp(14px, 3.5vw, 22px)', textShadow:'0 0 10px #ff0055'}}>🔥 INYECCIÓN TÉRMICA (K)</div>
@@ -455,15 +485,16 @@ export default function GasTheory() {
         <div style={ui.modalBg}>
           <div style={ui.glassModal('#0f0')}>
             <h2 style={{color:'#0f0', letterSpacing:'clamp(2px, 1vw, 6px)', borderBottom: '2px solid #0f05', paddingBottom: '15px', fontSize:'clamp(20px, 5vw, 35px)', margin: '0'}}>{d.ui.synthTitle}</h2>
-            <p style={{fontSize:'clamp(16px, 4.5vw, 32px)', lineHeight:'1.7', margin:'clamp(20px, 4vh, 50px) 0', color: '#fff', fontWeight:'bold'}}>{lvl.rw}</p>
-            <button style={ui.btnSolid('#0f0')} onClick={() => loadLevel(levelIdx + 1)}>{d.ui.btnNext}</button>
+            <p style={{fontSize:'clamp(16px, 4.5vw, 26px)', lineHeight:'1.7', margin:'clamp(20px, 4vh, 40px) 0', color: '#fff', fontWeight:'bold'}}>{lvl.rw}</p>
+            <button style={ui.nextBtn('#0f0')} onClick={() => loadLevel(levelIdx + 1)}>{d.ui.btnNext}</button>
           </div>
         </div>
       )}
 
       {/* 🌌 MOTOR DE RENDERIZADO THREE.JS PROFESIONAL */}
       <div style={{position:'absolute', inset:0, zIndex:1, pointerEvents:'none'}}>
-        <Canvas camera={{position:[0, 2, 16], fov:45}}>
+        {/* 🔥 FIX CÁMARA MOBILE: Z:32 en vertical, Z:18 en horizontal, Z:16 en PC */}
+        <Canvas camera={{position:[0, 2, isMobile ? (isLandscape ? 18 : 32) : 16], fov:45}}>
           <color attach="background" args={['#000103']} />
           <ambientLight intensity={1.5} />
           <directionalLight position={[10, 10, 5]} intensity={2.5} color="#ffffff" />
@@ -473,7 +504,7 @@ export default function GasTheory() {
           
           <Suspense fallback={null}>
             <CameraController isCritical={isCritical} />
-            <QuantumPiston temp={temp} volume={vol} pressure={pressure} isCritical={isCritical} />
+            <QuantumPiston temp={temp} volume={vol} pressure={pressure} isCritical={isCritical} isMobile={isMobile} isLandscape={isLandscape} />
           </Suspense>
           
           <EffectComposer>
@@ -515,9 +546,9 @@ const ui = {
   modalBg: { position:'absolute', inset:0, zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,5,15,0.92)', backdropFilter:'blur(30px)', pointerEvents:'auto', padding: 'clamp(15px, 4vw, 30px)', boxSizing: 'border-box' },
   glassModal: (c) => ({ border:`clamp(1px, 0.5vw, 3px) solid ${c}`, background:'rgba(0, 15, 30, 0.85)', padding:'clamp(25px, 6vw, 80px)', borderRadius:'clamp(20px, 4vw, 35px)', textAlign:'center', maxWidth:'1000px', width:'100%', boxShadow:`0 0 100px ${c}55`, backdropFilter: 'blur(15px)', maxHeight: '85dvh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center', boxSizing: 'border-box' }),
   
-  grid: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))', gap:'clamp(15px, 3vw, 35px)', marginTop:'clamp(20px, 5vh, 50px)', width: '100%' },
-  btnOpt: { padding:'clamp(15px, 3vw, 30px)', background:'rgba(255,255,255,0.03)', border:'2px solid #555', color:'#fff', borderRadius:'15px', fontSize:'clamp(14px, 3.5vw, 24px)', cursor:'pointer', fontFamily:'Orbitron', transition:'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', minHeight: '60px' },
-  btnSolid: (c) => ({ marginTop:'clamp(20px, 4vh, 60px)', padding:'clamp(15px, 3vw, 30px) clamp(20px, 5vw, 90px)', background:c, color:'#000', fontWeight:'900', fontSize:'clamp(16px, 4vw, 26px)', borderRadius:'15px', border:'none', cursor:'pointer', fontFamily:'Orbitron', letterSpacing: 'clamp(2px, 1vw, 4px)', boxShadow: `0 0 50px ${c}88`, width: '100%' })
+  gridOptions: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))', gap:'clamp(15px, 3vw, 35px)', marginTop:'clamp(20px, 5vh, 50px)', width: '100%' },
+  actionBtn: (c) => ({ padding:'clamp(15px, 3vw, 30px)', background:'rgba(255,255,255,0.03)', border:`2px solid #555`, color:'#fff', borderRadius:'15px', fontSize:'clamp(14px, 3.5vw, 24px)', cursor:'pointer', fontFamily:'Orbitron', transition:'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', minHeight: '60px', width: '100%' }),
+  nextBtn: (c) => ({ marginTop:'clamp(20px, 4vh, 60px)', padding:'clamp(15px, 3vw, 30px) clamp(20px, 5vw, 90px)', background:c, color:'#000', fontWeight:'900', fontSize:'clamp(16px, 4vw, 26px)', borderRadius:'15px', border:'none', cursor:'pointer', fontFamily:'Orbitron', letterSpacing: 'clamp(2px, 1vw, 4px)', boxShadow: `0 0 50px ${c}88`, width: '100%' })
 };
 
 // Necesario inyectar estilos globales sutiles para el input range y animaciones glitch si no existieran en App.css
@@ -532,21 +563,45 @@ styleSheet.innerText = `
     100% { transform: translate(0) }
   }
   
-  /* Ajuste responsivo de emergencia para el panel holográfico 3D en móviles */
-  @media (max-width: 768px) {
-    .telemetry-panel {
-      transform: translate(-100px, 60px) scale(0.85) !important;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .telemetry-panel {
-      transform: translate(-120px, 70px) scale(0.7) !important;
-    }
-  }
-  
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 10px; }
   ::-webkit-scrollbar-thumb { background: rgba(0, 242, 255, 0.4); border-radius: 10px; }
+
+  /* ========================================= */
+  /* 📱 MODO CELULAR PANTALLA VERTICAL         */
+  /* ========================================= */
+  @media (max-width: 768px) and (orientation: portrait) {
+    .dock-panel {
+       bottom: 0 !important;
+       left: 0 !important;
+       transform: none !important;
+       width: 100vw !important;
+       border-radius: 25px 25px 0 0 !important;
+       padding: 20px 20px max(20px, env(safe-area-inset-bottom)) !important;
+       flex-direction: column !important;
+       gap: 15px !important;
+       border-bottom: none !important;
+       border-left: none !important;
+       border-right: none !important;
+       box-sizing: border-box !important;
+    }
+    .check-btn { width: 100% !important; padding: 15px !important; font-size: 16px !important; letter-spacing: 2px !important; border-radius: 10px !important; }
+  }
+
+  /* ========================================= */
+  /* 📱 MODO CELULAR PANTALLA HORIZONTAL       */
+  /* ========================================= */
+  @media (max-width: 900px) and (orientation: landscape) {
+    .dock-panel { 
+       padding: 10px !important; 
+       border-radius: 15px !important; 
+       bottom: 5px !important; 
+       border: 1px solid #00f2ff !important; 
+       background: rgba(0,5,15,0.7) !important; 
+    }
+    .btn-opt { padding: 10px !important; font-size: 12px !important; min-height: 40px !important; }
+    .glass-modal p { font-size: 14px !important; margin: 10px 0 !important; }
+    .check-btn { padding: 10px 20px !important; font-size: 14px !important; border-radius: 8px !important; }
+  }
 `;
 document.head.appendChild(styleSheet);
