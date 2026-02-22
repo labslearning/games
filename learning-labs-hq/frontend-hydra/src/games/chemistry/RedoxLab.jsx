@@ -1,622 +1,612 @@
-import React, { Suspense, useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import React, { Suspense, useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stars, Text, Sphere, Float, MeshDistortMaterial, ContactShadows, Sparkles, Line, Html } from '@react-three/drei';
-import { EffectComposer, Bloom, Scanline, ChromaticAberration, Vignette } from '@react-three/postprocessing';
+import { OrbitControls, Stars, Sparkles, Html } from '@react-three/drei';
+import { EffectComposer, Bloom, Vignette, ChromaticAberration, Scanline } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useGameStore } from '../../store/useGameStore';
 
 /* ============================================================
-   📱 HOOK DE RESPONSIVIDAD 3D (MOBILE FIRST)
+   🛡️ ESCUDO ANTI-CRASH (ERROR BOUNDARY)
 ============================================================ */
-function useMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  return isMobile;
+class GameErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { hasError: false, errorMsg: "" }; }
+  static getDerivedStateFromError(error) { return { hasError: true, errorMsg: error.toString() }; }
+  componentDidCatch(error, errorInfo) { console.error("Critical Error:", error, errorInfo); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ width: '100vw', height: '100vh', background: '#110000', color: '#ff4444', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', fontFamily: 'monospace' }}>
+          <h1 style={{ fontSize: '40px' }}>⚠️ FATAL SYSTEM ERROR</h1>
+          <p style={{ background: 'rgba(0,0,0,0.8)', padding: '20px', borderRadius: '10px' }}>{this.state.errorMsg}</p>
+          <button onClick={() => window.location.reload()} style={{ marginTop: '20px', padding: '15px 30px', fontSize: '18px', cursor: 'pointer', background: '#ff4444', color: '#fff', border: 'none', borderRadius: '5px' }}>REBOOT SYSTEM</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 /* ============================================================
-    1. MOTOR DE AUDIO Y VOZ SEGURO
+   🧠 1. MOTOR QUÍMICO PURO (ESTEQUIOMETRÍA COMPLETA)
 ============================================================ */
-const safeSpeak = (text, langCode) => {
-  if (!('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel(); 
-  setTimeout(() => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = langCode;
-    utterance.rate = 1.05;
-    window.speechSynthesis.speak(utterance);
-  }, 50);
-};
+class RedoxEngine {
+  static validate(userCoef1, userCoef2, userH2O, userH, userOH, levelData) {
+    if (!levelData) return { isBalanced: false, errorType: "ERROR" };
+    
+    // 1. Balance de Electrones
+    const eLostTotal = userCoef1 * (levelData.eOx || 1);
+    const eGainedTotal = userCoef2 * (levelData.eRed || 1);
+    const isChargeBalanced = eLostTotal === eGainedTotal;
+    const isSimplified = userCoef1 === levelData.cOx && userCoef2 === levelData.cRed;
 
-class SafeAudioEngine {
-  constructor() { this.ctx = null; }
-  init() { 
-    if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    // 2. Balance de Masas (Agua y Protones/Hidroxilos)
+    const expectedH2O = levelData.ansH2O || 0;
+    const expectedH = levelData.ansH || 0;
+    const expectedOH = levelData.ansOH || 0;
+    const isMassBalanced = (userH2O === expectedH2O) && (userH === expectedH) && (userOH === expectedOH);
+    
+    const isBalanced = isChargeBalanced && isSimplified && isMassBalanced;
+
+    let errorType = "NONE";
+    let aiQuestion = "";
+    let aiOptions = [];
+    let aiAnswer = 0;
+    let aiReason = "";
+
+    // LÓGICA SOCRÁTICA CONTEXTUAL
+    if (!isBalanced) {
+      if (eLostTotal !== eGainedTotal) {
+        errorType = eLostTotal > eGainedTotal ? "EXCESS_LOST" : "DEFICIT_LOST";
+        aiQuestion = "Los electrones no cuadran. ¿Cuál es el Mínimo Común Múltiplo entre los electrones cedidos y absorbidos?";
+        const mcm = this.getMCM(levelData.eOx, levelData.eRed);
+        aiOptions = [`${mcm} electrones`, `${mcm * 2} electrones`];
+        aiAnswer = 0;
+        aiReason = `Debes multiplicar la oxidación por ${mcm / levelData.eOx} y la reducción por ${mcm / levelData.eRed}.`;
+      } 
+      else if (!isSimplified) {
+        errorType = "NOT_SIMPLIFIED"; 
+        aiQuestion = "Están igualados, pero no en su mínima expresión. ¿Qué debes hacer?";
+        aiOptions = ["Simplificar los coeficientes", "Añadir más agua"];
+        aiAnswer = 0;
+        aiReason = "La estequiometría siempre exige la relación entera más pequeña posible.";
+      } 
+      else if (userH2O !== expectedH2O) {
+        errorType = "H2O_IMBALANCE";
+        aiQuestion = "Falta balancear el Oxígeno. ¿Qué molécula aporta átomos de oxígeno en medio acuoso?";
+        aiOptions = ["H₂O (Agua)", "O₂ (Gas)"];
+        aiAnswer = 0;
+        aiReason = `Necesitas añadir exactamente ${expectedH2O} moléculas de H₂O para compensar los oxígenos.`;
+      } 
+      else if (userH !== expectedH || userOH !== expectedOH) {
+        errorType = "ION_IMBALANCE";
+        aiQuestion = `Para balancear los hidrógenos en un medio ${levelData.env}, ¿qué ión debes utilizar?`;
+        aiOptions = levelData.env === "Ácido" ? ["Iones H⁺", "Iones OH⁻"] : ["Iones OH⁻", "Iones H⁺"];
+        aiAnswer = 0;
+        aiReason = levelData.env === "Ácido" ? `Añade ${expectedH} H⁺ para balancear los hidrógenos del agua.` : `Usa el método del agua y compensa con ${expectedOH} OH⁻.`;
+      }
+    }
+
+    return { 
+      isBalanced, 
+      eLostTotal, 
+      eGainedTotal, 
+      eDiff: Math.abs(eLostTotal - eGainedTotal), 
+      errorType,
+      socraticData: { q: aiQuestion, o: aiOptions, a: aiAnswer, m: aiReason }
+    };
+  }
+
+  static getMCM(a, b) {
+    if (!a || !b) return 1; 
+    const gcd = (x, y) => (!y ? x : gcd(y, x % y));
+    return (a * b) / gcd(a, b);
+  }
+}
+
+/* ============================================================
+   🔊 2. MOTOR DE AUDIO SCI-FI Y VOZ
+============================================================ */
+class QuantumAudio {
+  constructor() { this.ctx = null; this.gainNode = null; }
+  init() {
+    if (typeof window !== 'undefined' && !this.ctx) {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          this.ctx = new AudioContext();
+          this.gainNode = this.ctx.createGain();
+          this.gainNode.gain.value = 0.3;
+          this.gainNode.connect(this.ctx.destination);
+        }
+      } catch (e) { console.warn("Audio API bloqueada por el navegador."); }
+    }
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(()=>{});
   }
   _play(type, fStart, fEnd, dur, vol) {
     if (!this.ctx) return;
     try {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
-      osc.connect(gain); gain.connect(this.ctx.destination);
+      osc.connect(gain); gain.connect(this.gainNode);
       osc.type = type;
       osc.frequency.setValueAtTime(fStart, this.ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(fEnd, this.ctx.currentTime + dur);
       gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
       osc.start(); osc.stop(this.ctx.currentTime + dur);
-    } catch(e) {} 
+    } catch (e) {}
   }
-  laser() { this._play('square', 1200, 100, 0.3, 0.2); }
-  extract() { this._play('sawtooth', 200, 1200, 0.4, 0.2); }
-  impact() { this._play('sine', 150, 40, 0.4, 0.5); }
-  success() { this._play('sine', 440, 880, 0.4, 0.2); setTimeout(()=>this._play('sine', 880, 1760, 0.5, 0.2), 150); }
-  error() { this._play('sawtooth', 150, 50, 0.4, 0.3); }
+  click() { this._play('sine', 800, 400, 0.1, 0.1); }
+  verify() { this._play('triangle', 400, 1200, 0.4, 0.1); }
+  success() { this._play('sine', 440, 880, 0.5, 0.2); }
+  error() { this._play('sawtooth', 150, 40, 0.6, 0.2); }
+  aiPop() { this._play('triangle', 200, 800, 0.4, 0.1); }
+  transfer() { this._play('noise', 2000, 100, 1.0, 0.2); }
+  explosion() { this._play('sawtooth', 800, 20, 1.5, 0.5); }
 }
-const sfx = new SafeAudioEngine();
+const sfx = new QuantumAudio();
 
-/* ============================================================
-   🌍 2. DICCIONARIO GLOBAL 100% TRADUCIDO (CERO FALLBACKS)
-============================================================ */
-const I18N = {
-  es: {
-    ui: { 
-      start: "INICIAR NANO-CORE", title: "NANO-CORE V11", level: "NIVEL", exp: "EXP", target: "META",
-      theoryTitle: "TUTORÍA TEÓRICA", theoryBtn: "ENTENDIDO ➔", diagTitle: "ANÁLISIS COGNITIVO", diagQ1: "debe pasar de", diagQ2: "a", diagQ3: "¿Qué debe ocurrir con sus electrones?", 
-      btnGain: "GANAR e⁻ (REDUCIR)", btnLose: "PERDER e⁻ (OXIDAR)", diagGalvanic: "En una batería, ¿hacia dónde fluyen los electrones?", 
-      btnZnCu: "ZINC ➔ COBRE", btnCuZn: "COBRE ➔ ZINC", btnInject: "INYECTAR e⁻", btnExtract: "EXTRAER e⁻", btnTransfer: "CERRAR CIRCUITO", 
-      synthTitle: "APLICACIÓN REAL", btnNext: "SIGUIENTE RETO ➔", winTitle: "🏅 MAESTRÍA ALCANZADA", btnBack: "⬅ SALIR",
-      btnAI: "🤖 PREGUNTA IA", microClassTitle: "MICRO-CLASE IA", aiCorrect: "¡Excelente! Comprensión absoluta.", btnContinue: "CONTINUAR"
-    },
-    ai: { wrongMath: "Incorrecto. Ganar electrones resta carga.", correct: "Correcto. Proceda.", wrongTool: "Herramienta incorrecta.", galvanicError: "Falso. El Zinc cede electrones.", galvanicCorrect: "Circuito correcto.", synth: "Estabilizado. Analizando datos...", start: "Analice el núcleo.", boss: "Construcción de Batería.", aiIntro: "Evaluación activada. Selecciona la respuesta correcta." },
-    theory: ["La OXIDACIÓN es PERDER electrones.", "La REDUCCIÓN es GANAR electrones.", "El hierro se oxida al aire, podemos reducirlo.", "El Cobre es un conductor excelente si se reduce.", "Los halógenos como el Cloro aman ganar electrones.", "El Aluminio requiere inmensa energía para reducirse.", "El Magnesio se oxida emitiendo luz blanca.", "El Azufre forma cristales amarillos al oxidarse.", "El Oro es un metal noble, muy difícil de oxidar.", "La Pila Galvánica oxida un metal para dar energía a otro."],
-    realWorld: ["El Sodio reacciona violentamente perdiendo 1 electrón.", "Las plantas oxidan el agua liberando Oxígeno.", "La hemoglobina reduce el Hierro para transportar oxígeno.", "El cobre se reduce para hacer cables eléctricos.", "El cloro gana electrones para purificar agua.", "Reciclar aluminio requiere inyectar electrones.", "El magnesio se oxida en los fuegos artificiales.", "El azufre se oxida en los volcanes.", "El oro se oxida para ser disuelto en la minería.", "El Zinc da energía al Cobre. Así funcionan las baterías."],
-    elements: ["Sodio", "Oxígeno", "Hierro", "Cobre", "Cloro", "Aluminio", "Magnesio", "Azufre", "Oro", "Batería"],
-    questions: [
-      { q: "¿Qué ión forma el Sodio al oxidarse?", options: ["Catión (+1)", "Anión (-1)", "Neutro", "Isótopo"], correct: 0, micro: "Al perder un electrón negativo, el Sodio queda con carga positiva, formando un catión." },
-      { q: "¿Cuál es el estado de oxidación del Oxígeno puro (O2)?", options: ["0", "-2", "+1", "+2"], correct: 0, micro: "Los elementos en su estado libre siempre tienen un estado de oxidación de cero." },
-      { q: "Si el Hierro pasa de +3 a +2, ¿qué proceso ocurrió?", options: ["Reducción", "Oxidación", "Fusión", "Fisión"], correct: 0, micro: "La carga se redujo. Esto significa que ganó una carga negativa (un electrón)." },
-      { q: "¿Qué partículas viajan para que el Cobre se reduzca?", options: ["Electrones", "Protones", "Neutrones", "Quarks"], correct: 0, micro: "En las reacciones Redox, las únicas partículas que se transfieren son los electrones." },
-      { q: "El Cloro gana electrones fácilmente porque es un...", options: ["Halógeno", "Gas noble", "Metal", "Líquido"], correct: 0, micro: "Los halógenos necesitan ganar solo un electrón para completar su octet." },
-      { q: "Reducir Aluminio en las fábricas requiere mucha...", options: ["Electricidad", "Agua", "Presión", "Oxígeno"], correct: 0, micro: "Se necesita electrólisis, un proceso que usa cantidades masivas de electricidad." },
-      { q: "La rápida oxidación del Magnesio se conoce como...", options: ["Combustion", "Evaporación", "Sublimación", "Fusión"], correct: 0, micro: "La combustión es una oxidación tan rápida que libera energía en forma de luz y calor." },
-      { q: "Si el Azufre pasa de -2 a 0, ¿cuántos electrones pierde?", options: ["2", "1", "4", "0"], correct: 0, micro: "Para subir de -2 a 0, debe deshacerse matemáticamente de 2 cargas negativas." },
-      { q: "¿Por qué el Oro apenas se oxida en la naturaleza?", options: ["Es metal noble", "Es un gas", "Es muy ligero", "Es irreal"], correct: 0, micro: "Los metales nobles tienen una estructura muy estable que resiste perder electrones." },
-      { q: "En una celda galvánica, la oxidación ocurre en el...", options: ["Ánodo", "Cátodo", "Cable", "Puente salino"], correct: 0, micro: "El Ánodo es siempre el electrodo donde ocurre la oxidación." }
-    ]
-  },
-  en: {
-    ui: { 
-      start: "START NANO-CORE", title: "NANO-CORE V11", level: "LEVEL", exp: "EXP", target: "TARGET",
-      theoryTitle: "THEORETICAL TUTORIAL", theoryBtn: "UNDERSTOOD ➔", diagTitle: "COGNITIVE ANALYSIS", diagQ1: "must go from", diagQ2: "to", diagQ3: "What must happen to its electrons?", 
-      btnGain: "GAIN e⁻ (REDUCE)", btnLose: "LOSE e⁻ (OXIDIZE)", diagGalvanic: "In a battery, where do electrons flow?", 
-      btnZnCu: "ZINC ➔ COPPER", btnCuZn: "COPPER ➔ ZINC", btnInject: "INJECT e⁻", btnExtract: "EXTRACT e⁻", btnTransfer: "CLOSE CIRCUIT", 
-      synthTitle: "REAL APPLICATION", btnNext: "NEXT CHALLENGE ➔", winTitle: "🏅 MASTERY ACHIEVED", btnBack: "⬅ EXIT",
-      btnAI: "🤖 AI QUESTION", microClassTitle: "AI MICRO-CLASS", aiCorrect: "Excellent! Absolute comprehension.", btnContinue: "CONTINUE" 
-    },
-    ai: { wrongMath: "Incorrect. Gaining subtracts charge.", correct: "Correct. Proceed.", wrongTool: "Wrong tool.", galvanicError: "False. Zinc yields electrons.", galvanicCorrect: "Circuit correct.", synth: "Stabilized. Analyzing...", start: "Analyze the core.", boss: "Battery Construction.", aiIntro: "Evaluation active. Select the correct answer." },
-    theory: ["OXIDATION is LOSING electrons.", "REDUCTION is GAINING electrons.", "We reduce iron to purify it.", "Copper is a great conductor when reduced.", "Halogens like Chlorine love to gain electrons.", "Aluminum needs immense energy to reduce.", "Magnesium oxidizes emitting white light.", "Sulfur forms yellow crystals.", "Gold is a noble metal, hard to oxidize.", "A Galvanic Cell uses oxidation to send energy."],
-    realWorld: ["Sodium reacts by losing 1 electron.", "Plants oxidize water releasing Oxygen.", "Hemoglobin reduces Fe+3 to Fe+2 to transport oxygen.", "Copper is reduced to metal for wires.", "Chlorine gains 1 electron to purify water.", "Recycling aluminum requires injecting 3 electrons.", "Magnesium oxidizes in fireworks.", "Sulfur oxidizes forming volcanic crystals.", "Gold is oxidized to (+3) in mining.", "Zinc gives energy to Copper. This runs batteries."],
-    elements: ["Sodium", "Oxygen", "Iron", "Copper", "Chlorine", "Aluminum", "Magnesium", "Sulfur", "Gold", "Battery"],
-    questions: [
-      { q: "What ion does Sodium form when oxidized?", options: ["Cation (+1)", "Anion (-1)", "Neutral", "Isotope"], correct: 0, micro: "By losing a negative electron, Sodium gets a positive charge, forming a cation." },
-      { q: "What is the oxidation state of pure Oxygen (O2)?", options: ["0", "-2", "+1", "+2"], correct: 0, micro: "Elements in their free state always have an oxidation state of zero." },
-      { q: "If Iron goes from +3 to +2, what happened?", options: ["Reduction", "Oxidation", "Fusion", "Fission"], correct: 0, micro: "The charge reduced, meaning it gained a negative electron (Reduction)." },
-      { q: "What particles travel to reduce Copper?", options: ["Electrons", "Protons", "Neutrons", "Quarks"], correct: 0, micro: "In Redox reactions, only electrons are transferred between atoms." },
-      { q: "Chlorine gains electrons easily because it is a...", options: ["Halogen", "Noble gas", "Metal", "Liquid"], correct: 0, micro: "Halogens need just one electron to complete their octet." },
-      { q: "Reducing Aluminum in factories requires massive...", options: ["Electricity", "Water", "Pressure", "Oxygen"], correct: 0, micro: "Electrolysis is used, a process requiring massive amounts of electricity." },
-      { q: "The rapid oxidation of Magnesium is known as...", options: ["Combustion", "Evaporation", "Sublimation", "Fusion"], correct: 0, micro: "Combustion is rapid oxidation that releases light and heat." },
-      { q: "If Sulfur goes from -2 to 0, how many electrons are lost?", options: ["2", "1", "4", "0"], correct: 0, micro: "To rise from -2 to 0, it must get rid of 2 negative charges." },
-      { q: "Why does Gold hardly oxidize in nature?", options: ["Noble metal", "Gas", "Lightweight", "Artificial"], correct: 0, micro: "Noble metals have a very stable electronic structure that resists losing electrons." },
-      { q: "In a galvanic cell, oxidation occurs at the...", options: ["Anode", "Cathode", "Wire", "Salt Bridge"], correct: 0, micro: "The Anode is always the electrode where oxidation occurs." }
-    ]
-  },
-  fr: {
-    ui: { 
-      start: "DÉMARRER NANO-CORE", title: "NANO-CORE V11", level: "NIVEAU", exp: "EXP", target: "CIBLE",
-      theoryTitle: "TUTORIEL THÉORIQUE", theoryBtn: "COMPRIS ➔", diagTitle: "ANALYSE COGNITIVE", diagQ1: "doit passer de", diagQ2: "à", diagQ3: "Que doit-il arriver à ses électrons?", 
-      btnGain: "GAGNER e⁻ (RÉDUIRE)", btnLose: "PERDRE e⁻ (OXYDER)", diagGalvanic: "Dans une pile, où circulent les électrons?", 
-      btnZnCu: "ZINC ➔ CUIVRE", btnCuZn: "CUIVRE ➔ ZINC", btnInject: "INJECTER e⁻", btnExtract: "EXTRAIRE e⁻", btnTransfer: "FERMER LE CIRCUIT", 
-      synthTitle: "APPLICATION RÉELLE", btnNext: "DÉFI SUIVANT ➔", winTitle: "🏅 MAÎTRISE ATTEINTE", btnBack: "⬅ QUITTER",
-      btnAI: "🤖 QUESTION IA", microClassTitle: "MICRO-CLASSE IA", aiCorrect: "Excellent! Compréhension absolue.", btnContinue: "CONTINUER" 
-    },
-    ai: { wrongMath: "Incorrect. Gagner soustrait la charge.", correct: "Correct. Procédez.", wrongTool: "Mauvais outil.", galvanicError: "Faux. Le Zinc cède des électrons.", galvanicCorrect: "Circuit correct.", synth: "Stabilisé. Analyse...", start: "Analysez le noyau.", boss: "Construction de Batterie.", aiIntro: "Évaluation active. Choisissez la bonne réponse." },
-    theory: ["L'OXYDATION c'est PERDRE des électrons.", "La RÉDUCTION c'est GAGNER des électrons.", "Le fer s'oxyde, on le réduit pour le purifier.", "Le Cuivre est un excellent conducteur.", "Les halogènes aiment gagner des électrons.", "L'Aluminium nécessite une énergie immense.", "Le Magnésium s'oxyde en émettant une lumière blanche.", "Le Soufre forme des cristaux jaunes.", "L'Or est un métal noble, difficile à oxyder.", "Une Pile Galvanique oxyde un métal pour donner de l'énergie."],
-    realWorld: ["Le Sodium réagit violemment en perdant 1 électron.", "Les plantes libèrent de l'Oxygène pur.", "L'hémoglobine réduit le Fer pour transporter l'oxygène.", "Le Cuivre est réduit pour fabriquer des câbles.", "Le Chlore gagne des électrons pour purifier l'eau.", "Le recyclage nécessite d'injecter des électrons.", "Le Magnésium s'oxyde dans les feux d'artifice.", "Le Soufre s'oxyde dans les volcans.", "L'Or s'oxyde pour être dissous dans les mines.", "Le Zinc donne de l'énergie au Cuivre. Ainsi fonctionnent les batteries."],
-    elements: ["Sodium", "Oxygène", "Fer", "Cuivre", "Chlore", "Aluminium", "Magnésium", "Soufre", "Or", "Batterie"],
-    questions: [
-      { q: "Quel ion forme le Sodium en s'oxydant?", options: ["Cation (+1)", "Anion (-1)", "Neutre", "Isotope"], correct: 0, micro: "En perdant un électron négatif, le Sodium obtient une charge positive (cation)." },
-      { q: "Quel est l'état d'oxydation de l'Oxygène pur (O2)?", options: ["0", "-2", "+1", "+2"], correct: 0, micro: "Les éléments à l'état pur ont toujours un état d'oxydation de zéro." },
-      { q: "Si le Fer passe de +3 à +2, que s'est-il passé?", options: ["Réduction", "Oxydation", "Fusion", "Fission"], correct: 0, micro: "La charge a diminué, ce qui signifie qu'il a gagné un électron négatif (Réduction)." },
-      { q: "Quelles particules voyagent pour réduire le Cuivre?", options: ["Électrons", "Protons", "Neutrons", "Quarks"], correct: 0, micro: "Dans les réactions Redox, seuls les électrons sont transférés." },
-      { q: "Le Chlore gagne des électrons car il est un...", options: ["Halogène", "Gaz noble", "Métal", "Liquide"], correct: 0, micro: "Les halogènes ont besoin d'un électron pour compléter leur octet." },
-      { q: "Réduire l'Aluminium nécessite beaucoup...", options: ["D'électricité", "D'eau", "De pression", "D'oxygène"], correct: 0, micro: "L'électrolyse est utilisée, nécessitant des quantités massives d'électricité." },
-      { q: "L'oxydation rapide du Magnésium s'appelle...", options: ["Combustion", "Évaporation", "Sublimation", "Fusion"], correct: 0, micro: "La combustion est une oxydation rapide libérant lumière et chaleur." },
-      { q: "Si le Soufre passe de -2 à 0, combien d'électrons perd-il?", options: ["2", "1", "4", "0"], correct: 0, micro: "Pour passer de -2 à 0, il doit se débarrasser de 2 charges négatives." },
-      { q: "Pourquoi l'Or s'oxyde-t-il difficilement?", options: ["Métal noble", "Gaz", "Léger", "Artificiel"], correct: 0, micro: "Les métaux nobles ont une structure électronique très stable." },
-      { q: "Dans une pile, l'oxydation se produit à...", options: ["L'anode", "La cathode", "Le câble", "Le pont salin"], correct: 0, micro: "L'anode est toujours l'électrode où se produit l'oxydation." }
-    ]
-  },
-  de: {
-    ui: { 
-      start: "START NANO-CORE", title: "NANO-CORE V11", level: "LEVEL", exp: "EXP", target: "ZIEL",
-      theoryTitle: "THEORETISCHES TUTORIAL", theoryBtn: "VERSTANDEN ➔", diagTitle: "KOGNITIVE ANALYSE", diagQ1: "muss von", diagQ2: "auf", diagQ3: "Was muss mit seinen Elektronen passieren?", 
-      btnGain: "GEWINNEN e⁻ (REDUZIEREN)", btnLose: "VERLIEREN e⁻ (OXIDIEREN)", diagGalvanic: "Wohin fließen die Elektronen in einer Batterie?", 
-      btnZnCu: "ZINK ➔ KUPFER", btnCuZn: "KUPFER ➔ ZINK", btnInject: "INJIZIEREN e⁻", btnExtract: "EXTRAHIEREN e⁻", btnTransfer: "STROMKREIS SCHLIESSEN", 
-      synthTitle: "REALE ANWENDUNG", btnNext: "NÄCHSTE HERAUSFORDERUNG ➔", winTitle: "🏅 MEISTERSCHAFT ERREICHT", btnBack: "⬅ BEENDEN",
-      btnAI: "🤖 KI-FRAGE", microClassTitle: "KI MIKRO-KLASSE", aiCorrect: "Ausgezeichnet! Absolutes Verständnis.", btnContinue: "WEITER" 
-    },
-    ai: { wrongMath: "Falsch. Elektronen gewinnen subtrahiert Ladung.", correct: "Korrekt. Fortfahren.", wrongTool: "Falsches Werkzeug.", galvanicError: "Falsch. Zink gibt Elektronen ab.", galvanicCorrect: "Stromkreis korrekt.", synth: "Stabilisiert. Analysiere...", start: "Analysieren Sie den Kern.", boss: "Batteriebau.", aiIntro: "Auswertung aktiv. Wählen Sie die richtige Antwort." },
-    theory: ["OXIDATION ist Elektronen VERLIEREN.", "REDUKTION ist Elektronen GEWINNEN.", "Wir reduzieren Eisen, um es zu reinigen.", "Kupfer ist ein hervorragender Leiter.", "Halogene wie Chlor gewinnen gerne Elektronen.", "Aluminium benötigt enorme Energie zur Reduktion.", "Magnesium oxidiert und sendet weißes Licht aus.", "Schwefel bildet gelbe Kristalle.", "Gold ist ein Edelmetall, schwer zu oxidieren.", "Eine galvanische Zelle nutzt Oxidation zur Energieübertragung."],
-    realWorld: ["Natrium reagiert heftig und verliert 1 Elektron.", "Pflanzen oxidieren Wasser und setzen Sauerstoff frei.", "Hämoglobin reduziert Eisen für den Sauerstofftransport.", "Kupfer wird für Stromkabel reduziert.", "Chlor gewinnt Elektronen, um Wasser zu reinigen.", "Aluminiumrecycling erfordert die Injektion von Elektronen.", "Magnesium oxidiert in Feuerwerkskörpern.", "Schwefel oxidiert in Vulkanen.", "Gold wird im Bergbau zur Auflösung oxidiert.", "Zink gibt Kupfer Energie. So funktionieren Batterien."],
-    elements: ["Natrium", "Sauerstoff", "Eisen", "Kupfer", "Chlor", "Aluminium", "Magnesium", "Schwefel", "Gold", "Batterie"],
-    questions: [
-      { q: "Welches Ion bildet Natrium beim Oxidieren?", options: ["Kation (+1)", "Anion (-1)", "Neutral", "Isotop"], correct: 0, micro: "Durch den Verlust eines negativen Elektrons erhält Natrium eine positive Ladung (Kation)." },
-      { q: "Was ist die Oxidationsstufe von reinem Sauerstoff (O2)?", options: ["0", "-2", "+1", "+2"], correct: 0, micro: "Elemente im reinen Zustand haben immer eine Oxidationsstufe von Null." },
-      { q: "Wenn Eisen von +3 auf +2 geht, was passierte?", options: ["Reduktion", "Oxidation", "Fusion", "Fission"], correct: 0, micro: "Die Ladung wurde reduziert, d.h. es gewann ein negatives Elektron (Reduktion)." },
-      { q: "Welche Teilchen reisen, um Kupfer zu reduzieren?", options: ["Elektronen", "Protonen", "Neutronen", "Quarks"], correct: 0, micro: "In Redoxreaktionen werden nur Elektronen übertragen." },
-      { q: "Chlor gewinnt Elektronen leicht, weil es ein ... ist", options: ["Halogen", "Edelgas", "Metall", "Flüssigkeit"], correct: 0, micro: "Halogene benötigen nur ein Elektron, um ihr Oktett zu vervollständigen." },
-      { q: "Die Reduzierung von Aluminium erfordert massiv...", options: ["Strom", "Wasser", "Druck", "Sauerstoff"], correct: 0, micro: "Es wird Elektrolyse verwendet, die massive Mengen an Strom erfordert." },
-      { q: "Die schnelle Oxidation von Magnesium nennt man...", options: ["Verbrennung", "Verdampfung", "Sublimation", "Fusion"], correct: 0, micro: "Verbrennung ist eine schnelle Oxidation, die Licht und Wärme freisetzt." },
-      { q: "Wenn Schwefel von -2 auf 0 geht, wie viele Elektronen verliert er?", options: ["2", "1", "4", "0"], correct: 0, micro: "Um von -2 auf 0 zu steigen, muss er 2 negative Ladungen loswerden." },
-      { q: "Warum oxidiert Gold in der Natur kaum?", options: ["Edelmetall", "Gas", "Leichtgewicht", "Künstlich"], correct: 0, micro: "Edelmetalle haben eine sehr stabile Elektronenstruktur." },
-      { q: "In einer galvanischen Zelle findet die Oxidation statt an der...", options: ["Anode", "Kathode", "Draht", "Salzbrücke"], correct: 0, micro: "Die Anode ist immer die Elektrode, an der die Oxidation stattfindet." }
-    ]
-  }
+const triggerVoice = (text, langCode) => {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const pureText = text ? text.replace(/<[^>]*>?/gm, '') : ''; 
+  setTimeout(() => {
+    try {
+      const u = new SpeechSynthesisUtterance(pureText);
+      u.lang = langCode; u.rate = 1.05; u.pitch = 1.0;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }, 50);
 };
-const LANG_MAP = { es: 'es-ES', en: 'en-US', fr: 'fr-FR', de: 'de-DE' };
 
 /* ============================================================
-   ⚙️ 3. CONFIGURACIÓN FÍSICA (10 NIVELES)
+   🌍 3. BASE DE DATOS QUÍMICA INTEGRAL (CON REACCIONES COMPLETAS)
 ============================================================ */
-const MISSIONS_CONFIG = [
-  { id: 1, cores: [{ symbol: "Na", start: 0, target: 1, type: "oxidize", color: "#ffff00", geom: "sphere" }] },
-  { id: 2, cores: [{ symbol: "O", start: -2, target: 0, type: "oxidize", color: "#ff00ff", geom: "octahedron" }] },
-  { id: 3, cores: [{ symbol: "Fe", start: 3, target: 2, type: "reduce", color: "#ff4400", geom: "octahedron" }] },
-  { id: 4, cores: [{ symbol: "Cu", start: 2, target: 0, type: "reduce", color: "#00f2ff", geom: "dodecahedron" }] },
-  { id: 5, cores: [{ symbol: "Cl", start: 0, target: -1, type: "reduce", color: "#00ff88", geom: "icosahedron" }] },
-  { id: 6, cores: [{ symbol: "Al", start: 3, target: 0, type: "reduce", color: "#aaaaaa", geom: "octahedron" }] },
-  { id: 7, cores: [{ symbol: "Mg", start: 0, target: 2, type: "oxidize", color: "#ffffff", geom: "sphere" }] },
-  { id: 8, cores: [{ symbol: "S", start: -2, target: 0, type: "oxidize", color: "#ffee00", geom: "icosahedron" }] },
-  { id: 9, cores: [{ symbol: "Au", start: 0, target: 3, type: "oxidize", color: "#ffd700", geom: "dodecahedron" }] },
-  { id: 10, isGalvanic: true, cores: [
-      { symbol: "Zn", start: 0, target: 2, type: "oxidize", color: "#aaaaaa", geom: "sphere", pos: [-4, 0, 0] },
-      { symbol: "Cu", start: 2, target: 0, type: "reduce", color: "#00f2ff", geom: "dodecahedron", pos: [4, 0, 0] }
-  ]}
+const CHEM_DB = [
+  { eq: "Zn + Cu²⁺ ➔ Zn²⁺ + Cu", hOx: "Zn ➔ Zn²⁺ + 2e⁻", hRed: "Cu²⁺ + 2e⁻ ➔ Cu", eOx: 2, eRed: 2, symOx: "Zn", symRed: "Cu", cOx: 1, cRed: 1, env: "Neutral", ansH2O: 0, ansH: 0, ansOH: 0 },
+  { eq: "Al + 3H⁺ ➔ Al³⁺ + 1.5H₂", hOx: "Al ➔ Al³⁺ + 3e⁻", hRed: "2H⁺ + 2e⁻ ➔ H₂", eOx: 3, eRed: 2, symOx: "Al", symRed: "H", cOx: 2, cRed: 3, env: "Ácido", ansH2O: 0, ansH: 6, ansOH: 0 },
+  { eq: "MnO₄⁻ + 5Fe²⁺ + 8H⁺ ➔ Mn²⁺ + 5Fe³⁺ + 4H₂O", hOx: "Fe²⁺ ➔ Fe³⁺ + 1e⁻", hRed: "MnO₄⁻ + 8H⁺ + 5e⁻ ➔ Mn²⁺ + 4H₂O", eOx: 1, eRed: 5, symOx: "Fe", symRed: "Mn", cOx: 5, cRed: 1, env: "Ácido", ansH2O: 4, ansH: 8, ansOH: 0 },
+  { eq: "Cr₂O₇²⁻ + 6Cl⁻ + 14H⁺ ➔ 2Cr³⁺ + 3Cl₂ + 7H₂O", hOx: "2Cl⁻ ➔ Cl₂ + 2e⁻", hRed: "Cr₂O₇²⁻ + 14H⁺ + 6e⁻ ➔ 2Cr³⁺ + 7H₂O", eOx: 2, eRed: 6, symOx: "Cl", symRed: "Cr", cOx: 3, cRed: 1, env: "Ácido", ansH2O: 7, ansH: 14, ansOH: 0 },
+  { eq: "3Cl₂ + 6OH⁻ ➔ 5Cl⁻ + ClO₃⁻ + 3H₂O", hOx: "Cl₂ + 12OH⁻ ➔ 2ClO₃⁻ + 6H₂O + 10e⁻", hRed: "Cl₂ + 2e⁻ ➔ 2Cl⁻", eOx: 10, eRed: 2, symOx: "Cl", symRed: "Cl", cOx: 1, cRed: 5, env: "Básico", ansH2O: 6, ansH: 0, ansOH: 12 },
+  { eq: "Cu + H₂SO₄ ➔ CuSO₄ + SO₂", hOx: "Cu ➔ Cu²⁺ + 2e⁻", hRed: "SO₄²⁻ + 4H⁺ + 2e⁻ ➔ SO₂ + 2H₂O", eOx: 2, eRed: 2, symOx: "Cu", symRed: "S", cOx: 1, cRed: 1, env: "Ácido", ansH2O: 2, ansH: 4, ansOH: 0 },
+  { eq: "P₄ + NaOH ➔ PH₃ + NaH₂PO₂", hOx: "P₄ + 8OH⁻ ➔ 4H₂PO₂⁻ + 4e⁻", hRed: "P₄ + 12H₂O + 12e⁻ ➔ 4PH₃ + 12OH⁻", eOx: 4, eRed: 12, symOx: "P", symRed: "P", cOx: 3, cRed: 1, env: "Básico", ansH2O: 12, ansH: 0, ansOH: 24 }
 ];
 
 /* ============================================================
-   ⚛️ 4. RENDERIZADOR 3D PROFUNDO (NUBES CUÁNTICAS Y ECUACIONES)
+   🌍 4. DICCIONARIO TRADUCIDO Y LÓGICA
 ============================================================ */
-const HolographicEquation = ({ core, isStable }) => {
-  let eq = "";
-  if (isStable) eq = "EQUILIBRIO ESTABLE";
-  else if (core.type === 'reduce') eq = `${core.symbol}${core.start > 0 ? '+'+core.start : core.start} + ${Math.abs(core.start - core.target)}e⁻ ➔ ${core.symbol}${core.target > 0 ? '+'+core.target : core.target}`;
-  else eq = `${core.symbol}${core.start > 0 ? '+'+core.start : core.start} ➔ ${core.symbol}${core.target > 0 ? '+'+core.target : core.target} + ${Math.abs(core.target - core.start)}e⁻`;
+const DICT = {
+  es: {
+    ui: { 
+      start: "INICIAR CAMPAÑA", title: "REDOX BALANCER", rank: "RANGO", xp: "XP", 
+      theoryTitle: "BRIEFING TÁCTICO", theoryBtn: "ESTABILIZAR SISTEMA ➔", diagTitle: "ANÁLISIS IA", 
+      btnCheck: "VERIFICAR", btnBack: "⬅ ABORTAR", btnNext: "SIGUIENTE ➔", 
+      btnRetry: "REINTENTAR", aiTitle: "🤖 TUTOR IA SOCRÁTICO", btnContinue: "ENTENDIDO", 
+      react: "AGENTE REDUCTOR", prod: "AGENTE OXIDANTE",
+      mission: "MISIÓN", scan: "ABRIR DESGLOSE", eLost: "e- Cedidos", eGained: "e- Absorbidos", status: "ESTADO:",
+      explTitle: "¡COLAPSO ESTRUCTURAL!", explMsg: "La descompensación provocó una fisión masiva.",
+      statsTitle: "TELEMETRÍA AVANZADA", timeTaken: "Tiempo", clicksUsed: "Ajustes", 
+      successTitle: "¡ESTABILIZADO!", successMessage: "Masa y carga en equilibrio perfecto.",
+      helpBtn: "🤖 AYUDA TÁCTICA", helpText: "Paso 1: Balancea el elemento principal.\nPaso 2: Usa H₂O para balancear Oxígenos.\nPaso 3: Usa H⁺ o OH⁻ para balancear Hidrógenos.\nPaso 4: Iguala los electrones de ambas semirreacciones.", aiBtn: "🧠 CONSULTAR IA"
+    },
+    ai: { intro: "Protocolo activado. Revisa la ecuación.", correct: "Perfecto.", explosion: "¡Ruptura crítica!" }
+  }
+};
+DICT.en = DICT.es; 
+const LANG_MAP = { es: 'es-ES', en: 'en-US' };
+
+const getRank = (xp) => {
+  const safeXp = Number(xp) || 0;
+  const RANKS = [ { name: "NEÓFITO", xp: 0, color: "#888" }, { name: "ALQUIMISTA", xp: 1500, color: "#2196F3" }, { name: "ARQUITECTO", xp: 5000, color: "#FFD700" } ];
+  for (let i = RANKS.length - 1; i >= 0; i--) if (safeXp >= RANKS[i].xp) return RANKS[i];
+  return RANKS[0];
+};
+
+/* ============================================================
+   🎥 5. NÚCLEO 3D (MEMOIZADO EXTREMO)
+============================================================ */
+const VEC_AB_EXP = new THREE.Vector2(0.015, 0.015);
+const VEC_AB_NORM = new THREE.Vector2(0.002, 0.002);
+const BEAM_START = new THREE.Vector3(-6, 0, 0);
+const BEAM_MID = new THREE.Vector3(0, 6, 0);
+const BEAM_END = new THREE.Vector3(6, 0, 0);
+
+const Core3D = ({ phase, isExploding, isErrorShake, c1, c2, activeTransfer }) => {
+  useFrame((state) => {
+    if (isExploding) {
+      state.camera.position.x = Math.sin(state.clock.elapsedTime * 60) * 1.0;
+      state.camera.position.y = 2 + Math.cos(state.clock.elapsedTime * 70) * 1.0;
+    } else if (isErrorShake) {
+      state.camera.position.x = Math.sin(state.clock.elapsedTime * 40) * 0.2;
+    } else {
+      state.camera.position.lerp(new THREE.Vector3(0, 2, 16), 0.05);
+    }
+    state.camera.lookAt(0, 0, 0);
+  });
+
+  const safeC1 = Math.max(1, Math.min(Number(c1) || 1, 10));
+  const safeC2 = Math.max(1, Math.min(Number(c2) || 1, 10));
+  
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(0.6, 16, 16), []);
+  const beamCurve = useMemo(() => new THREE.QuadraticBezierCurve3(BEAM_START, BEAM_MID, BEAM_END), []);
 
   return (
-    <Text position={[0, 3.5, 0]} fontSize={0.6} color={isStable ? "#0f0" : "#00f2ff"} font="https://fonts.gstatic.com/s/orbitron/v25/yYK5cRXep8lBoySMYNenOweb.woff" outlineWidth={0.02} outlineColor="#000">
-      {eq}
-    </Text>
+    <>
+      <ambientLight intensity={1.5} />
+      <directionalLight position={[10, 15, 10]} intensity={3} color="#ffffff" />
+      <Stars count={1000} factor={3} fade />
+      
+      <group position={[-6, 0, 0]}>
+        {[...Array(safeC1)].map((_, i) => (
+           <mesh key={`ox-${i}`} position={[Math.cos(i) * 1.5, Math.sin(i) * 0.5, 0]} geometry={sphereGeo}>
+              <meshPhysicalMaterial color={isExploding || isErrorShake ? "#f00" : "#00f2ff"} emissive={isExploding || isErrorShake ? "#f00" : "#00f2ff"} emissiveIntensity={2} />
+           </mesh>
+        ))}
+      </group>
+
+      <group position={[6, 0, 0]}>
+        {[...Array(safeC2)].map((_, i) => (
+           <mesh key={`red-${i}`} position={[Math.cos(i) * 1.5, Math.sin(i) * 0.5, 0]} geometry={sphereGeo}>
+              <meshPhysicalMaterial color={isExploding || isErrorShake ? "#f00" : "#ff0055"} emissive={isExploding || isErrorShake ? "#f00" : "#ff0055"} emissiveIntensity={2} />
+           </mesh>
+        ))}
+      </group>
+
+      {activeTransfer && (
+        <mesh>
+          <tubeGeometry args={[beamCurve, 64, 0.3, 8, false]} />
+          <meshBasicMaterial color="#00f2ff" transparent opacity={0.9} />
+        </mesh>
+      )}
+
+      <EffectComposer>
+        <Bloom intensity={activeTransfer ? 6 : (isExploding ? 8 : 2)} luminanceThreshold={0.2} />
+        <ChromaticAberration offset={isExploding ? VEC_AB_EXP : VEC_AB_NORM} />
+        <Scanline opacity={0.15} density={1.5} />
+      </EffectComposer>
+    </>
   );
 };
 
-const AtomicCore = React.memo(({ core, hitPulse }) => {
-  const groupRef = useRef();
-  const meshRef = useRef();
-  const isStable = core.currentCharge === core.target;
-  const visualElectrons = Math.max(0, Math.abs(core.currentCharge));
-  const initPos = useMemo(() => new THREE.Vector3(...(core.pos || [0,0,0])), [core.pos]);
-
-  useFrame((state, delta) => {
-    if (!groupRef.current || !meshRef.current) return;
-    groupRef.current.rotation.y += delta * (isStable ? 0.3 : 1.2);
-    groupRef.current.rotation.x += delta * 0.4;
-    groupRef.current.position.y = initPos.y + Math.sin(state.clock.elapsedTime * 2.5) * 0.15;
-
-    if (hitPulse) {
-      groupRef.current.scale.setScalar(1.2);
-      meshRef.current.material.emissiveIntensity = 8;
-    } else {
-      groupRef.current.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
-      meshRef.current.material.emissiveIntensity = isStable ? 1 : 3;
-    }
-  });
-
-  const geometry = useMemo(() => {
-    if (core.geom === "octahedron") return <octahedronGeometry args={[2.2, isStable ? 0 : 2]} />;
-    if (core.geom === "icosahedron") return <icosahedronGeometry args={[2.2, isStable ? 0 : 2]} />;
-    if (core.geom === "dodecahedron") return <dodecahedronGeometry args={[2.2, isStable ? 0 : 2]} />;
-    return <sphereGeometry args={[2.2, 32, 32]} />;
-  }, [core.geom, isStable]);
-
-  return (
-    <group ref={groupRef} position={initPos}>
-      <Sparkles count={isStable ? 200 : 60} scale={6} size={4} speed={2} color={isStable ? "#00f2ff" : core.color} opacity={0.5} />
-      
-      <mesh ref={meshRef}>
-        {geometry}
-        <meshStandardMaterial color={isStable ? "#00ff88" : core.color} emissive={isStable ? "#00ff88" : core.color} wireframe={!isStable} roughness={0.1} metalness={0.9} />
-      </mesh>
-      
-      <HolographicEquation core={core} isStable={isStable} />
-
-      {[...Array(visualElectrons)].map((_, i) => {
-        const angle = (i / (visualElectrons || 1)) * Math.PI * 2;
-        return (
-          <group key={i} rotation={[Math.PI / 4, angle, 0]}>
-            <mesh position={[3.5, 0, 0]}><sphereGeometry args={[0.2, 16, 16]} /><meshBasicMaterial color="#ffea00" /></mesh>
-            <mesh rotation={[Math.PI / 2, 0, 0]}><ringGeometry args={[3.5, 3.55, 64]} /><meshBasicMaterial color="rgba(255,255,255,0.1)" transparent side={THREE.DoubleSide} /></mesh>
-          </group>
-        )
-      })}
-    </group>
-  );
-});
-
 /* ============================================================
-   🎮 5. MÁQUINA DE ESTADOS PRINCIPAL
+   🎮 6. MÁQUINA DE ESTADOS PRINCIPAL
 ============================================================ */
-export default function RedoxLab() {
-  const isMobile = useMobile(); // 🔥 Inyección del Hook de Responsividad
-  const { language } = useGameStore();
+function GameApp() {
+  const store = useGameStore();
+  const language = store?.language || "es";
+  const resetProgress = store?.resetProgress || (() => {});
   
-  const safeLang = I18N[language] ? language : 'es';
-  const dict = I18N[safeLang];
-  const langCode = LANG_MAP[safeLang];
+  const safeLang = DICT[language] ? language : 'es';
+  const dict = DICT[safeLang] || DICT.es;
+  const lCode = LANG_MAP[safeLang] || 'es-ES';
 
-  const [phase, setPhase] = useState("BOOT"); 
-  const [missionIdx, setMissionIdx] = useState(0);
-  const [cores, setCores] = useState([]);
-  const [laserActive, setLaserActive] = useState(false);
-  const [laserColor, setLaserColor] = useState('#fff');
-  const [hitPulse, setHitPulse] = useState(false);
-  const [mastery, setMastery] = useState(0);
-  const [microClassActive, setMicroClassActive] = useState(false);
+  const [phase, setPhase] = useState("BOOT");
+  const [levelIdx, setLevelIdx] = useState(0);
+  const [xp, setXp] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [mistakes, setMistakes] = useState(0);
+  
+  const [c1, setC1] = useState(1);
+  const [c2, setC2] = useState(1);
+  const [cH2O, setCH2O] = useState(0);
+  const [cH, setCH] = useState(0);
+  const [cOH, setCOH] = useState(0);
 
-  const config = MISSIONS_CONFIG[missionIdx];
-  const qData = dict.questions[missionIdx];
+  const [clicks, setClicks] = useState(0);
+  const [time, setTime] = useState(0);
+  const [timerActive, setTimerActive] = useState(false);
+  
+  const [aiState, setAiState] = useState("Q");
+  const [aiDialog, setAiDialog] = useState(null);
 
-  const handleBack = () => {
-    window.speechSynthesis?.cancel();
-    window.location.href = '/'; 
-  };
+  const [errorMath, setErrorMath] = useState("");
+  const [isErrorShake, setIsErrorShake] = useState(false);
+  const [isExploding, setIsExploding] = useState(false);
+  const [scannerActive, setScannerActive] = useState(false);
+  const [helpActive, setHelpActive] = useState(false);
 
-  const handleStartBoot = () => {
-    sfx.init();
-    sfx.success();
-    loadMission(0);
-  };
+  const level = useMemo(() => CHEM_DB[levelIdx] || CHEM_DB[0], [levelIdx]);
+  const currentRank = getRank(xp);
+  
+  const eLost = c1 * (level.eOx || 1);
+  const eGained = c2 * (level.eRed || 1);
+  const eDiff = Math.abs(eLost - eGained);
 
-  const loadMission = (idx) => {
-    const nextConfig = MISSIONS_CONFIG[idx];
-    if (!nextConfig) { 
-      setPhase("END"); 
-      safeSpeak(dict.ui.winTitle, langCode);
-      return; 
-    }
-    setMissionIdx(idx);
-    setCores(nextConfig.cores.map(c => ({ ...c, currentCharge: c.start })));
-    setPhase("THEORY");
-    safeSpeak(dict.theory[idx], langCode);
-  };
-
-  const isStable = useMemo(() => cores.length > 0 && cores.every(c => c.currentCharge === c.target), [cores]);
-
-  const handlePrediction = (action) => {
-    if (config.isGalvanic) {
-      if (action !== 'zn_cu') { sfx.error(); safeSpeak(dict.ai.galvanicError, langCode); return; }
-    } else {
-      if (action !== config.cores[0].type) { sfx.error(); safeSpeak(dict.ai.wrongMath, langCode); return; }
-    }
-    sfx.success(); safeSpeak(dict.ai.correct, langCode); setPhase("EXECUTION");
-  };
-
-  const handleFire = (tool) => {
-    if (isStable || laserActive) return;
-
-    if (!config.isGalvanic && tool !== cores[0].type) {
-      sfx.error(); safeSpeak(dict.ai.wrongTool, langCode); return;
-    }
-
-    setLaserColor(config.isGalvanic ? "#ffea00" : (tool === 'reduce' ? "#00f2ff" : "#ff0055"));
-    setLaserActive(true);
-    tool === 'reduce' ? sfx.laser() : sfx.extract();
-
-    setTimeout(() => {
-      setLaserActive(false);
-      setHitPulse(true);
-      sfx.impact();
-      setCores(prev => prev.map((c, i) => {
-        if (config.isGalvanic) return i === 0 ? { ...c, currentCharge: c.currentCharge + 1 } : { ...c, currentCharge: c.currentCharge - 1 };
-        return { ...c, currentCharge: c.currentCharge + (c.type === "reduce" ? -1 : 1) };
-      }));
-      setTimeout(() => setHitPulse(false), 200);
-    }, 400); 
-  };
-
-  const handleAIQuestion = () => {
-    setPhase("AI_QUESTION");
-    setMicroClassActive(false);
-    safeSpeak(dict.ai.aiIntro, langCode);
-  };
-
-  const handleAnswer = (idx) => {
-    if (idx === qData.correct) {
-      sfx.success();
-      safeSpeak(dict.ui.aiCorrect, langCode);
-      setMastery(m => m + 50);
-      setTimeout(() => setPhase("EXECUTION"), 2000);
-    } else {
-      sfx.error();
-      setMicroClassActive(true);
-      safeSpeak(qData.micro, langCode);
-    }
-  };
+  const isMounted = useRef(true);
 
   useEffect(() => {
-    if (isStable && phase === "EXECUTION") {
-      setPhase("SYNTHESIS");
-      setMastery(m => m + (config.isGalvanic ? 500 : 150));
-      setTimeout(() => sfx.success(), 400);
-      safeSpeak(dict.ai.synth, langCode);
-      setTimeout(() => safeSpeak(dict.realWorld[missionIdx], langCode), 3000);
-    }
-  }, [isStable, phase, config, dict, missionIdx, langCode]);
+    isMounted.current = true;
+    sfx.init();
+    return () => { 
+      isMounted.current = false;
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel(); 
+    };
+  }, []);
 
-  const aberrationOffset = useMemo(() => new THREE.Vector2(hitPulse ? 0.02 : 0.002, hitPulse ? 0.02 : 0.002), [hitPulse]);
+  useEffect(() => {
+    let interval = null;
+    if (timerActive) interval = setInterval(() => setTime(t => t + 1), 1000);
+    return () => clearInterval(interval);
+  }, [timerActive]);
 
-  // Pantalla de inicio
-  if (phase === "BOOT") return (
-    <div style={ui.centerScreen}>
-      <h1 className="nano-title" style={ui.titleGlow}>{dict.ui.title}</h1>
-      <button style={ui.btnHex('#00f2ff')} onClick={handleStartBoot}>{dict.ui.start}</button>
-    </div>
-  );
+  const updateCoef = (side, delta) => {
+    sfx.click();
+    if (side === 'c1') setC1(p => Math.max(1, p + delta));
+    if (side === 'c2') setC2(p => Math.max(1, p + delta));
+    if (side === 'h2o') setCH2O(p => Math.max(0, p + delta));
+    if (side === 'h') setCH(p => Math.max(0, p + delta));
+    if (side === 'oh') setCOH(p => Math.max(0, p + delta));
+    setClicks(p => p + 1);
+  };
 
-  // Pantalla de victoria
-  if (phase === "END") return (
-    <div style={ui.centerScreen}>
-      <h1 className="nano-title" style={ui.titleComplete}>{dict.ui.winTitle}</h1>
-      <p style={{color:'#fff', fontSize:'clamp(20px, 5vw, 30px)', fontFamily:'Orbitron', margin:'30px 0'}}>{dict.ui.exp}: {mastery}</p>
-      <button style={ui.btnHex('#0f0')} onClick={handleBack}>{dict.ui.btnBack}</button>
-    </div>
-  );
+  const verify = () => {
+    setTimerActive(false);
+    const result = RedoxEngine.validate(c1, c2, cH2O, cH, cOH, level);
 
-  return (
-    <div style={ui.container}>
-      {/* HEADER DE NAVEGACIÓN Y AYUDA */}
-      <div style={ui.topControls}>
-        <button style={ui.backBtn} onClick={handleBack}>{dict.ui.btnBack}</button>
-        {phase === "EXECUTION" && !isStable && (
-          <button style={ui.aiBtn} onClick={handleAIQuestion}>{dict.ui.btnAI}</button>
-        )}
-      </div>
+    if (result.isBalanced) {
+      sfx.transfer();
+      setPhase("TRANSFER");
+      setStreak(s => s + 1);
+      setXp(p => p + 150 + (streak * 50));
+      setTimeout(() => { if(isMounted.current) { sfx.success(); setPhase("WIN"); triggerVoice(dict.ui.successMessage, lCode); } }, 2000);
+    } else {
+      setMistakes(m => m + 1);
+      setStreak(0);
+      sfx.error(); 
+      setIsErrorShake(true); 
 
-      {/* 🖥️ HUD CENTRALIZADO Y RESPONSIVO (USANDO CSS GRID PARA LOS STATS) */}
-      <div className="nano-hud" style={ui.hud}>
-        <div className="nano-glass" style={ui.glassCard}>
-          <h1 className="nano-glass-title" style={ui.title}>{dict.ui.title}</h1>
-          <div style={ui.badge}>{dict.ui.level} {config.id} / 10 {config.isGalvanic && " (BOSS)"}</div>
-          <div style={{color:'#ffea00', fontSize:'clamp(14px, 3vw, 18px)', marginTop:'10px', fontWeight:'bold'}}>{dict.ui.exp}: {mastery}</div>
-          
-          <div className="nano-stats" style={ui.statsContainer}>
-            {cores.map((c, i) => (
-              <div key={i} className="nano-stat-box" style={ui.statBox(c.color)}>
-                <div style={{color:c.color, fontSize:'clamp(14px, 4vw, 18px)', fontWeight:'bold'}}>{config.isGalvanic ? c.symbol : dict.elements[missionIdx]}</div>
-                <div style={{color:'#aaa', fontSize:'clamp(10px, 3vw, 12px)'}}>{dict.ui.target}: {c.target}</div>
-                <div style={ui.statNumber(c.color)}>{c.currentCharge > 0 ? `+${c.currentCharge}` : c.currentCharge}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* 📖 FASE 0: TEORÍA */}
-      {phase === "THEORY" && (
-        <div style={ui.overlay}>
-          <div style={ui.dialogBox('#00f2ff')}>
-            <h2 style={{color: '#00f2ff', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: '2px solid #00f2ff55', paddingBottom: '15px'}}>{dict.ui.theoryTitle}</h2>
-            <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', lineHeight:'1.5', margin: 'clamp(20px, 4vh, 40px) 0'}}>{dict.theory[missionIdx]}</p>
-            <button style={ui.nextBtn('#00f2ff')} onClick={() => { setPhase("DIAGNOSIS"); safeSpeak(config.isGalvanic ? dict.ai.boss : dict.ai.start, langCode); }}>{dict.ui.theoryBtn}</button>
-          </div>
-        </div>
-      )}
-
-      {/* 🧠 FASE 1: DIAGNÓSTICO */}
-      {phase === "DIAGNOSIS" && (
-        <div style={ui.overlay}>
-          <div style={ui.dialogBox(config.isGalvanic ? '#ff0055' : '#ffea00')}>
-            <h2 style={{color: config.isGalvanic ? '#ff0055' : '#ffea00', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: `2px solid ${config.isGalvanic ? '#ff005555' : '#ffea0055'}`, paddingBottom: '15px'}}>{dict.ui.diagTitle}</h2>
-            {!config.isGalvanic ? (
-              <div style={{display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px'}}>
-                <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', margin: 0}}>{dict.elements[missionIdx]} {dict.ui.diagQ1} <b style={{color:'#ffea00'}}>{cores[0]?.start}</b> {dict.ui.diagQ2} <b style={{color:'#0f0'}}>{cores[0]?.target}</b>.</p>
-                <p style={{color:'#aaa', fontSize:'clamp(14px, 4vw, 20px)', margin: 0}}>{dict.ui.diagQ3}</p>
-                <div className="nano-btn-group" style={ui.btnGroup}>
-                  <button style={ui.actionBtn('#00f2ff')} onClick={() => handlePrediction("reduce")}>{dict.ui.btnGain}</button>
-                  <button style={ui.actionBtn('#ff0055')} onClick={() => handlePrediction("oxidize")}>{dict.ui.btnLose}</button>
-                </div>
-              </div>
-            ) : (
-              <div style={{display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px'}}>
-                <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', margin: 0}}>{dict.ui.diagGalvanic}</p>
-                <div className="nano-btn-group" style={ui.btnGroup}>
-                  <button style={ui.actionBtn('#00ff88')} onClick={() => handlePrediction("zn_cu")}>{dict.ui.btnZnCu}</button>
-                  <button style={ui.actionBtn('#ff0055')} onClick={() => handlePrediction("cu_zn")}>{dict.ui.btnCuZn}</button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 🤖 NUEVO: FASE IA QUESTION */}
-      {phase === "AI_QUESTION" && (
-        <div style={ui.overlay}>
-          <div style={ui.dialogBox('#ff00ff')}>
-            <h2 style={{color:'#ff00ff', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: '2px solid #ff00ff55', paddingBottom: '15px'}}>{microClassActive ? dict.ui.microClassTitle : dict.ui.btnAI}</h2>
-            {!microClassActive ? (
-              <div style={{marginTop: '20px'}}>
-                <p style={{color:'#fff', fontSize:'clamp(16px, 4.5vw, 24px)', margin: 0, fontWeight: 'bold'}}>{qData.q}</p>
-                <div className="nano-grid" style={ui.gridOptions}>
-                  {qData.options.map((opt, i) => (
-                    <button key={i} style={ui.actionBtn('#ff00ff')} onClick={() => handleAnswer(i)}>{opt}</button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div style={{marginTop: '20px'}}>
-                <p style={{color:'#ffea00', fontSize:'clamp(16px, 4.5vw, 22px)', lineHeight:'1.5', margin: 0}}>{qData.micro}</p>
-                <button style={ui.nextBtn('#0f0')} onClick={() => { setPhase("EXECUTION"); setMicroClassActive(false); }}>{dict.ui.btnContinue}</button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 🎯 FASE 2: EJECUCIÓN */}
-      {phase === "EXECUTION" && !isStable && (
-        <div style={ui.bottomCenter}>
-          {!config.isGalvanic ? (
-            <div className="nano-btn-group" style={ui.btnGroup}>
-              <button style={ui.fireBtn('#00f2ff')} onClick={() => handleFire("reduce")} disabled={laserActive}>{dict.ui.btnInject}</button>
-              <button style={ui.fireBtn('#ff0055')} onClick={() => handleFire("oxidize")} disabled={laserActive}>{dict.ui.btnExtract}</button>
-            </div>
-          ) : (
-            <button style={ui.fireBtn('#ffea00')} onClick={() => handleFire("transfer")} disabled={laserActive}>{dict.ui.btnTransfer}</button>
-          )}
-        </div>
-      )}
-
-      {/* 🎓 FASE 3: SÍNTESIS */}
-      {phase === "SYNTHESIS" && (
-        <div style={ui.overlay}>
-          <div style={ui.dialogBox('#0f0')}>
-            <h2 style={{color:'#0f0', letterSpacing:'clamp(2px, 1vw, 6px)', fontSize:'clamp(20px, 6vw, 35px)', margin: 0, borderBottom: '2px solid #0f05', paddingBottom: '15px'}}>{dict.ui.synthTitle}</h2>
-            <p style={{fontSize:'clamp(16px, 4.5vw, 26px)', lineHeight:'1.7', margin:'clamp(20px, 4vh, 40px) 0', color: '#fff', fontWeight:'bold'}}>{dict.realWorld[missionIdx]}</p>
-            <button style={ui.nextBtn('#0f0')} onClick={() => loadMission(missionIdx + 1)}>{dict.ui.btnNext}</button>
-          </div>
-        </div>
-      )}
-
-      {/* 🌌 MOTOR 3D PROFUNDO (CÁMARA Y VECTORES DINÁMICOS) */}
-      <div style={{position:'absolute', inset:0, zIndex:1, pointerEvents:'none'}}>
-        {/* 🔥 FIX CÁMARA MOBILE: Si es movil la alejamos a 26 para que se vea todo en vertical */}
-        <Canvas camera={{position:[0, 0, isMobile ? 26 : 15], fov:45}}>
-          <color attach="background" args={['#000308']} />
-          <Stars count={5000} factor={4} fade />
-          <ambientLight intensity={0.8} />
-          
-          <Suspense fallback={null}>
-            {cores.map((c, i) => {
-              // Si es Batería (Jefe) y es Celular, apilamos los núcleos verticalmente para que quepan
-              let pos = c.pos || [0, 0, 0];
-              if (config.isGalvanic && isMobile) {
-                pos = i === 0 ? [0, 4, 0] : [0, -4, 0];
-              }
-              return <AtomicCore key={i} core={{...c, pos}} hitPulse={hitPulse}/>
-            })}
-            
-            {/* Láser Vertical en Móvil, Horizontal en PC */}
-            {laserActive && (
-              <mesh rotation={[0, 0, (config.isGalvanic && isMobile) ? 0 : Math.PI / 2]}>
-                <cylinderGeometry args={[0.2, 0.2, (config.isGalvanic && isMobile) ? 8 : 20, 8]} />
-                <meshBasicMaterial color={laserColor} transparent opacity={0.6} />
-              </mesh>
-            )}
-            
-            {/* Cable de Batería Vertical en Móvil, Horizontal en PC */}
-            {config.isGalvanic && (
-              <mesh rotation={[0, 0, isMobile ? 0 : Math.PI / 2]}>
-                 <cylinderGeometry args={[0.08, 0.08, isMobile ? 8 : 9, 16]} />
-                 <meshStandardMaterial color="#444" metalness={0.9} roughness={0.1} />
-               </mesh>
-            )}
-          </Suspense>
-
-          <EffectComposer>
-            <Bloom luminanceThreshold={0.1} intensity={hitPulse || laserActive ? 6 : 2}/>
-            <Scanline opacity={0.1}/>
-            <ChromaticAberration offset={aberrationOffset}/>
-            <Vignette eskil={false} offset={0.1} darkness={1.2}/>
-          </EffectComposer>
-        </Canvas>
-      </div>
+      // Guardamos la información socrática basada en el error para que la IA la lea
+      setAiDialog(result.socraticData);
+      setErrorMath(dict.hints[result.errorType]);
       
-      {hitPulse && <div style={ui.flash} />}
-    </div>
+      if (result.eDiff > 12) {
+        setIsExploding(true);
+        triggerVoice(dict.ai.explosion, lCode);
+        setTimeout(() => { if(isMounted.current) setPhase("GAMEOVER"); }, 3000);
+      } else {
+        if (mistakes >= 1) {
+            setPhase("AI"); 
+            setAiState("Q");
+            triggerVoice(result.socraticData.q, lCode);
+        } else {
+            triggerVoice(dict.hints[result.errorType], lCode);
+        }
+        setTimeout(() => { if(isMounted.current) setIsErrorShake(false); }, 1000);
+      }
+    }
+  };
+
+  const loadLevel = (idx) => {
+    if (!isMounted.current) return;
+    if (idx >= CHEM_DB.length) { setPhase("BOOT"); setLevelIdx(0); setXp(0); return; }
+    setLevelIdx(idx); 
+    setC1(1); setC2(1); setCH2O(0); setCH(0); setCOH(0); 
+    setErrorMath(""); setIsErrorShake(false); setIsExploding(false); setHelpActive(false); setScannerActive(false);
+    setTime(0); setTimerActive(false); setClicks(0); setMistakes(0);
+    setPhase("THEORY");
+  };
+
+  const invokeAI = () => {
+    sfx.aiPop();
+    const genericDialog = {
+        q: `¿Cuál es el Mínimo Común Múltiplo entre los electrones de ${level.symOx} y ${level.symRed}?`,
+        o: [`${RedoxEngine.getMCM(level.eOx, level.eRed)}`, "No lo sé"],
+        m: `El MCM es ${RedoxEngine.getMCM(level.eOx, level.eRed)}. Multiplica para igualarlos.`
+    };
+    setAiDialog(aiDialog || genericDialog);
+    setPhase("AI");
+    setAiState("Q");
+    triggerVoice(aiDialog?.q || genericDialog.q, lCode);
+  };
+
+  /* ================= VISTAS UI ================= */
+  return (
+    <>
+      <style>{`
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.02); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+        .hud-pulse { animation: pulse 1s infinite; }
+        .hud-btn { padding: 15px 40px; background: #00f2ff; color: #000; font-weight: 900; font-size: 20px; cursor: pointer; border-radius: 10px; border: none; font-family: 'Orbitron', sans-serif; transition: 0.2s; box-shadow: 0 0 30px rgba(0,242,255,0.5); }
+        .hud-btn:active { transform: scale(0.95); }
+        .hud-btn-ghost { padding: 10px 20px; background: rgba(255,255,255,0.05); border: 2px solid #555; color: #fff; font-size: 18px; cursor: pointer; border-radius: 10px; font-family: 'Orbitron', sans-serif; transition: 0.2s; }
+        .hud-btn-ghost:active { transform: scale(0.95); }
+        .hud-btn-ghost:hover { border-color: #00f2ff !important; background: rgba(0,242,255,0.1) !important; color: #fff !important; }
+        
+        /* Mobile-First CSS */
+        @media (max-width: 768px) {
+          .dock-container { flex-direction: column !important; bottom: 0 !important; width: 100% !important; padding: 10px !important; border-radius: 0 !important; gap: 10px !important; }
+          .hud-title { font-size: 40px !important; }
+          .side-panel { top: 70px !important; left: 10px !important; right: 10px !important; width: auto !important; max-width: none !important; display: flex !important; flex-wrap: wrap !important; gap: 10px !important; font-size: 14px !important; }
+        }
+      `}</style>
+      
+      <div style={{ position:'absolute', inset:0, overflow:'hidden', background:'#000', fontFamily:'Orbitron, sans-serif' }}>
+        
+        {phase === "BOOT" && (
+          <div style={{ position:'absolute', inset:0, zIndex:3000, background:'#001122', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center' }}>
+            <div style={{color:'#00f2ff', fontSize:'20px', letterSpacing:'10px', marginBottom:'10px'}}>PROTOCOLO V31</div>
+            <h1 className="hud-title hud-glow" style={{color:'#00f2ff', fontSize:'80px', textShadow:'0 0 40px #00f2ff', textAlign:'center', margin: '0 20px'}}>{dict.ui.title}</h1>
+            <div style={{marginTop:'40px'}}><button className="hud-btn" onClick={() => { sfx.init(); loadLevel(0); }}>{dict.ui.start}</button></div>
+          </div>
+        )}
+
+        {phase === "GAMEOVER" && (
+          <div style={{ position:'absolute', inset:0, zIndex:3000, background:'#300', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center' }}>
+            <h1 className="hud-title hud-glow" style={{color:'#f00', fontSize:'80px', textShadow:'0 0 40px #f00', textAlign: 'center'}}>{dict.ui.explTitle}</h1>
+            <button className="hud-btn" style={{background:'#f00', boxShadow:'0 0 30px #f00'}} onClick={() => loadLevel(levelIdx)}>{dict.ui.btnRetry}</button>
+          </div>
+        )}
+
+        {phase !== "BOOT" && phase !== "GAMEOVER" && (
+          <>
+            {/* Header */}
+            <div style={{ position: 'absolute', top: '20px', left: '20px', right: '20px', display: 'flex', justifyContent: 'space-between', zIndex: 500 }}>
+              <button className="hud-btn-ghost" onClick={() => window.location.reload()}>⬅ SALIR</button>
+              {(phase === "GAME") && !isExploding && (
+                <div style={{display:'flex', gap:'10px'}}>
+                   <button className="hud-btn-ghost" style={{borderColor:'#ff00ff', color:'#ff00ff'}} onClick={invokeAI}>🧠 IA</button>
+                   <button className="hud-btn-ghost" style={{borderColor:'#ffea00', color:'#ffea00'}} onClick={() => setHelpActive(true)}>❓</button>
+                </div>
+              )}
+            </div>
+
+            {/* HUD Central Superior */}
+            <div style={{ position:'absolute', top:'80px', left:'0', width: '100%', display: 'flex', justifyContent: 'center', zIndex:100 }}>
+              <div style={{ background:'rgba(0,15,30,0.85)', border:'2px solid #00f2ff', padding:'10px 20px', borderRadius:'15px', textAlign:'center' }}>
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', width: '100%', borderBottom:'1px solid #444', paddingBottom:'5px'}}>
+                  <div style={{ background:'#ff0055', color:'#fff', padding:'2px 10px', borderRadius:'5px', fontWeight:'900' }}>NIVEL {levelIdx + 1}</div>
+                  <div style={{color:currentRank.color, fontWeight:'bold', fontSize:'16px'}}>XP: {xp}</div>
+                </div>
+                <div style={{ fontSize:'clamp(20px, 4vw, 40px)', fontWeight:'900', color:'#fff', marginTop:'10px' }}>{level.eq}</div>
+              </div>
+            </div>
+
+            {/* Panel de Desglose (Semirreacciones) */}
+            {scannerActive && (
+              <div className="side-panel" style={{ position:'absolute', top:'200px', right:'20px', zIndex:100, background:'rgba(0,15,30,0.95)', border:'2px solid #00f2ff', padding:'15px', borderRadius:'10px', maxWidth: '350px' }}>
+                <div style={{color:'#00f2ff', fontWeight:'bold'}}>Oxidación:<br/><span>{c1} × [{level.hOx}]</span></div>
+                <div style={{color:'#ff0055', fontWeight:'bold', marginTop:'10px'}}>Reducción:<br/><span>{c2} × [{level.hRed}]</span></div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* MODALES OVERLAY */}
+        {phase === "THEORY" && (
+          <div style={{ position:'absolute', inset:0, zIndex:2000, display:'flex', alignItems:'center', justifyContent: 'center', background:'rgba(0,0,0,0.9)', padding: '20px' }}>
+            <div style={{ border:'2px solid #00f2ff', background:'rgba(0,15,30,0.9)', padding:'30px', borderRadius:'20px', textAlign:'center', maxWidth:'600px' }}>
+              <h2 style={{color: '#00f2ff', fontSize:'30px', margin:0}}>{dict.ui.theoryTitle}</h2>
+              <p style={{fontSize:'20px', color: '#fff', margin:'20px 0'}}>Balancea la reacción teniendo en cuenta el medio ({level.env}).</p>
+              <button className="hud-btn" onClick={() => { setPhase("GAME"); setTimerActive(true); }}>INICIAR REACTOR</button>
+            </div>
+          </div>
+        )}
+
+        {/* IA SOCRÁTICA DINÁMICA */}
+        {phase === "AI" && (
+          <div style={{ position:'absolute', inset:0, zIndex:2000, display:'flex', alignItems:'center', justifyContent: 'center', background:'rgba(0,0,0,0.9)', padding: '20px' }}>
+            <div style={{ border:'2px solid #ff00ff', background:'rgba(0,15,30,0.9)', padding:'30px', borderRadius:'20px', textAlign:'center', maxWidth:'600px' }}>
+              <h2 style={{color:'#ff00ff', fontSize:'30px', margin:0}}>TUTOR IA</h2>
+              {aiState === "Q" && aiDialog ? (
+                 <div style={{marginTop:'20px'}}>
+                   <p style={{fontSize:'22px', color: '#fff'}}>{aiDialog.q}</p>
+                   <div style={{display:'flex', flexDirection:'column', gap:'15px', marginTop:'20px'}}>
+                     {aiDialog.o?.map((opt, i) => (
+                       <button key={i} className="hud-btn-ghost" onClick={() => { sfx.aiPop(); setAiState("MICRO"); triggerVoice(aiDialog.m, lCode); }}>{opt}</button>
+                     ))}
+                   </div>
+                 </div>
+              ) : (
+                 <div style={{fontSize:'20px', color:'#ffea00', marginTop:'20px', textAlign:'left'}}>
+                    <p>{aiDialog?.m}</p>
+                 </div>
+              )}
+              {aiState !== "Q" && <div style={{marginTop:'20px'}}><button className="hud-btn" style={{background:'#ff00ff'}} onClick={()=>{setPhase("GAME"); setTimerActive(true); window.speechSynthesis.cancel();}}>{dict.ui.btnContinue}</button></div>}
+            </div>
+          </div>
+        )}
+
+        {helpActive && (
+          <div style={{ position:'absolute', inset:0, zIndex:2000, display:'flex', alignItems:'center', justifyContent: 'center', background:'rgba(0,0,0,0.9)', padding: '20px' }}>
+             <div style={{ border:'2px solid #ffea00', background:'rgba(0,15,30,0.9)', padding:'30px', borderRadius:'20px', textAlign:'center', maxWidth: '600px' }}>
+               <h2 style={{color:'#ffea00', fontSize:'30px'}}>{dict.ui.helpBtn}</h2>
+               <p style={{fontSize:'18px', color:'#fff', whiteSpace:'pre-wrap', textAlign:'left', margin:'20px 0'}}>{dict.ui.helpText}</p>
+               <button className="hud-btn" style={{background:'#ffea00', color:'#000'}} onClick={() => { setHelpActive(false); window.speechSynthesis.cancel(); }}>CERRAR</button>
+             </div>
+          </div>
+        )}
+
+        {phase === "WIN" && (
+          <div style={{ position:'absolute', inset:0, zIndex:2000, display:'flex', alignItems:'center', justifyContent: 'center', background:'rgba(0,0,0,0.9)', padding: '20px' }}>
+            <div style={{ border:'2px solid #0f0', background:'rgba(0,30,0,0.9)', padding:'30px', borderRadius:'20px', textAlign:'center' }}>
+              <h2 className="hud-glow" style={{color:'#0f0', fontSize:'50px', margin:0}}>{dict.ui.successTitle}</h2>
+              <div style={{ margin:'20px 0', fontSize:'20px', color:'#fff' }}>
+                <p>Tiempo: {time}s | Ajustes: {clicks}</p>
+              </div>
+              <button className="hud-btn" style={{background:'#0f0'}} onClick={() => loadLevel(levelIdx + 1)}>{dict.ui.btnNext}</button>
+            </div>
+          </div>
+        )}
+
+        {/* DOCK INFERIOR RESPONSIVO */}
+        {(phase === "GAME" || phase === "TRANSFER" || isExploding) && !helpActive && (
+          <div style={{ position:'absolute', bottom:'10px', left:'0', width: '100%', display: 'flex', justifyContent: 'center', zIndex:150 }}>
+            <div className="dock-container" style={{ display:'flex', gap:'15px', alignItems:'center', background:'rgba(0,10,20,0.95)', padding:'15px', borderRadius:'25px', border:'2px solid #333', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '800px', width: '95%' }}>
+              
+              {/* OXIDANTE */}
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
+                <div style={{color:'#00f2ff', fontWeight:'bold', fontSize:'12px', marginBottom:'5px'}}>REDUCTOR</div>
+                <div style={{display:'flex', gap:'5px', alignItems:'center'}}>
+                  <button className="hud-btn-ghost" style={{width:'35px', height:'35px', borderRadius:'50%', fontSize:'20px', padding:0}} onClick={()=>updateCoef('c1', -1)} disabled={phase==='TRANSFER'}>-</button>
+                  <div style={{fontSize:'24px', fontWeight:'bold', color:'#00f2ff', width:'30px', textAlign:'center'}}>{c1}</div>
+                  <button className="hud-btn-ghost" style={{width:'35px', height:'35px', borderRadius:'50%', fontSize:'20px', padding:0}} onClick={()=>updateCoef('c1', 1)} disabled={phase==='TRANSFER'}>+</button>
+                </div>
+              </div>
+              
+              {/* MASAS (H2O, H+, OH-) */}
+              <div style={{display:'flex', flexDirection:'column', gap:'5px', borderLeft:'1px solid #555', borderRight:'1px solid #555', padding:'0 10px'}}>
+                <div style={{display:'flex', gap:'5px', alignItems:'center'}}>
+                   <span style={{color:'#fff', width:'30px', fontSize: '14px'}}>H₂O</span>
+                   <button className="hud-btn-ghost" style={{width:'25px', height:'25px', borderRadius:'50%', padding:0, fontSize:'14px'}} onClick={()=>updateCoef('h2o', -1)}>-</button>
+                   <span style={{color:'#fff', width:'25px', textAlign:'center', fontSize:'16px'}}>{cH2O}</span>
+                   <button className="hud-btn-ghost" style={{width:'25px', height:'25px', borderRadius:'50%', padding:0, fontSize:'14px'}} onClick={()=>updateCoef('h2o', 1)}>+</button>
+                </div>
+                {level.env === "Ácido" && (
+                  <div style={{display:'flex', gap:'5px', alignItems:'center'}}>
+                     <span style={{color:'#ffaa00', width:'30px', fontSize: '14px'}}>H⁺</span>
+                     <button className="hud-btn-ghost" style={{width:'25px', height:'25px', borderRadius:'50%', padding:0, fontSize:'14px'}} onClick={()=>updateCoef('h', -1)}>-</button>
+                     <span style={{color:'#ffaa00', width:'25px', textAlign:'center', fontSize:'16px'}}>{cH}</span>
+                     <button className="hud-btn-ghost" style={{width:'25px', height:'25px', borderRadius:'50%', padding:0, fontSize:'14px'}} onClick={()=>updateCoef('h', 1)}>+</button>
+                  </div>
+                )}
+                {level.env === "Básico" && (
+                  <div style={{display:'flex', gap:'5px', alignItems:'center'}}>
+                     <span style={{color:'#ff00aa', width:'30px', fontSize: '14px'}}>OH⁻</span>
+                     <button className="hud-btn-ghost" style={{width:'25px', height:'25px', borderRadius:'50%', padding:0, fontSize:'14px'}} onClick={()=>updateCoef('oh', -1)}>-</button>
+                     <span style={{color:'#ff00aa', width:'25px', textAlign:'center', fontSize:'16px'}}>{cOH}</span>
+                     <button className="hud-btn-ghost" style={{width:'25px', height:'25px', borderRadius:'50%', padding:0, fontSize:'14px'}} onClick={()=>updateCoef('oh', 1)}>+</button>
+                  </div>
+                )}
+              </div>
+
+              {/* VERIFY */}
+              <div style={{display:'flex', flexDirection:'column', gap:'10px', alignItems:'center', position: 'relative'}}>
+                <button className="hud-btn" style={{padding: '10px 20px', fontSize: '16px'}} onClick={verify} disabled={phase==='TRANSFER' || isExploding}>{dict.ui.btnCheck}</button>
+                <button className="hud-btn-ghost" style={{padding: '5px 10px', fontSize: '12px'}} onClick={toggleScanner} disabled={phase==='TRANSFER' || isExploding}>👁️ {dict.ui.scan}</button>
+                {errorMath && phase === "GAME" && <div className="hud-pulse" style={{position:'absolute', top:'-50px', color:'#f00', fontWeight:'bold', background:'rgba(50,0,0,0.9)', padding:'5px', borderRadius:'5px', border:'1px solid #f00', fontSize:'12px', whiteSpace:'nowrap'}}>{errorMath}</div>}
+              </div>
+
+              {/* REDUCTOR */}
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
+                <div style={{color:'#ff0055', fontWeight:'bold', fontSize:'12px', marginBottom:'5px'}}>OXIDANTE</div>
+                <div style={{display:'flex', gap:'10px', alignItems:'center'}}>
+                  <button className="hud-btn-ghost" style={{width:'35px', height:'35px', borderRadius:'50%', fontSize:'20px', padding:0}} onClick={()=>updateCoef('c2', -1)} disabled={phase==='TRANSFER'}>-</button>
+                  <div style={{fontSize:'24px', fontWeight:'bold', color:'#ff0055', width:'30px', textAlign:'center'}}>{c2}</div>
+                  <button className="hud-btn-ghost" style={{width:'35px', height:'35px', borderRadius:'50%', fontSize:'20px', padding:0}} onClick={()=>updateCoef('c2', 1)} disabled={phase==='TRANSFER'}>+</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* 🌌 CANVAS AISLADO SEGURO */}
+        <div style={{position:'absolute', inset:0, zIndex:1, pointerEvents:'none'}}>
+          <Suspense fallback={null}>
+            <Canvas camera={{position:[0, 2, 22], fov:45}}>
+              <Core3D phase={phase} isExploding={isExploding} isErrorShake={isErrorShake} c1={c1} c2={c2} activeTransfer={phase === 'TRANSFER'} />
+            </Canvas>
+          </Suspense>
+        </div>
+      </div>
+    </>
   );
 }
 
-// 🎨 ESTILOS UI (100% NATIVE MOBILE FIRST CON CSS GRID Y FLEXBOX)
-const ui = {
-  // Contenedor principal adaptable con flex column y dvh para móviles
-  container: { position: 'absolute', inset: 0, overflow: 'hidden', background: '#000', fontFamily: 'Orbitron, sans-serif', width: '100vw', height: '100dvh', display: 'flex', flexDirection: 'column' },
-  
-  // Pantallas de Boot y Victoria
-  centerScreen: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', background: 'radial-gradient(circle at center, #001122 0%, #000 100%)', zIndex: 1000, position: 'relative', padding: '20px', boxSizing: 'border-box', textAlign: 'center' },
-  titleComplete: { color: '#0f0', fontSize: 'clamp(30px, 6vw, 60px)', letterSpacing: 'clamp(2px, 1vw, 8px)', textShadow: '0 0 40px #0f0', margin: 0, textAlign: 'center' },
-  titleGlow: { color:'#00f2ff', fontSize:'clamp(40px, 8vw, 80px)', letterSpacing:'clamp(5px, 2vw, 15px)', textShadow:'0 0 60px rgba(0, 242, 255, 0.8)', margin:'0 0 30px 0', textAlign: 'center', fontWeight: '900' },
-  btnHex: (c) => ({ padding:'clamp(20px, 4vw, 30px) clamp(40px, 8vw, 80px)', background:`linear-gradient(45deg, rgba(0,0,0,0.9), ${c}33)`, border:`3px solid ${c}`, color:c, fontSize:'clamp(18px, 4vw, 26px)', fontWeight:'900', cursor:'pointer', borderRadius:'15px', fontFamily:'Orbitron', transition:'all 0.3s ease', boxShadow: `0 0 30px ${c}55`, letterSpacing: '4px' }),
-  
-  // Header Adaptable
-  topControls: { position: 'absolute', top: 'clamp(10px, 2vh, 30px)', left: '0', width: '100%', padding: '0 clamp(10px, 2vw, 30px)', boxSizing: 'border-box', display: 'flex', justifyContent: 'space-between', zIndex: 500, pointerEvents: 'none', flexWrap: 'wrap', gap: '10px' },
-  backBtn: { padding: 'clamp(8px, 1.5vw, 15px) clamp(15px, 3vw, 30px)', background: 'rgba(255,0,85,0.15)', border: 'clamp(1px, 0.5vw, 2px) solid #ff0055', color: '#ff0055', cursor: 'pointer', borderRadius: 'clamp(8px, 1.5vw, 10px)', fontFamily: 'Orbitron', fontWeight: '900', backdropFilter: 'blur(10px)', letterSpacing: '1px', transition: '0.3s', pointerEvents: 'auto', fontSize: 'clamp(12px, 2.5vw, 16px)' },
-  aiBtn: { padding: 'clamp(8px, 1.5vw, 15px) clamp(15px, 3vw, 30px)', background: 'rgba(255,0,255,0.15)', border: 'clamp(1px, 0.5vw, 2px) solid #ff00ff', color: '#ff00ff', cursor: 'pointer', borderRadius: 'clamp(8px, 1.5vw, 10px)', fontFamily: 'Orbitron', fontWeight: '900', backdropFilter: 'blur(10px)', letterSpacing: '1px', transition: '0.3s', pointerEvents: 'auto', fontSize: 'clamp(12px, 2.5vw, 16px)' },
-
-  // HUD
-  hud: { position: 'absolute', top: 'clamp(60px, 10vh, 90px)', left: '50%', transform: 'translateX(-50%)', zIndex: 100, width: '100%', padding: '0 clamp(15px, 3vw, 20px)', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', pointerEvents: 'none' },
-  glassCard: { background: 'rgba(0,10,25,0.85)', border: '2px solid #00f2ff', padding: 'clamp(15px, 3vw, 30px)', borderRadius: '15px', backdropFilter: 'blur(15px)', boxShadow: '0 0 40px rgba(0,242,255,0.2)', width: '100%', maxWidth: '600px', textAlign: 'center' },
-  title: { color: '#fff', margin: 0, fontSize: 'clamp(20px, 4vw, 28px)', letterSpacing: '3px' },
-  badge: { display: 'inline-block', marginTop: '10px', padding: 'clamp(5px, 1vw, 8px) clamp(10px, 2vw, 20px)', background: '#ff0055', color: '#fff', fontSize: 'clamp(12px, 2vw, 14px)', fontWeight: 'bold', borderRadius: '5px' },
-  statsContainer: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '10px', marginTop: '15px', width: '100%' },
-  statBox: (c) => ({ background: 'rgba(0,0,0,0.6)', border: `2px solid ${c}`, borderRadius: '8px', padding: '10px 5px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }),
-  statNumber: (c) => ({ fontSize: 'clamp(24px, 7vw, 45px)', fontWeight: '900', color: c, textShadow: `0 0 15px ${c}`, marginTop: '5px' }),
-
-  // Modales Flexibles con Scroll
-  overlay: { position: 'absolute', inset: 0, background: 'rgba(0,5,15,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', pointerEvents: 'auto', padding: 'clamp(15px, 4vw, 30px)', boxSizing: 'border-box' },
-  dialogBox: (c) => ({ border: `2px solid ${c}`, background: 'rgba(0,0,0,0.95)', padding: 'clamp(20px, 6vw, 40px)', borderRadius: '20px', textAlign: 'center', width: '100%', maxWidth: '700px', boxShadow: `0 0 60px ${c}55`, maxHeight: '85dvh', overflowY: 'auto', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }),
-  
-  // Botones de Acción Modales (Grid Inteligente para móvil y PC)
-  btnGroup: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', width: '100%' },
-  gridOptions: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px', width: '100%', marginTop: '20px' },
-  actionBtn: (c) => ({ padding: '15px 10px', background: 'rgba(0,0,0,0.8)', border: `2px solid ${c}`, color: c, fontSize: 'clamp(14px, 4vw, 18px)', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', transition: '0.2s', borderRadius: '10px', minHeight: '55px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', boxSizing: 'border-box' }),
-  nextBtn: (c) => ({ padding: '15px 20px', background: c, border: 'none', color: '#000', fontSize: 'clamp(16px, 4.5vw, 22px)', fontWeight: 'bold', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '10px', boxShadow: `0 0 30px ${c}`, width: '100%', minHeight: '60px', marginTop: '15px' }),
-  
-  // Área Inferior de Ejecución (Disparos)
-  bottomCenter: { position: 'absolute', bottom: 'max(20px, env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)', zIndex: 150, pointerEvents: 'auto', width: '95%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '15px', boxSizing: 'border-box' },
-  fireBtn: (c) => ({ padding: '15px 20px', background: 'rgba(0,0,0,0.95)', border: `3px solid ${c}`, color: c, fontSize: 'clamp(16px, 4.5vw, 24px)', fontWeight: '900', fontFamily: 'Orbitron', cursor: 'pointer', borderRadius: '30px', boxShadow: `0 0 40px ${c}66`, letterSpacing: '2px', width: '100%', minHeight: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }),
-  
-  flash: { position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.3)', pointerEvents: 'none', zIndex: 999 }
-};
-
-// Parches visuales para Scrollbar y ajustes puros CSS
-if (typeof document !== 'undefined' && !document.getElementById("nano-styles-mobile")) {
-  const styleSheet = document.createElement("style");
-  styleSheet.id = "nano-styles-mobile";
-  styleSheet.innerText = `
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 10px; }
-    ::-webkit-scrollbar-thumb { background: rgba(0, 242, 255, 0.4); border-radius: 10px; }
-    
-    /* Reglas Mágicas Mobile First */
-    @media (max-width: 768px) {
-      .nano-btn-group { flex-direction: column !important; }
-      .nano-btn-group button { width: 100% !important; }
-      .nano-stats { gap: 10px !important; }
-      .nano-stat-box { min-width: 45% !important; flex: 1 1 45% !important; padding: 10px !important; }
-      .nano-glass { padding: 20px 15px !important; }
-      .nano-glass-title { font-size: 22px !important; }
-      .nano-grid { grid-template-columns: 1fr !important; }
-      .nano-title { font-size: 32px !important; padding: 0 10px; }
-    }
-  `;
-  document.head.appendChild(styleSheet);
+// 🛡️ EXPORT Y WRAPPER DE SEGURIDAD FINAL
+export default function RedoxLab() {
+  return (
+    <GameErrorBoundary>
+      <GameApp />
+    </GameErrorBoundary>
+  );
 }
