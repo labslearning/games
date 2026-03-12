@@ -38,38 +38,35 @@ class GameErrorBoundary extends React.Component {
 }
 
 /* ============================================================
-   🧠 2. MOTOR GENERATIVO ALGORÍTMICO (FALLBACK DE EMERGENCIA)
+   🧠 2. MOTOR GENERATIVO MATEMÁTICO (FALLBACK ZERO-LATENCY)
 ============================================================ */
 class IcfesEngine {
-  static get ELECTRONEGATIVITIES() { return { F: 4.0, O: 3.5, Cl: 3.1, N: 3.0, C: 2.5, H: 2.1, Na: 0.9, K: 0.8, Mg: 1.2, Ca: 1.0 }; }
-
-  // Utilidad para extraer el nombre traducido del tópico para el Reporte
+  
   static getTopicName(topicId, lang) {
-      // Usamos el propio motor para obtener la traducción rápida instanciando una pregunta falsa (solo nos interesa el string del tema)
       const mockQ = this.generateQuestion(lang, topicId);
       return mockQ.topic || topicId.replace(/_/g, ' ');
   }
 
   static generateQuestion(lang, forcedTopic = null) {
     const topics = [
-      'GASES_IDEALES', 'ESTEQUIOMETRIA', 'DENSIDAD', 'PH', 
-      'ENLACES_QUIMICOS', 'CONFIGURACION_ELECTRONICA', 
-      'SOLUCIONES', 'BALANCEO_ECUACIONES', 'ISOTOPOS_Y_ESTRUCTURA', 'CINETICA_QUIMICA'
+      'RAZONAMIENTO_CUANTITATIVO', 'PORCENTAJES_Y_PROPORCIONES', 'ESTADISTICA_DESCRIPTIVA', 'PROBABILIDAD_CLASICA', 
+      'GEOMETRIA_PLANA', 'GEOMETRIA_ESPACIAL', 
+      'TRIGONOMETRIA', 'ALGEBRA_LINEAL', 'FUNCIONES_Y_GRAFICAS', 'TECNICAS_DE_CONTEO'
     ];
     const selectedTopic = forcedTopic || topics[Math.floor(Math.random() * topics.length)];
 
     switch (selectedTopic) {
-      case 'GASES_IDEALES': return this.genGasQuestion(lang);
-      case 'ESTEQUIOMETRIA': return this.genStoichQuestion(lang);
-      case 'DENSIDAD': return this.genDensityQuestion(lang);
-      case 'PH': return this.genPhQuestion(lang);
-      case 'ENLACES_QUIMICOS': return this.genBondQuestion(lang);
-      case 'CONFIGURACION_ELECTRONICA': return this.genElectronConfigQuestion(lang);
-      case 'SOLUCIONES': return this.genSolutionsQuestion(lang);
-      case 'BALANCEO_ECUACIONES': return this.genBalanceQuestion(lang);
-      case 'ISOTOPOS_Y_ESTRUCTURA': return this.genIsotopeQuestion(lang);
-      case 'CINETICA_QUIMICA': return this.genKineticsQuestion(lang);
-      default: return this.genGasQuestion(lang);
+      case 'RAZONAMIENTO_CUANTITATIVO': return this.genQuantitativeQuestion(lang);
+      case 'PORCENTAJES_Y_PROPORCIONES': return this.genPercentageQuestion(lang);
+      case 'ESTADISTICA_DESCRIPTIVA': return this.genStatisticsQuestion(lang);
+      case 'PROBABILIDAD_CLASICA': return this.genProbabilityQuestion(lang);
+      case 'GEOMETRIA_PLANA': return this.genPlaneGeometryQuestion(lang);
+      case 'GEOMETRIA_ESPACIAL': return this.genSpatialGeometryQuestion(lang);
+      case 'TRIGONOMETRIA': return this.genTrigQuestion(lang);
+      case 'ALGEBRA_LINEAL': return this.genAlgebraQuestion(lang);
+      case 'FUNCIONES_Y_GRAFICAS': return this.genFunctionsQuestion(lang);
+      case 'TECNICAS_DE_CONTEO': return this.genCountingQuestion(lang);
+      default: return this.genQuantitativeQuestion(lang);
     }
   }
 
@@ -77,9 +74,9 @@ class IcfesEngine {
       const q = this.generateQuestion(lang, topic);
       return {
           title: `ENTRENAMIENTO TÁCTICO: ${q.topic}`,
-          theory: `[SISTEMA AISLADO DE DEEPSEEK]\n\nEl núcleo teórico de ${q.topic} se basa en las relaciones fisicoquímicas que el ICFES evalúa para medir tu capacidad analítica. No requieres memoria fotográfica, sino entendimiento lógico del fenómeno.\n\nLa clave está en comprender cómo interactúan las variables sin memorizar ciegamente la fórmula.`,
-          trap: "El ICFES suele emplear distractores matemáticos: conversiones de unidades faltantes (ej. Celsius a Kelvin, mL a L) o proporciones inversas. Revisa siempre la magnitud esperada y sus unidades.",
-          protocol: "1. Lee la matriz de datos e identifica la variable incógnita.\n2. Ejecuta la conversión de unidades ANTES de operar.\n3. Aplica la relación matemática con cuidado.\n4. Verifica que la respuesta final tenga sentido físico.",
+          theory: `[SISTEMA AISLADO DE DEEPSEEK]\n\nEl núcleo teórico de ${q.topic} evalúa tu capacidad para traducir el lenguaje natural a lenguaje algebraico o geométrico. El ICFES no premia al que memoriza más fórmulas, sino al que sabe descartar datos irrelevantes en el enunciado.\n\nLa clave matemática está en identificar el patrón lógico antes de hacer el primer cálculo.`,
+          trap: "El ICFES suele emplear distractores visuales o numéricos: resultados parciales de la operación, errores de signo, o respuestas que no contestan la pregunta específica (e.g., calculas 'x' pero pedían '2x').",
+          protocol: "1. Lee la pregunta final antes que el contexto.\n2. Extrae solo los datos estrictamente necesarios.\n3. Plantea la ecuación o proporción (siempre escríbela).\n4. Resuelve y verifica si tu resultado responde a la incógnita solicitada.",
           demoQuestion: {
               text: q.text,
               options: q.options,
@@ -89,217 +86,277 @@ class IcfesEngine {
       };
   }
 
-  static genGasQuestion(lang) {
-    const isIsochoric = Math.random() > 0.5; 
-    const T1_C = Math.floor(Math.random() * 40) + 10;
-    const T1_K = T1_C + 273.15;
-    const var1 = Math.floor(Math.random() * 5) + 2; 
-    const T2_C = T1_C + Math.floor(Math.random() * 80) + 40;
-    const T2_K = T2_C + 273.15;
+  static genQuantitativeQuestion(lang) {
+    const rate1 = Math.floor(Math.random() * 5) + 3; // hrs
+    const rate2 = Math.floor(Math.random() * 6) + 4; // hrs
+    const totalTime = (rate1 * rate2) / (rate1 + rate2);
     
-    const correctVal = Number(((var1 * T2_K) / T1_K).toFixed(2));
-    const errorCelsius = Number(((var1 * T2_C) / T1_C).toFixed(2)); 
-    const errorInverted = Number(((var1 * T1_K) / T2_K).toFixed(2)); 
-    const errorLinear = Number((var1 + (T2_C - T1_C) * 0.1).toFixed(2)); 
+    const correctVal = Number(totalTime.toFixed(2));
+    const errorAdd = rate1 + rate2; 
+    const errorAvg = (rate1 + rate2) / 2;
+    const errorDiff = Math.abs(rate1 - rate2);
 
-    const optionsRaw = [correctVal, errorCelsius, errorInverted, errorLinear];
+    const optionsRaw = [correctVal, errorAdd, errorAvg, errorDiff];
     const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
     while(uniqueOptions.length < 4) uniqueOptions.push(Number((Math.random() * 10 + 1).toFixed(2)));
     
     const options = uniqueOptions.sort(() => Math.random() - 0.5);
     const correctIndex = options.indexOf(correctVal);
-    const unit = isIsochoric ? 'atm' : 'L';
 
     const texts = {
-      es: { topic: 'TERMODINÁMICA DE GASES', text: `Un gas ideal está confinado a ${var1} ${unit} y una temperatura de ${T1_C}°C. Si se calienta el sistema hasta los ${T2_C}°C manteniendo constante el ${isIsochoric ? 'volumen' : 'presión'}, ¿cuál será el nuevo valor en ${unit}?`, hint: "REGLA DE ORO ICFES: En termodinámica, la temperatura SIEMPRE opera en grados Kelvin (+273.15).", micro: `[EXPLICACIÓN DE FENÓMENOS - GASES]\n1. Conversión obligatoria:\n   T₁ = ${T1_C} + 273.15 = ${T1_K}K\n   T₂ = ${T2_C} + 273.15 = ${T2_K}K.\n2. Relación directamente proporcional.\n3. Matemática exacta: (${var1} × ${T2_K}) / ${T1_K} = ${correctVal} ${unit}.`, traps: [null, `Trampa Cognitiva: Usaste grados Celsius.`, `Trampa Cognitiva: Invertiste la relación.`, `Trampa Cognitiva: Suma lineal ilógica.`] },
-      en: { topic: 'GAS THERMODYNAMICS', text: `An ideal gas is confined at ${var1} ${unit} and ${T1_C}°C. If heated to ${T2_C}°C keeping ${isIsochoric ? 'volume' : 'pressure'} constant, what is the new value in ${unit}?`, hint: "GOLDEN RULE: Use Kelvin.", micro: `Convert: T₁=${T1_K}K, T₂=${T2_K}K. Math: (${var1} × ${T2_K}) / ${T1_K} = ${correctVal} ${unit}.`, traps: [null, "Used Celsius.", "Inverted ratio.", "Linear addition."] },
-      fr: { topic: 'THERMODYNAMIQUE DES GAZ', text: `Un gaz idéal est confiné à ${var1} ${unit} et ${T1_C}°C. S'il est chauffé à ${T2_C}°C en gardant ${isIsochoric ? 'le volume' : 'la pression'} constant(e), quelle est la nouvelle valeur en ${unit}?`, hint: "RÈGLE D'OR : Utilisez Kelvin.", micro: `Convertir: T₁=${T1_K}K, T₂=${T2_K}K. Calcul: (${var1} × ${T2_K}) / ${T1_K} = ${correctVal} ${unit}.`, traps: [null, "Celsius utilisé.", "Ratio inversé.", "Addition linéaire."] },
-      de: { topic: 'GASTHERMODYNAMIK', text: `Ein ideales Gas ist bei ${var1} ${unit} und ${T1_C}°C eingeschlossen. Wenn es auf ${T2_C}°C erhitzt wird, wobei ${isIsochoric ? 'das Volumen' : 'der Druck'} konstant bleibt, was ist der neue Wert in ${unit}?`, hint: "GOLDENE REGEL: Verwenden Sie Kelvin.", micro: `Umwandeln: T₁=${T1_K}K, T₂=${T2_K}K. Mathematik: (${var1} × ${T2_K}) / ${T1_K} = ${correctVal} ${unit}.`, traps: [null, "Celsius verwendet.", "Verhältnis umgekehrt.", "Lineare Addition."] }
+      es: { topic: 'RAZONAMIENTO CUANTITATIVO', text: `Una bomba A llena un tanque en ${rate1} horas. Una bomba B lo llena en ${rate2} horas. Si se encienden ambas bombas al mismo tiempo, ¿cuántas horas tardarán en llenar el tanque juntas?`, hint: "Suma de tasas de trabajo: 1/T = (1/A) + (1/B).", micro: `Tasa de A: 1/${rate1}. Tasa de B: 1/${rate2}. Juntas: (1/${rate1}) + (1/${rate2}) = (${rate1}+${rate2})/(${rate1}*${rate2}). Tiempo total = inverso de la suma = ${correctVal} horas.`, traps: [null, `Trampa: Sumaste los tiempos directamente.`, `Trampa: Calculaste el promedio de horas.`, `Trampa: Restaste los tiempos.`] },
+      en: { topic: 'QUANTITATIVE REASONING', text: `Pump A fills a tank in ${rate1} hours. Pump B fills it in ${rate2} hours. If both are turned on simultaneously, how many hours will it take to fill the tank?`, hint: "Work rate sum: 1/T = (1/A) + (1/B).", micro: `Rate A: 1/${rate1}. Rate B: 1/${rate2}. Combined: (1/${rate1}) + (1/${rate2}). Total time = reciprocal = ${correctVal} hours.`, traps: [null, "Added times.", "Averaged times.", "Subtracted times."] },
+      fr: { topic: 'RAISONNEMENT QUANTITATIF', text: `La pompe A remplit un réservoir en ${rate1} heures. La pompe B le remplit en ${rate2} heures. Si les deux sont allumées en même temps, combien d'heures faudra-t-il pour remplir le réservoir ?`, hint: "Somme des taux: 1/T = (1/A) + (1/B).", micro: `Taux A: 1/${rate1}. Taux B: 1/${rate2}. Combiné: (1/${rate1}) + (1/${rate2}). Temps total = inverse = ${correctVal} heures.`, traps: [null, "Temps additionnés.", "Moyenne calculée.", "Temps soustraits."] },
+      de: { topic: 'QUANTITATIVES DENKEN', text: `Pumpe A füllt einen Tank in ${rate1} Stunden. Pumpe B füllt ihn in ${rate2} Stunden. Wenn beide gleichzeitig eingeschaltet sind, wie viele Stunden dauert es, den Tank zu füllen?`, hint: "Arbeitsrate Summe: 1/T = (1/A) + (1/B).", micro: `Rate A: 1/${rate1}. Rate B: 1/${rate2}. Kombiniert: (1/${rate1}) + (1/${rate2}). Gesamtzeit = Kehrwert = ${correctVal} Stunden.`, traps: [null, "Zeiten addiert.", "Zeiten gemittelt.", "Zeiten subtrahiert."] }
     };
     const langData = texts[lang] || texts['es'];
-    return { id: 'GASES_IDEALES', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} ${unit}`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
+    return { id: 'RAZONAMIENTO_CUANTITATIVO', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} h`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
   }
 
-  static genStoichQuestion(lang) {
-    const alkanes = [
-      { name: {es: "Metano", en: "Methane", fr: "Méthane", de: "Methan"}, f: "CH₄", c: 1, h: 4, mass: 16 },
-      { name: {es: "Etano", en: "Ethane", fr: "Éthane", de: "Ethan"}, f: "C₂H₆", c: 2, h: 6, mass: 30 },
-      { name: {es: "Propano", en: "Propane", fr: "Propane", de: "Propan"}, f: "C₃H₈", c: 3, h: 8, mass: 44 }
-    ];
-    const alkane = alkanes[Math.floor(Math.random() * alkanes.length)];
-    const molesO2 = alkane.c + (alkane.h / 4); const molesCO2 = alkane.c; const molesH2O = alkane.h / 2;
-    const inputMoles = Math.floor(Math.random() * 3) + 2; const inputGrams = inputMoles * alkane.mass;
-    const correctGramsCO2 = inputMoles * molesCO2 * 44; 
-    const errorNoRatio = inputMoles * 44; const errorInverted = Number(((inputMoles / molesCO2) * 44).toFixed(1)); const errorNoMass = inputMoles * molesCO2; 
-
-    const optionsRaw = [correctGramsCO2, errorNoRatio, errorNoMass, errorInverted];
-    const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n) && n > 0);
-    while(uniqueOptions.length < 4) uniqueOptions.push(Math.floor(Math.random() * 300) + 50);
-    const options = uniqueOptions.sort(() => Math.random() - 0.5);
-    const correctIndex = options.indexOf(correctGramsCO2);
-
-    const texts = {
-      es: { topic: 'ESTEQUIOMETRÍA', text: `Combustión del ${alkane.name.es}: ${alkane.f} + O₂ ➔ CO₂ + H₂O (Ecuación sin balancear). Si reaccionan ${inputGrams}g del alcano, ¿cuántos gramos de CO₂ se emiten? (Masas: C=12, H=1, O=16).`, hint: "1. Balancea. 2. Gramos a moles. 3. Ratio. 4. Moles a gramos.", micro: `Ecuación: 1 ${alkane.f} + ${molesO2} O₂ ➔ ${molesCO2} CO₂ + ${molesH2O} H₂O.\nTienes ${inputGrams}g / ${alkane.mass}g/mol = ${inputMoles} moles. Relación: ${inputMoles * molesCO2} moles de CO₂ × 44g/mol = ${correctGramsCO2}g.`, traps: [null, `Trampa: No balanceaste (${errorNoRatio}g).`, `Trampa: Respondiste en moles.`, `Trampa: Invertiste el ratio.`] },
-      en: { topic: 'STOICHIOMETRY', text: `Combustion of ${alkane.name.en}: ${alkane.f} + O₂ ➔ CO₂ + H₂O (Unbalanced). If ${inputGrams}g of alkane react, how many grams of CO₂ are emitted?`, hint: "Balance -> Grams to Moles -> Ratio -> Moles to Grams.", micro: `Balanced: 1 ${alkane.f} + ${molesO2} O₂ ➔ ${molesCO2} CO₂ + ${molesH2O} H₂O.\n${inputGrams}g / ${alkane.mass}g/mol = ${inputMoles} moles. Ratio: ${inputMoles * molesCO2} moles CO₂ × 44g/mol = ${correctGramsCO2}g.`, traps: [null, "Trap: Unbalanced.", "Trap: Moles instead of grams.", "Trap: Inverted ratio."] },
-      fr: { topic: 'STŒCHIOMÉTRIE', text: `Combustion du ${alkane.name.fr}: ${alkane.f} + O₂ ➔ CO₂ + H₂O (Non équilibré). Si ${inputGrams}g d'alcane réagissent, combien de grammes de CO₂ sont émis ?`, hint: "Équilibrez -> Grammes en Moles -> Ratio -> Moles en Grammes.", micro: `Équilibré: 1 ${alkane.f} produit ${molesCO2} CO₂.\n${inputGrams}g / ${alkane.mass}g/mol = ${inputMoles} moles. Ratio: ${inputMoles * molesCO2} moles CO₂ × 44g/mol = ${correctGramsCO2}g.`, traps: [null, "Piège: Non équilibré.", "Piège: Moles au lieu de grammes.", "Piège: Ratio inversé."] },
-      de: { topic: 'STÖCHIOMETRIE', text: `Verbrennung von ${alkane.name.de}: ${alkane.f} + O₂ ➔ CO₂ + H₂O (Unbalanciert). Wenn ${inputGrams}g Alkan reagieren, wie viele Gramm CO₂ werden freigesetzt?`, hint: "Ausgleichen -> Gramm in Mol -> Verhältnis -> Mol in Gramm.", micro: `Ausgeglichen: 1 ${alkane.f} erzeug ${molesCO2} CO₂.\n${inputGrams}g / ${alkane.mass}g/mol = ${inputMoles} Mol. Verhältnis: ${inputMoles * molesCO2} Mol CO₂ × 44g/mol = ${correctGramsCO2}g.`, traps: [null, "Falle: Nicht ausgeglichen.", "Falle: Mol statt Gramm.", "Falle: Umgekehrtes Verhältnis."] }
-    };
-    const langData = texts[lang] || texts['es'];
-    return { id: 'ESTEQUIOMETRIA', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} g`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
-  }
-
-  static genDensityQuestion(lang) {
-    const volume = Math.floor(Math.random() * 40) + 15; 
-    const mass = Math.floor(Math.random() * 150) + 80; 
-    const correctDensity = Number((mass / volume).toFixed(2));
-    const initialVol = Math.floor(Math.random() * 30) + 30; const finalVol = initialVol + volume;
-    const errorFinalVol = Number((mass / finalVol).toFixed(2)); const errorInverted = Number((volume / mass).toFixed(2)); const errorRest = Number((mass / (finalVol + initialVol)).toFixed(2)); 
-
-    const optionsRaw = [correctDensity, errorFinalVol, errorInverted, errorRest];
-    const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
-    while(uniqueOptions.length < 4) uniqueOptions.push(Number((Math.random() * 8 + 1).toFixed(2)));
-    const options = uniqueOptions.sort(() => Math.random() - 0.5);
-    const correctIndex = options.indexOf(correctDensity);
-
-    const texts = {
-      es: { topic: 'PROPIEDADES INTENSIVAS', text: `Una probeta contiene ${initialVol} mL de agua. Al introducir una pieza metálica de ${mass} g, el nivel del agua asciende a ${finalVol} mL. ¿Cuál es la densidad exacta del metal?`, hint: "El volumen es la diferencia: Volumen final - Volumen inicial.", micro: `Volumen real: ${finalVol}mL - ${initialVol}mL = ${volume}mL.\nCálculo: ${mass}g / ${volume}mL = ${correctDensity} g/mL.`, traps: [null, `Trampa: Usaste el volumen total (${finalVol}mL).`, `Trampa: Dividiste volumen entre masa.`, `Trampa: Sumaste los volúmenes.`] },
-      en: { topic: 'INTENSIVE PROPERTIES', text: `A cylinder has ${initialVol} mL of water. A metal piece of ${mass} g is added, raising water to ${finalVol} mL. Exact density?`, hint: "Volume is Final - Initial.", micro: `Real volume: ${finalVol}mL - ${initialVol}mL = ${volume}mL.\nCalc: ${mass}g / ${volume}mL = ${correctDensity} g/mL.`, traps: [null, "Trap: Used total volume.", "Trap: Inverted formula.", "Trap: Added volumes."] },
-      fr: { topic: 'PROPRIÉTÉS INTENSIVES', text: `Une éprouvette contient ${initialVol} mL d'eau. Une pièce de ${mass} g est ajoutée, faisant monter l'eau à ${finalVol} mL. Quelle est sa densité ?`, hint: "Volume = Final - Initial.", micro: `Volume réel: ${finalVol}mL - ${initialVol}mL = ${volume}mL.\nCalcul: ${mass}g / ${volume}mL = ${correctDensity} g/mL.`, traps: [null, "Piège: Volume total utilisé.", "Piège: Formule inversée.", "Piège: Volumes additionnés."] },
-      de: { topic: 'INTENSIVE EIGENSCHAFTEN', text: `Ein Zylinder enthält ${initialVol} mL Wasser. Ein ${mass} g Metallstück erhöht das Wasser auf ${finalVol} mL. Exakte Dichte?`, hint: "Volumen = Endwert - Anfangswert.", micro: `Reales Volumen: ${finalVol}mL - ${initialVol}mL = ${volume}mL.\nBerechnung: ${mass}g / ${volume}mL = ${correctDensity} g/mL.`, traps: [null, "Falle: Gesamtvolumen verwendet.", "Falle: Formel umgekehrt.", "Falle: Volumen addiert."] }
-    };
-    const langData = texts[lang] || texts['es'];
-    return { id: 'DENSIDAD', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} g/mL`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
-  }
-
-  static genPhQuestion(lang) {
-    const concExponent = Math.floor(Math.random() * 10) + 2; const coef = Math.floor(Math.random() * 8) + 1; 
-    const pH = Number((concExponent - Math.log10(coef)).toFixed(2)); const pOH = Number((14 - pH).toFixed(2));
-    const error1 = pOH; const error2 = concExponent; const error3 = Number((14 - concExponent).toFixed(2));
-
-    const optionsRaw = [pH, error1, error2, error3];
-    const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
-    while(uniqueOptions.length < 4) uniqueOptions.push(Number((Math.random() * 14).toFixed(2)));
-    const options = uniqueOptions.sort(() => Math.random() - 0.5);
-    const correctIndex = options.indexOf(pH);
-
-    const texts = {
-      es: { topic: 'EQUILIBRIO ÁCIDO-BASE', text: `La concentración de iones Hidronio [H⁺] es de ${coef}.0 × 10⁻${concExponent} M. Según la escala logarítmica, ¿cuál es el pH exacto?`, hint: "Propiedad de logaritmos: -log(A × 10⁻ᴮ) = B - log(A).", micro: `pH = -log(${coef} × 10⁻${concExponent}) ➔ ${concExponent} - log(${coef}) = ${pH}.`, traps: [null, `Trampa: Calculaste el pOH (${pOH}).`, `Trampa: Ignoraste el logaritmo del coeficiente.`, `Trampa: Mezclaste pOH con el exponente directo.`] },
-      en: { topic: 'ACID-BASE EQUILIBRIUM', text: `Hydronium ion [H⁺] concentration is ${coef}.0 × 10⁻${concExponent} M. What is the exact pH?`, hint: "Log property: -log(A × 10⁻ᴮ) = B - log(A).", micro: `pH = -log(${coef} × 10⁻${concExponent}) ➔ ${concExponent} - log(${coef}) = ${pH}.`, traps: [null, "Trap: Calculated pOH.", "Trap: Ignored coefficient log.", "Trap: Mixed formula."] },
-      fr: { topic: 'ÉQUILIBRE ACIDO-BASIQUE', text: `La concentration en [H⁺] est de ${coef}.0 × 10⁻${concExponent} M. Quel est le pH exact ?`, hint: "Propriété : -log(A × 10⁻ᴮ) = B - log(A).", micro: `pH = -log(${coef} × 10⁻${concExponent}) ➔ ${concExponent} - log(${coef}) = ${pH}.`, traps: [null, "Piège: pOH calculé.", "Piège: Log ignoré.", "Piège: Formule mixte."] },
-      de: { topic: 'SÄURE-BASE-GLEICHGEWICHT', text: `Die [H⁺] Konzentration beträgt ${coef}.0 × 10⁻${concExponent} M. Was ist der exakte pH-Wert?`, hint: "Log-Eigenschaft: -log(A × 10⁻ᴮ) = B - log(A).", micro: `pH = -log(${coef} × 10⁻${concExponent}) ➔ ${concExponent} - log(${coef}) = ${pH}.`, traps: [null, "Falle: pOH berechnet.", "Falle: Log ignoriert.", "Falle: Gemischte Formel."] }
-    };
-    const langData = texts[lang] || texts['es'];
-    return { id: 'PH', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `pH ${o}`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
-  }
-
-  static genBondQuestion(lang) {
-    const metals = ['Na', 'K', 'Mg', 'Ca']; const nonMetals = ['F', 'O', 'Cl', 'N'];
-    const el1 = metals[Math.floor(Math.random()*metals.length)]; const el2 = nonMetals[Math.floor(Math.random()*nonMetals.length)];
-    const en1 = this.ELECTRONEGATIVITIES[el1]; const en2 = this.ELECTRONEGATIVITIES[el2];
-    const diff = Number(Math.abs(en1 - en2).toFixed(1));
+  static genPercentageQuestion(lang) {
+    const originalPrice = (Math.floor(Math.random() * 8) + 2) * 10000;
+    const discount = Math.floor(Math.random() * 3) * 10 + 10; // 10, 20, 30
+    const tax = 19; 
     
-    let bondTypeES = diff > 1.7 ? "Iónico" : (diff > 0.4 ? "Covalente Polar" : "Covalente Apolar");
-    let bondTypeEN = diff > 1.7 ? "Ionic" : (diff > 0.4 ? "Polar Covalent" : "Non-polar Covalent");
-    let bondTypeFR = diff > 1.7 ? "Ionique" : (diff > 0.4 ? "Covalent Polaire" : "Covalent Apolaire");
-    let bondTypeDE = diff > 1.7 ? "Ionisch" : (diff > 0.4 ? "Polar Kovalent" : "Unpolar Kovalent");
-    const bondType = {es: bondTypeES, en: bondTypeEN, fr: bondTypeFR, de: bondTypeDE}[lang] || bondTypeES;
+    const discountedPrice = originalPrice * (1 - discount/100);
+    const finalPrice = discountedPrice * (1 + tax/100);
+    
+    const correctVal = Math.round(finalPrice);
+    const errorLinear = Math.round(originalPrice * (1 - (discount - tax)/100)); // Restar porcentajes
+    const errorNoTax = Math.round(discountedPrice);
+    const errorInverted = Math.round((originalPrice * (1 + tax/100)) * (1 + discount/100));
 
-    const optionsKeys = ['ionic', 'polar', 'apolar', 'metal'].sort(() => Math.random() - 0.5);
-    const correctType = diff > 1.7 ? 'ionic' : (diff > 0.4 ? 'polar' : 'apolar');
-    const correctIndex = optionsKeys.indexOf(correctType);
+    const optionsRaw = [correctVal, errorLinear, errorNoTax, errorInverted];
+    const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
+    while(uniqueOptions.length < 4) uniqueOptions.push(Math.round(originalPrice * (Math.random() + 0.5)));
+    const options = uniqueOptions.sort(() => Math.random() - 0.5);
+    const correctIndex = options.indexOf(correctVal);
 
     const texts = {
-      es: { topic: 'ENLACES QUÍMICOS', text: `Átomo A (EN=${en1}) y Átomo B (EN=${en2}). Según su diferencia de electronegatividad, ¿qué tipo de enlace rige la molécula?`, hint: "> 1.7 (Iónico). 0.4 - 1.7 (Polar). < 0.4 (Apolar).", micro: `Diferencia matemática: |${en1} - ${en2}| = ${diff}. Escala de Pauling ➔ ${bondType}.`, opts: { ionic: "Iónico", polar: "Covalente Polar", apolar: "Covalente Apolar", metal: "Metálico" }, traps: [null, null, null, null] },
-      en: { topic: 'CHEMICAL BONDS', text: `Atom A (EN=${en1}) and Atom B (EN=${en2}). What is the bond type?`, hint: "> 1.7 (Ionic). 0.4 - 1.7 (Polar). < 0.4 (Non-polar).", micro: `Math diff: |${en1} - ${en2}| = ${diff}. Pauling's Rule ➔ ${bondType}.`, opts: { ionic: "Ionic", polar: "Polar Covalent", apolar: "Non-polar Covalent", metal: "Metallic" }, traps: [null, null, null, null] },
-      fr: { topic: 'LIAISONS CHIMIQUES', text: `Atome A (EN=${en1}) et Atome B (EN=${en2}). Quel est le type de liaison ?`, hint: "> 1.7 (Ionique). 0.4 - 1.7 (Polaire). < 0.4 (Apolaire).", micro: `Différence : |${en1} - ${en2}| = ${diff}. Pauling ➔ ${bondType}.`, opts: { ionic: "Ionique", polar: "Covalent Polaire", apolar: "Covalent Apolaire", metal: "Métallique" }, traps: [null, null, null, null] },
-      de: { topic: 'CHEMISCHE BINDUNGEN', text: `Atom A (EN=${en1}) und Atom B (EN=${en2}). Bindungsart?`, hint: "> 1.7 (Ionisch). 0.4 - 1.7 (Polar). < 0.4 (Unpolar).", micro: `Differenz: |${en1} - ${en2}| = ${diff}. Pauling ➔ ${bondType}.`, opts: { ionic: "Ionisch", polar: "Polar Kovalent", apolar: "Unpolar Kovalent", metal: "Metallisch" }, traps: [null, null, null, null] }
+      es: { topic: 'PORCENTAJES', text: `Un artículo cuesta $${originalPrice}. Se le aplica un descuento del ${discount}%, y sobre el precio resultante se aplica un IVA del ${tax}%. ¿Cuál es el precio final a pagar?`, hint: "Los porcentajes son multiplicativos, NO se suman ni se restan entre sí.", micro: `1. Descuento: $${originalPrice} * (1 - ${discount/100}) = $${discountedPrice}.\n2. IVA sobre el nuevo valor: $${discountedPrice} * 1.${tax} = $${correctVal}.`, traps: [null, `Trampa: Restaste ${discount}% y sumaste ${tax}% linealmente.`, `Trampa: Olvidaste aplicar el IVA.`, `Trampa: Aplicaste ambos como aumentos.`] },
+      en: { topic: 'PERCENTAGES', text: `An item costs $${originalPrice}. A ${discount}% discount is applied, and then a ${tax}% tax is added to the discounted price. What is the final price?`, hint: "Percentages are sequential, do not add or subtract them directly.", micro: `1. Discount: $${originalPrice} * (1 - ${discount/100}) = $${discountedPrice}.\n2. Tax: $${discountedPrice} * 1.${tax} = $${correctVal}.`, traps: [null, "Linear subtraction trap.", "Forgot the tax.", "Applied both as increments."] },
+      fr: { topic: 'POURCENTAGES', text: `Un article coûte ${originalPrice} $. Une remise de ${discount}% est appliquée, puis une taxe de ${tax}% est ajoutée. Quel est le prix final ?`, hint: "Les pourcentages sont séquentiels.", micro: `1. Remise: ${originalPrice} $ * (1 - ${discount/100}) = ${discountedPrice} $.\n2. Taxe: ${discountedPrice} $ * 1.${tax} = ${correctVal} $.`, traps: [null, "Soustraction linéaire.", "Oublié la taxe.", "Deux augmentations."] },
+      de: { topic: 'PROZENTSÄTZE', text: `Ein Artikel kostet $${originalPrice}. Es wird ein Rabatt von ${discount}% gewährt und dann eine Steuer von ${tax}% hinzugefügt. Wie hoch ist der Endpreis?`, hint: "Prozentsätze sind sequentiell.", micro: `1. Rabatt: $${originalPrice} * (1 - ${discount/100}) = $${discountedPrice}.\n2. Steuer: $${discountedPrice} * 1.${tax} = $${correctVal}.`, traps: [null, "Lineare Subtraktion.", "Steuer vergessen.", "Beide als Erhöhungen."] }
     };
     const langData = texts[lang] || texts['es'];
-    return { id: 'ENLACES_QUIMICOS', isAi: false, topic: langData.topic, text: langData.text, options: optionsKeys.map(k => langData.opts[k]), optionsKeys: optionsKeys, correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
+    return { id: 'PORCENTAJES_Y_PROPORCIONES', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `$${o}`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
   }
 
-  static genElectronConfigQuestion(lang) {
-    const atoms = [
-      { name: {es:"Sodio", en:"Sodium", fr:"Sodium", de:"Natrium"}, z: 11, config: "[Ne] 3s¹", period: 3, group: "1A" },
-      { name: {es:"Cloro", en:"Chlorine", fr:"Chlore", de:"Chlor"}, z: 17, config: "[Ne] 3s² 3p⁵", period: 3, group: "7A" },
-      { name: {es:"Magnesio", en:"Magnesium", fr:"Magnésium", de:"Magnesium"}, z: 12, config: "[Ne] 3s²", period: 3, group: "2A" }
-    ];
-    const atom = atoms[Math.floor(Math.random() * atoms.length)];
-    const correctAns = `${atom.period}, ${atom.group}`; const error1 = `${atom.period - 1}, ${atom.group}`; const error2 = `${atom.period}, ${atom.group.replace('A', 'B')}`; const error3 = `2, 8A`;
-    const optionsRaw = [correctAns, error1, error2, error3]; const options = optionsRaw.sort(() => Math.random() - 0.5);
+  static genStatisticsQuestion(lang) {
+    const mean = Math.floor(Math.random() * 10) + 15;
+    const n1 = mean - 2;
+    const n2 = mean + 5;
+    const n3 = mean - 6;
+    const totalSum = mean * 4;
+    const correctVal = totalSum - (n1 + n2 + n3);
+    
+    const errorAvg = Math.round((n1 + n2 + n3) / 3);
+    const errorMedian = [n1, n2, n3].sort()[1];
+    const errorSum = n1 + n2 + n3;
+
+    const optionsRaw = [correctVal, errorAvg, errorMedian, errorSum];
+    const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
+    while(uniqueOptions.length < 4) uniqueOptions.push(Math.floor(Math.random() * 15) + 10);
+    const options = uniqueOptions.sort(() => Math.random() - 0.5);
+    const correctIndex = options.indexOf(correctVal);
+
+    const texts = {
+      es: { topic: 'ESTADÍSTICA', text: `El promedio exacto de 4 números enteros es ${mean}. Si tres de esos números son ${n1}, ${n2} y ${n3}, ¿cuál es el cuarto número?`, hint: "Promedio = Suma total / Cantidad de datos. Encuentra la Suma total primero.", micro: `Suma total requerida = Promedio × 4 = ${mean} × 4 = ${totalSum}.\nSuma actual = ${n1} + ${n2} + ${n3} = ${n1+n2+n3}.\nCuarto número = ${totalSum} - ${n1+n2+n3} = ${correctVal}.`, traps: [null, `Trampa: Calculaste el promedio de los 3 números dados.`, `Trampa: Seleccionaste la mediana.`, `Trampa: Sumaste solo los 3 números.`] },
+      en: { topic: 'STATISTICS', text: `The exact average of 4 integers is ${mean}. If three of the numbers are ${n1}, ${n2}, and ${n3}, what is the fourth number?`, hint: "Find the total sum first: Average * N.", micro: `Total sum = ${mean} × 4 = ${totalSum}.\nCurrent sum = ${n1} + ${n2} + ${n3} = ${n1+n2+n3}.\nFourth number = ${totalSum} - ${n1+n2+n3} = ${correctVal}.`, traps: [null, "Averaged the 3 numbers.", "Selected the median.", "Summed only the 3 numbers."] },
+      fr: { topic: 'STATISTIQUES', text: `La moyenne exacte de 4 entiers est ${mean}. Si trois des nombres sont ${n1}, ${n2} et ${n3}, quel est le quatrième nombre ?`, hint: "Trouvez la somme totale en premier.", micro: `Somme totale = ${mean} × 4 = ${totalSum}.\nSomme actuelle = ${n1} + ${n2} + ${n3} = ${n1+n2+n3}.\nQuatrième nombre = ${totalSum} - ${n1+n2+n3} = ${correctVal}.`, traps: [null, "Moyenne des 3 nombres.", "Médiane sélectionnée.", "Somme des 3 uniquement."] },
+      de: { topic: 'STATISTIK', text: `Der exakte Durchschnitt von 4 ganzen Zahlen ist ${mean}. Wenn drei der Zahlen ${n1}, ${n2} und ${n3} sind, wie lautet die vierte Zahl?`, hint: "Finde zuerst die Gesamtsumme.", micro: `Gesamtsumme = ${mean} × 4 = ${totalSum}.\nAktuelle Summe = ${n1} + ${n2} + ${n3} = ${n1+n2+n3}.\nVierte Zahl = ${totalSum} - ${n1+n2+n3} = ${correctVal}.`, traps: [null, "Durchschnitt der 3 Zahlen.", "Median gewählt.", "Nur die 3 Zahlen summiert."] }
+    };
+    const langData = texts[lang] || texts['es'];
+    return { id: 'ESTADISTICA_DESCRIPTIVA', isAi: false, topic: langData.topic, text: langData.text, options: options.map(String), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
+  }
+
+  static genProbabilityQuestion(lang) {
+    const r = Math.floor(Math.random() * 4) + 3;
+    const b = Math.floor(Math.random() * 5) + 4;
+    const g = Math.floor(Math.random() * 3) + 2;
+    const total = r + b + g;
+    
+    // Simplificar fracción r/total para opciones engañosas
+    const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+    const div = gcd(r, total);
+    const num = r / div;
+    const den = total / div;
+    
+    const correctVal = `${num}/${den}`;
+    const error1 = `${r}/${b+g}`; // Favorables / Desfavorables
+    const error2 = `${b}/${total}`; // Probabilidad de azul
+    const error3 = `${g}/${total}`; // Probabilidad de verde
+
+    const optionsRaw = [correctVal, error1, error2, error3];
+    const uniqueOptions = [...new Set(optionsRaw)];
+    while(uniqueOptions.length < 4) uniqueOptions.push(`1/${Math.floor(Math.random() * 10) + 2}`);
+    const options = uniqueOptions.sort(() => Math.random() - 0.5);
+    const correctIndex = options.indexOf(correctVal);
+
+    const texts = {
+      es: { topic: 'PROBABILIDAD', text: `En una urna opaca hay ${r} bolas rojas, ${b} azules y ${g} verdes. Si se extrae una bola al azar, ¿cuál es la probabilidad matemática de que sea roja?`, hint: "Casos Favorables divididos por Casos Totales.", micro: `Total de bolas = ${r} + ${b} + ${g} = ${total}.\nProbabilidad = Favorables / Totales = ${r} / ${total}.\nSimplificando la fracción: ${correctVal}.`, traps: [null, `Trampa: Dividiste favorables entre desfavorables.`, `Trampa: Calculaste la probabilidad de azul.`, `Trampa: Calculaste la probabilidad de verde.`] },
+      en: { topic: 'PROBABILITY', text: `An opaque urn contains ${r} red balls, ${b} blue, and ${g} green. If one is drawn at random, what is the mathematical probability it is red?`, hint: "Favorable Cases / Total Cases.", micro: `Total balls = ${r} + ${b} + ${g} = ${total}.\nProbability = Favorable / Total = ${r} / ${total} = ${correctVal}.`, traps: [null, "Favorable / Unfavorable.", "Calculated blue probability.", "Calculated green probability."] },
+      fr: { topic: 'PROBABILITÉS', text: `Une urne opaque contient ${r} boules rouges, ${b} bleues et ${g} vertes. Si l'on en tire une au hasard, quelle est la probabilité qu'elle soit rouge ?`, hint: "Cas Favorables / Cas Totaux.", micro: `Total = ${r} + ${b} + ${g} = ${total}.\nProbabilité = ${r} / ${total} = ${correctVal}.`, traps: [null, "Favorables / Défavorables.", "Probabilité pour bleu.", "Probabilité pour vert."] },
+      de: { topic: 'WAHRSCHEINLICHKEIT', text: `Eine undurchsichtige Urne enthält ${r} rote, ${b} blaue und ${g} grüne Kugeln. Wie hoch ist die mathematische Wahrscheinlichkeit, eine rote zu ziehen?`, hint: "Günstige Fälle / Gesamtfälle.", micro: `Gesamt = ${r} + ${b} + ${g} = ${total}.\nWahrscheinlichkeit = ${r} / ${total} = ${correctVal}.`, traps: [null, "Günstige / Ungünstige.", "Wahrscheinlichkeit für blau.", "Wahrscheinlichkeit für grün."] }
+    };
+    const langData = texts[lang] || texts['es'];
+    return { id: 'PROBABILIDAD_CLASICA', isAi: false, topic: langData.topic, text: langData.text, options: options, correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
+  }
+
+  static genPlaneGeometryQuestion(lang) {
+    const baseMult = Math.floor(Math.random() * 3) + 2; // base is 2x, 3x, or 4x the height
+    const height = Math.floor(Math.random() * 5) + 3;
+    const base = height * baseMult;
+    const perimeter = 2 * (base + height);
+    const correctArea = base * height;
+
+    const errorPerim = perimeter;
+    const errorSquare = height * height;
+    const errorAdd = base + height;
+
+    const optionsRaw = [correctArea, errorPerim, errorSquare, errorAdd];
+    const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
+    while(uniqueOptions.length < 4) uniqueOptions.push(Math.floor(Math.random() * 100) + 10);
+    const options = uniqueOptions.sort(() => Math.random() - 0.5);
+    const correctIndex = options.indexOf(correctArea);
+
+    const texts = {
+      es: { topic: 'GEOMETRÍA PLANA', text: `Un terreno rectangular tiene un perímetro de ${perimeter} m. Si se sabe que la base es ${baseMult} veces su altura, ¿cuál es el área del terreno en m²?`, hint: "Plantea la ecuación del perímetro: 2(b + h) = P, sustituyendo b por h.", micro: `Perímetro: 2(b + h) = ${perimeter}. Como b = ${baseMult}h:\n2(${baseMult}h + h) = ${perimeter}\n2(${baseMult + 1}h) = ${perimeter}\n${(baseMult + 1)*2}h = ${perimeter} ➔ h = ${height}, b = ${base}.\nÁrea = b × h = ${base} × ${height} = ${correctArea} m².`, traps: [null, `Trampa: Respondiste el valor del perímetro.`, `Trampa: Asumiste que era un cuadrado.`, `Trampa: Solo sumaste base y altura.`] },
+      en: { topic: 'PLANE GEOMETRY', text: `A rectangular plot has a perimeter of ${perimeter} m. The base is ${baseMult} times its height. What is the area in m²?`, hint: "Perimeter equation: 2(b + h) = P. Substitute b.", micro: `2(${baseMult}h + h) = ${perimeter} ➔ h = ${height}, b = ${base}.\nArea = b × h = ${correctArea} m².`, traps: [null, "Selected the perimeter.", "Assumed a square.", "Added base and height."] },
+      fr: { topic: 'GÉOMÉTRIE PLANE', text: `Un terrain rectangulaire a un périmètre de ${perimeter} m. La base est ${baseMult} fois sa hauteur. Quelle est la surface en m² ?`, hint: "Équation du périmètre: 2(b + h) = P.", micro: `2(${baseMult}h + h) = ${perimeter} ➔ h = ${height}, b = ${base}.\nSurface = b × h = ${correctArea} m².`, traps: [null, "Périmètre sélectionné.", "Carré supposé.", "Base + hauteur."] },
+      de: { topic: 'PLANIMETRIE', text: `Ein rechteckiges Grundstück hat einen Umfang von ${perimeter} m. Die Basis ist ${baseMult}-mal so groß wie die Höhe. Wie groß ist die Fläche in m²?`, hint: "Umfangsgleichung: 2(b + h) = P.", micro: `2(${baseMult}h + h) = ${perimeter} ➔ h = ${height}, b = ${base}.\nFläche = b × h = ${correctArea} m².`, traps: [null, "Umfang gewählt.", "Quadrat angenommen.", "Basis + Höhe addiert."] }
+    };
+    const langData = texts[lang] || texts['es'];
+    return { id: 'GEOMETRIA_PLANA', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} m²`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
+  }
+
+  static genSpatialGeometryQuestion(lang) {
+    const factor = Math.floor(Math.random() * 2) + 2; // 2 o 3
+    const factorSquare = factor * factor;
+    
+    const correctAns = factorSquare;
+    const error1 = factor; // lineal
+    const error2 = factor * 2; // suma
+    const error3 = factor * factor * factor; // cúbico
+
+    const optionsRaw = [correctAns, error1, error2, error3];
+    const uniqueOptions = [...new Set(optionsRaw)];
+    while(uniqueOptions.length < 4) uniqueOptions.push(Math.floor(Math.random() * 10) + 1);
+    const options = uniqueOptions.sort(() => Math.random() - 0.5);
     const correctIndex = options.indexOf(correctAns);
 
     const texts = {
-      es: { topic: 'CONFIGURACIÓN', text: `Un átomo neutro de ${atom.name.es} (Z=${atom.z}). ¿Periodo y grupo?`, hint: "Mayor nivel = periodo. Suma e- en ese nivel = grupo.", micro: `Configuración: ${atom.config}. Periodo ${atom.period}, Grupo ${atom.group}.`, traps: [null, "Periodo incorrecto.", "Metal de transición.", "Gases nobles."] },
-      en: { topic: 'CONFIGURATION', text: `Neutral ${atom.name.en} atom (Z=${atom.z}). Period and group?`, hint: "Highest level = period. Valence e- = group.", micro: `Config: ${atom.config}. Period ${atom.period}, Group ${atom.group}.`, traps: [null, "Wrong period.", "Transition metal.", "Noble gases."] },
-      fr: { topic: 'CONFIGURATION', text: `Atome neutre de ${atom.name.fr} (Z=${atom.z}). Période et groupe ?`, hint: "Niveau max = période. Électrons de valence = groupe.", micro: `Config: ${atom.config}. Période ${atom.period}, Groupe ${atom.group}.`, traps: [null, "Mauvaise période.", "Métal de transition.", "Gaz nobles."] },
-      de: { topic: 'KONFIGURATION', text: `Neutrales ${atom.name.de} Atom (Z=${atom.z}). Periode und Gruppe?`, hint: "Höchstes Niveau = Periode. Valenzelektronen = Gruppe.", micro: `Config: ${atom.config}. Periode ${atom.period}, Gruppe ${atom.group}.`, traps: [null, "Falsche Periode.", "Übergangsmetall.", "Edelgase."] }
+      es: { topic: 'GEOMETRÍA ESPACIAL', text: `Si el radio de la base de un cilindro recto se multiplica por ${factor} manteniendo su altura constante, ¿por qué factor se multiplica su volumen original?`, hint: "Fórmula del volumen del cilindro: V = π·r²·h. Observa el exponente del radio.", micro: `V₁ = π·r²·h.\nSi R = ${factor}r, entonces V₂ = π·(${factor}r)²·h = π·${factorSquare}r²·h = ${factorSquare}V₁.\nEl volumen crece con el cuadrado del radio.`, traps: [null, `Trampa Lineal: Pensaste que crece en la misma proporción (${factor}).`, `Trampa Aditiva: Duplicaste el factor erróneamente.`, `Trampa Cúbica: Elevaste al cubo en vez de al cuadrado.`] },
+      en: { topic: 'SPATIAL GEOMETRY', text: `If the base radius of a right cylinder is multiplied by ${factor} while height is constant, by what factor does the original volume multiply?`, hint: "Volume formula: V = π·r²·h.", micro: `V₁ = π·r²·h.\nIf R = ${factor}r, V₂ = π·(${factor}r)²·h = ${factorSquare}V₁.\nVolume grows with the square of the radius.`, traps: [null, "Linear trap.", "Additive trap.", "Cubic trap."] },
+      fr: { topic: 'GÉOMÉTRIE DANS L\'ESPACE', text: `Si le rayon de la base d'un cylindre est multiplié par ${factor} à hauteur constante, par quel facteur le volume est-il multiplié ?`, hint: "Formule: V = π·r²·h.", micro: `V₁ = π·r²·h.\nSi R = ${factor}r, V₂ = π·(${factor}r)²·h = ${factorSquare}V₁.\nCroissance au carré.`, traps: [null, "Piège linéaire.", "Piège additif.", "Piège cubique."] },
+      de: { topic: 'RAUMGEOMETRIE', text: `Wenn der Grundradius eines Zylinders mit ${factor} multipliziert wird (Höhe konstant), mit welchem Faktor multipliziert sich das Volumen?`, hint: "Volumenformel: V = π·r²·h.", micro: `V₁ = π·r²·h.\nWenn R = ${factor}r, V₂ = π·(${factor}r)²·h = ${factorSquare}V₁.\nWachstum im Quadrat.`, traps: [null, "Lineare Falle.", "Additive Falle.", "Kubische Falle."] }
     };
     const langData = texts[lang] || texts['es'];
-    return { id: 'CONFIGURACION_ELECTRONICA', isAi: false, topic: langData.topic, text: langData.text, options: options, correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
+    return { id: 'GEOMETRIA_ESPACIAL', isAi: false, topic: langData.topic, text: langData.text, options: options.map(String), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
   }
 
-  static genSolutionsQuestion(lang) {
-    const massSolute = Math.floor(Math.random() * 80) + 20; const mmSolute = Math.floor(Math.random() * 60) + 40; const volumeLiters = (Math.floor(Math.random() * 4) + 1) * 0.5; 
-    const moles = massSolute / mmSolute; const molarity = Number((moles / volumeLiters).toFixed(2));
-    const error1 = Number((massSolute / volumeLiters).toFixed(2)); const error2 = Number(((moles / volumeLiters) * 1000).toFixed(2)); const error3 = Number((volumeLiters / moles).toFixed(2)); 
-    const optionsRaw = [molarity, error1, error2, error3]; const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
-    while(uniqueOptions.length < 4) uniqueOptions.push(Number((Math.random() * 5).toFixed(2)));
-    const options = uniqueOptions.sort(() => Math.random() - 0.5); const correctIndex = options.indexOf(molarity);
+  static genTrigQuestion(lang) {
+    const angle = [30, 45, 60][Math.floor(Math.random() * 3)];
+    const distance = Math.floor(Math.random() * 10) + 10;
+    
+    let ansStr = "";
+    if (angle === 45) ansStr = `${distance}`;
+    if (angle === 30) ansStr = `${distance}/√3`;
+    if (angle === 60) ansStr = `${distance}√3`;
+
+    const optionsRaw = [`${distance}`, `${distance}√3`, `${distance}/√3`, `${distance*2}`];
+    const uniqueOptions = [...new Set(optionsRaw)];
+    const options = uniqueOptions.sort(() => Math.random() - 0.5);
+    const correctIndex = options.indexOf(ansStr);
 
     const texts = {
-      es: { topic: 'SOLUCIONES', text: `Disolviendo ${massSolute} g de sal (Masa molar = ${mmSolute} g/mol) en ${volumeLiters} Litros. ¿Molaridad (M)?`, hint: "M = Moles / Litros.", micro: `Moles = ${massSolute}g / ${mmSolute}g/mol = ${moles.toFixed(2)} moles. M = ${moles.toFixed(2)} / ${volumeLiters} L = ${molarity} M.`, traps: [null, "Trampa: Gramos / Litros.", "Trampa: Factor x1000.", "Trampa: Litros / Moles."] },
-      en: { topic: 'SOLUTIONS', text: `Dissolving ${massSolute} g of salt (MM = ${mmSolute} g/mol) into ${volumeLiters} Liters. Molarity (M)?`, hint: "M = Moles / Liters.", micro: `Moles = ${massSolute}g / ${mmSolute}g/mol = ${moles.toFixed(2)} moles. M = ${moles.toFixed(2)} / ${volumeLiters} L = ${molarity} M.`, traps: [null, "Trap: Grams / Liters.", "Trap: x1000 factor.", "Trap: Liters / Moles."] },
-      fr: { topic: 'SOLUTIONS', text: `Dissolution de ${massSolute} g de sel (MM = ${mmSolute} g/mol) dans ${volumeLiters} Litres. Molarité (M) ?`, hint: "M = Moles / Litres.", micro: `Moles = ${massSolute}g / ${mmSolute}g/mol = ${moles.toFixed(2)} moles. M = ${moles.toFixed(2)} / ${volumeLiters} L = ${molarity} M.`, traps: [null, "Piège: Grammes / Litres.", "Piège: x1000.", "Piège: Litres / Moles."] },
-      de: { topic: 'LÖSUNGEN', text: `Lösen von ${massSolute} g Salz (MM = ${mmSolute} g/mol) in ${volumeLiters} Litern. Molarität (M)?`, hint: "M = Mol / Liter.", micro: `Mol = ${massSolute}g / ${mmSolute}g/mol = ${moles.toFixed(2)} Mol. M = ${moles.toFixed(2)} / ${volumeLiters} L = ${molarity} M.`, traps: [null, "Falle: Gramm / Liter.", "Falle: x1000.", "Falle: Liter / Mol."] }
+      es: { topic: 'TRIGONOMETRÍA', text: `Una persona observa la cima de un edificio con un ángulo de elevación de ${angle}°. Si se encuentra a ${distance} metros de la base, ¿cuál es la altura exacta del edificio? (Ignora la altura de la persona).`, hint: "Usa la función Tangente = Opuesto / Adyacente.", micro: `Tan(${angle}°) = Altura / ${distance}.\nPor lo tanto, Altura = ${distance} × Tan(${angle}°).\nValores notables: Tan(45)=1, Tan(30)=1/√3, Tan(60)=√3.\nResultado = ${ansStr} metros.`, traps: [null, null, null, null] },
+      en: { topic: 'TRIGONOMETRY', text: `A person looks at the top of a building with an elevation angle of ${angle}°. They are ${distance}m from the base. What is the exact height? (Ignore person's height).`, hint: "Use Tangent = Opposite / Adjacent.", micro: `Tan(${angle}°) = Height / ${distance} ➔ Height = ${distance} × Tan(${angle}°).\nResult = ${ansStr} m.`, traps: [null, null, null, null] },
+      fr: { topic: 'TRIGONOMÉTRIE', text: `Une personne regarde le sommet d'un bâtiment avec un angle de ${angle}°. Elle est à ${distance}m de la base. Quelle est la hauteur exacte ?`, hint: "Tangente = Opposé / Adjacent.", micro: `Tan(${angle}°) = Hauteur / ${distance} ➔ Hauteur = ${distance} × Tan(${angle}°).\nRésultat = ${ansStr} m.`, traps: [null, null, null, null] },
+      de: { topic: 'TRIGONOMETRIE', text: `Eine Person betrachtet die Spitze eines Gebäudes mit einem Winkel von ${angle}°. Sie ist ${distance}m entfernt. Wie hoch ist das Gebäude?`, hint: "Tangens = Gegenkathete / Ankathete.", micro: `Tan(${angle}°) = Höhe / ${distance} ➔ Höhe = ${distance} × Tan(${angle}°).\nErgebnis = ${ansStr} m.`, traps: [null, null, null, null] }
     };
     const langData = texts[lang] || texts['es'];
-    return { id: 'SOLUCIONES', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} M`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
+    return { id: 'TRIGONOMETRIA', isAi: false, topic: langData.topic, text: langData.text, options: options, correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
   }
 
-  static genBalanceQuestion(lang) {
-      const eqTypes = [{ eq: "N₂ + X H₂ ➔ 2NH₃", x: 3, es:"Hidrógeno", en:"Hydrogen", fr:"Hydrogène", de:"Wasserstoff" }];
-      const selected = eqTypes[0]; const correctAns = selected.x;
-      const optionsRaw = [correctAns, correctAns + 1, correctAns - 1, correctAns * 2].filter(n => n > 0);
-      const uniqueOptions = [...new Set(optionsRaw)]; while(uniqueOptions.length < 4) uniqueOptions.push(Math.floor(Math.random() * 5) + 5);
-      const options = uniqueOptions.sort(() => Math.random() - 0.5); const correctIndex = options.indexOf(correctAns);
+  static genAlgebraQuestion(lang) {
+    const x = Math.floor(Math.random() * 5) + 2;
+    const y = Math.floor(Math.random() * 5) + 1;
+    const eq1Res = 2 * x + y;
+    const eq2Res = x - y;
 
-      const texts = {
-        es: { topic: 'BALANCEO', text: `Ecuación: ${selected.eq}. Para la Conservación de la Masa, ¿cuál es el valor X?`, hint: `Iguala los átomos de ${selected.es}.`, micro: `X = ${correctAns}.`, traps: [null, null, null, null] },
-        en: { topic: 'BALANCING', text: `Equation: ${selected.eq}. Exact value of X?`, hint: `Count ${selected.en} atoms.`, micro: `X = ${correctAns}.`, traps: [null, null, null, null] },
-        fr: { topic: 'ÉQUILIBRAGE', text: `Équation : ${selected.eq}. Valeur exacte de X ?`, hint: `Comptez les atomes de ${selected.fr}.`, micro: `X = ${correctAns}.`, traps: [null, null, null, null] },
-        de: { topic: 'AUSGLEICH', text: `Gleichung: ${selected.eq}. Exakter Wert von X?`, hint: `Zählen Sie die ${selected.de}-Atome.`, micro: `X = ${correctAns}.`, traps: [null, null, null, null] }
-      };
-      const langData = texts[lang] || texts['es'];
-      return { id: 'BALANCEO_ECUACIONES', isAi: false, topic: langData.topic, text: langData.text, options: options.map(String), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
+    const correctVal = x;
+    const error1 = y; // Trampa: respondio y
+    const error2 = x + y;
+    const error3 = eq1Res;
+
+    const optionsRaw = [correctVal, error1, error2, error3];
+    const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
+    while(uniqueOptions.length < 4) uniqueOptions.push(Math.floor(Math.random() * 15));
+    const options = uniqueOptions.sort(() => Math.random() - 0.5);
+    const correctIndex = options.indexOf(correctVal);
+
+    const texts = {
+      es: { topic: 'ÁLGEBRA LINEAL', text: `Dadas las ecuaciones: \n1) 2x + y = ${eq1Res} \n2) x - y = ${eq2Res} \n¿Cuál es el valor algebraico exacto de 'x'?`, hint: "Suma las dos ecuaciones de forma vertical para eliminar 'y'.", micro: `Sumando (1) + (2):\n(2x + x) + (y - y) = ${eq1Res} + ${eq2Res}\n3x = ${eq1Res + eq2Res}\nx = ${(eq1Res + eq2Res)} / 3 = ${correctVal}.`, traps: [null, `Trampa: Resolviste para 'y' en lugar de 'x'.`, `Suma incorrecta.`, `Valor directo de la ecuación.`] },
+      en: { topic: 'LINEAR ALGEBRA', text: `Given equations: \n1) 2x + y = ${eq1Res} \n2) x - y = ${eq2Res} \nWhat is the exact value of 'x'?`, hint: "Add equations vertically to eliminate 'y'.", micro: `Adding (1) + (2):\n3x = ${eq1Res + eq2Res} ➔ x = ${correctVal}.`, traps: [null, "Solved for 'y'.", "Wrong sum.", "Direct value."] },
+      fr: { topic: 'ALGÈBRE LINÉAIRE', text: `Équations : \n1) 2x + y = ${eq1Res} \n2) x - y = ${eq2Res} \nQuelle est la valeur exacte de 'x' ?`, hint: "Additionnez pour éliminer 'y'.", micro: `(1) + (2) ➔ 3x = ${eq1Res + eq2Res} ➔ x = ${correctVal}.`, traps: [null, "Résolu pour 'y'.", "Mauvaise somme.", "Valeur directe."] },
+      de: { topic: 'LINEARE ALGEBRA', text: `Gegebene Gleichungen: \n1) 2x + y = ${eq1Res} \n2) x - y = ${eq2Res} \nWas ist der exakte Wert von 'x'?`, hint: "Addiere Gleichungen, um 'y' zu eliminieren.", micro: `(1) + (2) ➔ 3x = ${eq1Res + eq2Res} ➔ x = ${correctVal}.`, traps: [null, "Für 'y' gelöst.", "Falsche Summe.", "Direkter Wert."] }
+    };
+    const langData = texts[lang] || texts['es'];
+    return { id: 'ALGEBRA_LINEAL', isAi: false, topic: langData.topic, text: langData.text, options: options.map(String), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
   }
 
-  static genIsotopeQuestion(lang) {
-      const iso = { name: "Carbono-14", z: 6, a: 14, n: 8 };
-      const correctAns = iso.n; const error1 = iso.a; const error2 = iso.z; const error3 = iso.a + iso.z;
-      const optionsRaw = [correctAns, error1, error2, error3]; const options = optionsRaw.sort(() => Math.random() - 0.5); const correctIndex = options.indexOf(correctAns);
+  static genFunctionsQuestion(lang) {
+    const fixed = (Math.floor(Math.random() * 5) + 5) * 1000;
+    const varCost = (Math.floor(Math.random() * 3) + 2) * 100;
+    const items = Math.floor(Math.random() * 10) + 15;
+    const correctVal = fixed + (varCost * items);
 
-      const texts = {
-        es: { topic: 'ISÓTOPOS', text: `Isótopo ${iso.name} (Z=${iso.z}, A=${iso.a}). ¿Cuántos neutrones posee?`, hint: "N = A - Z.", micro: `N = ${iso.a} - ${iso.z} = ${correctAns} neutrones.`, traps: [null, "Masa seleccionada.", "Protones seleccionados.", "Suma ilógica."] },
-        en: { topic: 'ISOTOPES', text: `Isotope ${iso.name} (Z=${iso.z}, A=${iso.a}). How many neutrons?`, hint: "N = A - Z.", micro: `N = ${iso.a} - ${iso.z} = ${correctAns} neutrons.`, traps: [null, "Mass selected.", "Protons selected.", "Added values."] },
-        fr: { topic: 'ISOTOPES', text: `Isotope ${iso.name} (Z=${iso.z}, A=${iso.a}). Combien de neutrons ?`, hint: "N = A - Z.", micro: `N = ${iso.a} - ${iso.z} = ${correctAns} neutrons.`, traps: [null, "Masse sélectionnée.", "Protons sélectionnés.", "Addition."] },
-        de: { topic: 'ISOTOPE', text: `Isotop ${iso.name} (Z=${iso.z}, A=${iso.a}). Wie viele Neutronen?`, hint: "N = A - Z.", micro: `N = ${iso.a} - ${iso.z} = ${correctAns} Neutronen.`, traps: [null, "Masse gewählt.", "Protonen gewählt.", "Addiert."] }
-      };
-      const langData = texts[lang] || texts['es'];
-      return { id: 'ISOTOPOS_Y_ESTRUCTURA', isAi: false, topic: langData.topic, text: langData.text, options: options.map(String), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
+    const error1 = varCost * items; // Solo costo variable
+    const error2 = fixed * items; // Fijo como variable
+    const error3 = correctVal + fixed;
+
+    const optionsRaw = [correctVal, error1, error2, error3];
+    const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
+    while(uniqueOptions.length < 4) uniqueOptions.push(correctVal + Math.floor(Math.random() * 5000));
+    const options = uniqueOptions.sort(() => Math.random() - 0.5);
+    const correctIndex = options.indexOf(correctVal);
+
+    const texts = {
+      es: { topic: 'FUNCIONES Y GRÁFICAS', text: `Una fábrica tiene un costo fijo mensual de $${fixed}. Además, producir cada unidad cuesta $${varCost}. ¿Cuál es el costo total matemático de producir ${items} unidades este mes?`, hint: "Función de Costo: C(x) = Costo Fijo + (Costo Variable × x).", micro: `C(x) = ${fixed} + ${varCost}x.\nC(${items}) = ${fixed} + (${varCost} × ${items})\nC(${items}) = ${fixed} + ${varCost * items} = $${correctVal}.`, traps: [null, `Trampa: Ignoraste el costo fijo.`, `Trampa: Multiplicaste el costo fijo.`, `Suma doble.`] },
+      en: { topic: 'FUNCTIONS AND GRAPHS', text: `A factory has a fixed monthly cost of $${fixed} and a variable cost of $${varCost} per unit. Total cost for ${items} units?`, hint: "Cost Function: C(x) = Fixed + (Variable × x).", micro: `C(${items}) = ${fixed} + (${varCost} × ${items}) = $${correctVal}.`, traps: [null, "Ignored fixed cost.", "Multiplied fixed cost.", "Double sum."] },
+      fr: { topic: 'FONCTIONS ET GRAPHIQUES', text: `Une usine a un coût fixe de ${fixed} $ et un coût variable de ${varCost} $ par unité. Coût total pour ${items} unités ?`, hint: "Fonction: C(x) = Fixe + (Variable × x).", micro: `C(${items}) = ${fixed} + (${varCost} × ${items}) = ${correctVal} $.`, traps: [null, "Coût fixe ignoré.", "Coût fixe multiplié.", "Double somme."] },
+      de: { topic: 'FUNKTIONEN UND GRAPHEN', text: `Eine Fabrik hat Fixkosten von $${fixed} und variable Kosten von $${varCost} pro Einheit. Gesamtkosten für ${items} Einheiten?`, hint: "Funktion: C(x) = Fix + (Variabel × x).", micro: `C(${items}) = ${fixed} + (${varCost} × ${items}) = $${correctVal}.`, traps: [null, "Fixkosten ignoriert.", "Fixkosten multipliziert.", "Doppelte Summe."] }
+    };
+    const langData = texts[lang] || texts['es'];
+    return { id: 'FUNCIONES_Y_GRAFICAS', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `$${o}`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
   }
 
-  static genKineticsQuestion(lang) {
-      const optionsKeys = ['ans', 'err1', 'err2', 'err3'].sort(() => Math.random() - 0.5);
-      const correctIndex = optionsKeys.indexOf('ans');
-      const texts = {
-        es: { topic: 'CINÉTICA QUÍMICA', text: `¿Por qué aumentar la temperatura acelera una reacción?`, hint: "Energía cinética.", micro: `Aumenta la energía cinética y frecuencia de colisiones.`, opts: { ans: "Aumenta energía cinética", err1: "Disminuye presión", err2: "Cambia el producto", err3: "Reduce energía" }, traps: [null, "Trampa presión.", "Trampa producto.", "Trampa reducción."] },
-        en: { topic: 'KINETICS', text: `Why does increasing temp speed up reaction?`, hint: "Kinetic energy.", micro: `Increases kinetic energy and collisions.`, opts: { ans: "Increases kinetic energy", err1: "Decreases pressure", err2: "Changes product", err3: "Reduces energy" }, traps: [null, "Pressure trap.", "Product trap.", "Reduction trap."] },
-        fr: { topic: 'CINÉTIQUE', text: `Pourquoi la température accélère-t-elle la réaction ?`, hint: "Énergie cinétique.", micro: `Augmente l'énergie cinétique.`, opts: { ans: "Augmente l'énergie cinétique", err1: "Diminue pression", err2: "Change produit", err3: "Réduit énergie" }, traps: [null, "Piège pression.", "Piège produit.", "Piège réduction."] },
-        de: { topic: 'KINETIK', text: `Warum beschleunigt Temperatur die Reaktion?`, hint: "Kinetische Energie.", micro: `Erhöht kinetische Energie.`, opts: { ans: "Erhöht kinetische Energie", err1: "Verringert Druck", err2: "Ändert Produkt", err3: "Reduziert Energie" }, traps: [null, "Druckfalle.", "Produktfalle.", "Reduktionsfalle."] }
-      };
-      const langData = texts[lang] || texts['es'];
-      return { id: 'CINETICA_QUIMICA', isAi: false, topic: langData.topic, text: langData.text, optionsKeys: optionsKeys, correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
+  static genCountingQuestion(lang) {
+    // Permutación sencilla: ordenar N libros
+    const n = Math.floor(Math.random() * 3) + 4; // 4, 5, 6
+    let factorial = 1;
+    for(let i = 2; i <= n; i++) factorial *= i;
+    
+    const correctVal = factorial;
+    const error1 = n * n; 
+    const error2 = n;
+    const error3 = factorial / 2;
+
+    const optionsRaw = [correctVal, error1, error2, error3];
+    const uniqueOptions = [...new Set(optionsRaw)].filter(num => !isNaN(num));
+    while(uniqueOptions.length < 4) uniqueOptions.push(Math.floor(Math.random() * 50) + 10);
+    const options = uniqueOptions.sort(() => Math.random() - 0.5);
+    const correctIndex = options.indexOf(correctVal);
+
+    const texts = {
+      es: { topic: 'TÉCNICAS DE CONTEO', text: `¿De cuántas formas distintas se pueden ordenar ${n} libros diferentes en un estante?`, hint: "Usa factoriales para permutaciones sin repetición: n!", micro: `Permutación lineal de ${n} elementos.\n${n}! = ${Array.from({length: n}, (_, i) => n - i).join(' × ')} = ${correctVal} formas.`, traps: [null, `Trampa: Calculaste ${n}².`, `Trampa: No permutaste.`, `Dividido a la mitad.`] },
+      en: { topic: 'COUNTING TECHNIQUES', text: `In how many different ways can ${n} distinct books be arranged on a shelf?`, hint: "Use factorials for permutations: n!", micro: `Linear permutation of ${n} items.\n${n}! = ${correctVal} ways.`, traps: [null, `Calculated ${n}².`, "No permutation.", "Divided by 2."] },
+      fr: { topic: 'TECHNIQUES DE DÉNOMBREMENT', text: `De combien de façons différentes peut-on ranger ${n} livres distincts sur une étagère ?`, hint: "Utilisez les factorielles : n!", micro: `Permutation linéaire de ${n} éléments.\n${n}! = ${correctVal} façons.`, traps: [null, `Calculé ${n}².`, "Pas de permutation.", "Divisé par 2."] },
+      de: { topic: 'ZÄHLTECHNIKEN', text: `Auf wie viele verschiedene Arten können ${n} verschiedene Bücher in einem Regal angeordnet werden?`, hint: "Fakultäten verwenden: n!", micro: `Lineare Permutation von ${n} Elementen.\n${n}! = ${correctVal} Arten.`, traps: [null, `Berechnet ${n}².`, "Keine Permutation.", "Durch 2 geteilt."] }
+    };
+    const langData = texts[lang] || texts['es'];
+    return { id: 'TECNICAS_DE_CONTEO', isAi: false, topic: langData.topic, text: langData.text, options: options.map(String), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
   }
 }
 
@@ -352,27 +409,30 @@ class DeepSeekEngine {
   }
 
   static async generateQuestion(lang, forcedTopic = null, retries = 1) {
-    const topics = [ 'GASES_IDEALES', 'ESTEQUIOMETRIA', 'DENSIDAD', 'PH', 'ENLACES_QUIMICOS', 'CONFIGURACION_ELECTRONICA', 'SOLUCIONES', 'BALANCEO_ECUACIONES', 'ISOTOPOS_Y_ESTRUCTURA', 'CINETICA_QUIMICA' ];
+    const topics = [
+      'RAZONAMIENTO_CUANTITATIVO', 'PORCENTAJES_Y_PROPORCIONES', 'ESTADISTICA_DESCRIPTIVA', 'PROBABILIDAD_CLASICA', 
+      'GEOMETRIA_PLANA', 'GEOMETRIA_ESPACIAL', 'TRIGONOMETRIA', 'ALGEBRA_LINEAL', 'FUNCIONES_Y_GRAFICAS', 'TECNICAS_DE_CONTEO'
+    ];
     const selectedTopic = forcedTopic || topics[Math.floor(Math.random() * topics.length)];
     
     const targetLang = LANG_MAP[lang] || "SPANISH";
 
     const sysPrompt = `
-      Eres un experto diseñador de exámenes de Química para el ICFES.
-      Genera una pregunta matemática COMPLETAMENTE NUEVA sobre: "${selectedTopic}".
+      Eres un experto diseñador de exámenes de Matemáticas para el ICFES de Colombia.
+      Genera una pregunta matemática analítica COMPLETAMENTE NUEVA sobre: "${selectedTopic}".
       Language for the output must strictly be: ${targetLang}.
-      Inventa valores aleatorios válidos. Provee 4 opciones, solo 1 correcta. Las otras 3 deben ser trampas de errores comunes.
+      Inventa valores numéricos aleatorios pero matemáticamente exactos. Provee 4 opciones de respuesta, solo 1 correcta. Las otras 3 deben ser trampas de errores comunes.
       
       REGLA ABSOLUTA: RESPONDE SOLO CON UN JSON VÁLIDO. NO USES MARKDOWN ALREDEDOR. Usa comillas simples ('') dentro de los textos si necesitas citar algo.
       {
         "id": "${selectedTopic}",
         "topic": "Nombre del tema",
-        "text": "El texto de la pregunta...",
+        "text": "El texto de la pregunta matemática...",
         "options": ["Opción A", "Opción B", "Opción C", "Opción D"],
         "correctIdx": 0,
-        "hint": "Pista breve sin dar la respuesta",
-        "microclass": "Explicación detallada de por qué es la correcta",
-        "trapExplanations": ["Explicación de trampa si eligió A", "Trampa B", "Trampa C", "Trampa D"]
+        "hint": "Pista lógica o fórmula sin dar la respuesta",
+        "microclass": "Explicación paso a paso de la resolución correcta",
+        "trapExplanations": ["Explicación de la trampa si eligió A", "Trampa B", "Trampa C", "Trampa D"]
       }
     `;
 
@@ -398,10 +458,10 @@ class DeepSeekEngine {
     const targetLang = LANG_MAP[lang] || "SPANISH";
 
     const sysPrompt = `
-      Eres un Profesor Top de Química preparando a un estudiante para el ICFES.
+      Eres un Profesor Top de Matemáticas preparando a un estudiante para el examen ICFES de Colombia.
       Genera una CLASE MAGISTRAL SIGNIFICATIVA Y DIRECTA sobre el tema: "${topic}".
       Language for the output MUST STRICTLY BE: ${targetLang}.
-      Debe ser al grano, profesional y dar un ejemplo clarísimo. Máximo 400 palabras en total.
+      Debe ser al grano, analítica, mostrando el 'truco' detrás del problema. Máximo 400 palabras en total.
 
       REGLAS CRÍTICAS DE SISTEMA PARA PREVENIR ERRORES:
       1. RESPONDE SÓLO EN JSON VÁLIDO. NADA DE MARKDOWN FUERA DEL JSON.
@@ -410,15 +470,15 @@ class DeepSeekEngine {
       
       ESTRUCTURA EXACTA REQUERIDA:
       {
-        "title": "TÍTULO DEL TEMA",
-        "theory": "Explicación teórica corta, al grano y fácil de entender. (max 150 palabras)",
-        "trap": "La trampa típica del ICFES explicada brevemente.",
+        "title": "TÍTULO DEL TEMA MATEMÁTICO",
+        "theory": "Explicación teórica corta, lógica y fácil de entender. (max 150 palabras)",
+        "trap": "La trampa típica matemática del ICFES explicada brevemente.",
         "protocol": "1. Paso uno.\\n2. Paso dos.",
         "demoQuestion": {
-           "text": "Problema directo generado al azar...",
+           "text": "Problema matemático avanzado generado al azar...",
            "options": ["A", "B", "C", "D"],
            "correctIdx": 0,
-           "analysis": "Explicación de la respuesta."
+           "analysis": "Explicación matemática y paso a paso de la respuesta."
         }
       }
     `;
@@ -487,15 +547,15 @@ const sfx = new QuantumAudio();
 ============================================================ */
 const DICT_UI = {
   es: {
-      start: "INICIAR SIMULACIÓN ICFES", title: "LABORATORIO ICFES QUÍMICA", 
+      start: "INICIAR SIMULACIÓN ICFES", title: "LABORATORIO ICFES MATEMÁTICAS", 
       scan: "ESCÁNER LÁSER DE PISTAS", aiBtn: "TUTORÍA IA",
       time: "CRONÓMETRO", mastery: "Maestría Cuántica", 
       btnCheck: "SINTETIZAR RESPUESTA", btnNext: "SIGUIENTE MÓDULO ➔",
       btnRetrySame: "REINTENTAR MATRIZ ➔", 
-      correctTitle: "¡ANÁLISIS PERFECTO!", wrongTitle: "RUPTURA COGNITIVA",
-      statsBtn: "TELEMETRÍA", theoryText: "SISTEMA DE GENERACIÓN IA ACTIVO. Este simulador está conectado a DeepSeek Neural Net. Cada ejercicio es único, calculado al instante. Si la IA detecta latencia, se te asignará un reto algorítmico de emergencia sin interrumpir tu flujo.",
+      correctTitle: "¡ANÁLISIS PERFECTO!", wrongTitle: "RUPTURA LÓGICA",
+      statsBtn: "TELEMETRÍA", theoryText: "SISTEMA DE GENERACIÓN IA ACTIVO. Este simulador está conectado a DeepSeek Neural Net. Cada ejercicio matemático es único, calculado al instante. Si la IA detecta latencia, se te asignará un reto algorítmico de emergencia sin interrumpir tu flujo.",
       timeout: "¡COLAPSO TÉRMICO (TIEMPO AGOTADO)!", topic: "DOMINIO ACTIVO", 
-      dashboard: "DASHBOARD DE TELEMETRÍA GLOBAL", avgTime: "Tiempo Medio de Reacción",
+      dashboard: "DASHBOARD DE TELEMETRÍA GLOBAL", avgTime: "Tiempo Medio de Resolución",
       btnRetry: "PURGAR CACHÉ", aiSocraticBtn: "SOLICITAR CLASE MAGISTRAL IA",
       socraticModal: "LA IA HA DETECTADO FALLOS EN:", aiPraise: "¡RENDIMIENTO PERFECTO! NO HAY DEBILIDADES.",
       aiSelectTopic: "Selecciona el dominio a repasar:", aiClose: "CERRAR SESIÓN IA",
@@ -504,13 +564,13 @@ const DICT_UI = {
       warmupTitle: "⚡ RETO DE CALENTAMIENTO", warmupSub: "Mientras la IA Cuántica sintetiza tu matriz principal..."
   },
   en: {
-      start: "START ICFES SIMULATION", title: "ICFES CHEMISTRY LAB", scan: "LASER INQUIRY SCANNER", aiBtn: "AI TUTOR", time: "CHRONOMETER", mastery: "Quantum Mastery", btnCheck: "SYNTHESIZE ANSWER", btnNext: "NEXT MODULE ➔", btnRetrySame: "RETRY MATRIX ➔", correctTitle: "PERFECT ANALYSIS!", wrongTitle: "COGNITIVE RUPTURE", statsBtn: "TELEMETRY", theoryText: "AI GENERATION SYSTEM ACTIVE. This simulator is hooked to DeepSeek Neural Net. Every exercise is uniquely calculated. If latency is detected, an emergency algorithm will deploy.", timeout: "THERMAL COLLAPSE!", topic: "ACTIVE DOMAIN", dashboard: "GLOBAL TELEMETRY DASHBOARD", avgTime: "Avg Reaction Time", btnRetry: "PURGE CACHE", aiSocraticBtn: "REQUEST AI MASTERCLASS", socraticModal: "AI HAS DETECTED FAILURES IN:", aiPraise: "PERFECT PERFORMANCE!", aiSelectTopic: "Select the domain to review:", aiClose: "CLOSE AI SESSION", downloadReport: "DOWNLOAD TACTICAL REPORT", loadingData: "ESTABLISHING DEEPSEEK NEURAL LINK...", warmupTitle: "⚡ WARM-UP CHALLENGE", warmupSub: "While AI synthesizes your main matrix..."
+      start: "START ICFES SIMULATION", title: "ICFES MATHEMATICS LAB", scan: "LASER INQUIRY SCANNER", aiBtn: "AI TUTOR", time: "CHRONOMETER", mastery: "Quantum Mastery", btnCheck: "SYNTHESIZE ANSWER", btnNext: "NEXT MODULE ➔", btnRetrySame: "RETRY MATRIX ➔", correctTitle: "PERFECT ANALYSIS!", wrongTitle: "LOGICAL RUPTURE", statsBtn: "TELEMETRY", theoryText: "AI GENERATION SYSTEM ACTIVE. This simulator is hooked to DeepSeek Neural Net. Every math exercise is uniquely calculated. If latency is detected, an emergency algorithm will deploy.", timeout: "THERMAL COLLAPSE!", topic: "ACTIVE DOMAIN", dashboard: "GLOBAL TELEMETRY DASHBOARD", avgTime: "Avg Resolution Time", btnRetry: "PURGE CACHE", aiSocraticBtn: "REQUEST AI MASTERCLASS", socraticModal: "AI HAS DETECTED FAILURES IN:", aiPraise: "PERFECT PERFORMANCE!", aiSelectTopic: "Select the domain to review:", aiClose: "CLOSE AI SESSION", downloadReport: "DOWNLOAD TACTICAL REPORT", loadingData: "ESTABLISHING DEEPSEEK NEURAL LINK...", warmupTitle: "⚡ WARM-UP CHALLENGE", warmupSub: "While AI synthesizes your main matrix..."
   },
   fr: {
-      start: "DÉMARRER LA SIMULATION", title: "LAB. DE CHIMIE ICFES", scan: "SCANNER LASER", aiBtn: "TUTEUR IA", time: "CHRONOMÈTRE", mastery: "Maîtrise Quantique", btnCheck: "SYNTHÉTISER", btnNext: "MODULE SUIVANT ➔", btnRetrySame: "RÉESSAYER ➔", correctTitle: "ANALYSE PARFAITE!", wrongTitle: "RUPTURE COGNITIVE", statsBtn: "TÉLÉMÉTRIE", theoryText: "SYSTÈME IA ACTIF. Ce simulateur génère des exercices uniques instantanément.", timeout: "EFFONDREMENT THERMIQUE!", topic: "DOMAINE ACTIF", dashboard: "TABLEAU DE BORD TÉLÉMÉTRIQUE", avgTime: "Temps Moyen de Réaction", btnRetry: "PURGER LE CACHE", aiSocraticBtn: "DEMANDER MASTERCLASS IA", socraticModal: "FAILLES DÉTECTÉES :", aiPraise: "PERFORMANCE PARFAITE !", aiSelectTopic: "Sélectionnez le domaine :", aiClose: "FERMER LA SESSION IA", downloadReport: "TÉLÉCHARGER LE RAPPORT TACTIQUE", loadingData: "ÉTABLISSEMENT DU LIEN NEURONAL...", warmupTitle: "⚡ DÉFI D'ÉCHAUFFEMENT", warmupSub: "Pendant que l'IA synthétise la matrice..."
+      start: "DÉMARRER LA SIMULATION", title: "LAB. DE MATHÉMATIQUES ICFES", scan: "SCANNER LASER", aiBtn: "TUTEUR IA", time: "CHRONOMÈTRE", mastery: "Maîtrise Quantique", btnCheck: "SYNTHÉTISER", btnNext: "MODULE SUIVANT ➔", btnRetrySame: "RÉESSAYER ➔", correctTitle: "ANALYSE PARFAITE!", wrongTitle: "RUPTURE LOGIQUE", statsBtn: "TÉLÉMÉTRIE", theoryText: "SYSTÈME IA ACTIF. Ce simulateur génère des exercices mathématiques uniques instantanément.", timeout: "EFFONDREMENT THERMIQUE!", topic: "DOMAINE ACTIF", dashboard: "TABLEAU DE BORD TÉLÉMÉTRIQUE", avgTime: "Temps Moyen de Résolution", btnRetry: "PURGER LE CACHE", aiSocraticBtn: "DEMANDER MASTERCLASS IA", socraticModal: "FAILLES DÉTECTÉES :", aiPraise: "PERFORMANCE PARFAITE !", aiSelectTopic: "Sélectionnez le domaine :", aiClose: "FERMER LA SESSION IA", downloadReport: "TÉLÉCHARGER LE RAPPORT TACTIQUE", loadingData: "ÉTABLISSEMENT DU LIEN NEURONAL...", warmupTitle: "⚡ DÉFI D'ÉCHAUFFEMENT", warmupSub: "Pendant que l'IA synthétise la matrice..."
   },
   de: {
-      start: "SIMULATION STARTEN", title: "ICFES CHEMIE LABOR", scan: "LASER-SCANNER", aiBtn: "KI-TUTOR", time: "CHRONOMETER", mastery: "Quantenbeherrschung", btnCheck: "ANTWORT SYNTHETISIEREN", btnNext: "NÄCHSTES MODUL ➔", btnRetrySame: "WIEDERHOLEN ➔", correctTitle: "PERFEKTE ANALYSE!", wrongTitle: "KOGNITIVER BRUCH", statsBtn: "TELEMETRIE", theoryText: "KI-SYSTEM AKTIV. Diese unendliche generative Engine erlaubt kein Auswendiglernen.", timeout: "THERMISCHER KOLLAPS!", topic: "AKTIVE DOMÄNE", dashboard: "GLOBALE TELEMETRIE", avgTime: "Durchschnittliche Reaktionszeit", btnRetry: "CACHE LÖSCHEN", aiSocraticBtn: "KI MASTERCLASS ANFORDERN", socraticModal: "FEHLER ERKANNT IN:", aiPraise: "PERFEKTE LEISTUNG!", aiSelectTopic: "Wählen Sie die Domäne:", aiClose: "KI-SITZUNG SCHLIESSEN", downloadReport: "TAKTIKBERICHT HERUNTERLADEN", loadingData: "AUFBAU DER NEURONALEN VERBINDUNG...", warmupTitle: "⚡ AUFWÄRMHERAUSFORDERUNG", warmupSub: "Während die KI deine Matrix synthetisiert..."
+      start: "SIMULATION STARTEN", title: "ICFES MATHEMATIK LABOR", scan: "LASER-SCANNER", aiBtn: "KI-TUTOR", time: "CHRONOMETER", mastery: "Quantenbeherrschung", btnCheck: "ANTWORT SYNTHETISIEREN", btnNext: "NÄCHSTES MODUL ➔", btnRetrySame: "WIEDERHOLEN ➔", correctTitle: "PERFEKTE ANALYSE!", wrongTitle: "LOGISCHER BRUCH", statsBtn: "TELEMETRIE", theoryText: "KI-SYSTEM AKTIV. Diese unendliche generative Engine erlaubt kein Auswendiglernen.", timeout: "THERMISCHER KOLLAPS!", topic: "AKTIVE DOMÄNE", dashboard: "GLOBALE TELEMETRIE", avgTime: "Durchschnittliche Lösungszeit", btnRetry: "CACHE LÖSCHEN", aiSocraticBtn: "KI MASTERCLASS ANFORDERN", socraticModal: "FEHLER ERKANNT IN:", aiPraise: "PERFEKTE LEISTUNG!", aiSelectTopic: "Wählen Sie die Domäne:", aiClose: "KI-SITZUNG SCHLIESSEN", downloadReport: "TAKTIKBERICHT HERUNTERLADEN", loadingData: "AUFBAU DER NEURONALEN VERBINDUNG...", warmupTitle: "⚡ AUFWÄRMHERAUSFORDERUNG", warmupSub: "Während die KI deine Matrix synthetisiert..."
   }
 };
 
@@ -518,11 +578,11 @@ const DICT_UI = {
 const DICT_REPORT = {
     es: {
         docTitle: "DOSSIER TÁCTICO ICFES",
-        docSub: "SIMULACIÓN CUÁNTICA DE QUÍMICA",
+        docSub: "SIMULACIÓN CUÁNTICA DE MATEMÁTICAS",
         dateLabel: "Fecha de Extracción",
         kpiTitle: "MÉTRICAS GLOBALES DE RENDIMIENTO",
         kpiAcc: "Precisión Neuronal",
-        kpiTime: "Tiempo de Reacción",
+        kpiTime: "Tiempo de Resolución",
         kpiTotal: "Matrices Resueltas",
         aiTitle: "VEREDICTO DEL SISTEMA DE INTELIGENCIA ARTIFICIAL",
         aiVuln: "⚠️ VULNERABILIDADES TÁCTICAS DETECTADAS",
@@ -530,22 +590,22 @@ const DICT_REPORT = {
         aiAction: "PLAN DE ACCIÓN DE IA",
         aiActionDesc: "Es imperativo solicitar el módulo 'Masterclass IA' dentro del simulador para re-entrenar las redes neuronales biológicas en estos temas.",
         aiOpt: "✅ RENDIMIENTO ÓPTIMO ALCANZADO",
-        aiOptDesc: "No se detectan vulnerabilidades críticas. El operador está calificado y listo para enfrentar escenarios ICFES de alta complejidad.",
+        aiOptDesc: "No se detectan vulnerabilidades críticas. El operador está calificado y listo para enfrentar escenarios matemáticos complejos.",
         aiNoData: "Datos biométricos insuficientes. El operador debe completar más simulaciones para emitir un veredicto válido.",
         topicTitle: "DESGLOSE MICRO-ANALÍTICO POR DOMINIO",
-        topicNoData: "Aún no se han procesado suficientes dominios químicos.",
+        topicNoData: "Aún no se han procesado suficientes dominios lógicos.",
         topicHit: "Aciertos",
         topicMiss: "Fallos",
-        footer: "DOCUMENTO CLASIFICADO GENERADO POR LEARNING LABS ENGINE V26.0",
+        footer: "DOCUMENTO CLASIFICADO GENERADO POR LEARNING LABS ENGINE V27.0",
         footerSub: "El conocimiento es la única ventaja táctica inquebrantable."
     },
     en: {
         docTitle: "ICFES TACTICAL DOSSIER",
-        docSub: "QUANTUM CHEMISTRY SIMULATION",
+        docSub: "QUANTUM MATHEMATICS SIMULATION",
         dateLabel: "Extraction Date",
         kpiTitle: "GLOBAL PERFORMANCE METRICS",
         kpiAcc: "Neural Accuracy",
-        kpiTime: "Reaction Time",
+        kpiTime: "Resolution Time",
         kpiTotal: "Matrices Solved",
         aiTitle: "ARTIFICIAL INTELLIGENCE SYSTEM VERDICT",
         aiVuln: "⚠️ TACTICAL VULNERABILITIES DETECTED",
@@ -553,22 +613,22 @@ const DICT_REPORT = {
         aiAction: "AI ACTION PLAN",
         aiActionDesc: "It is imperative to request the 'AI Masterclass' module within the simulator to retrain biological neural networks on these topics.",
         aiOpt: "✅ OPTIMAL PERFORMANCE ACHIEVED",
-        aiOptDesc: "No critical vulnerabilities detected. The operator is qualified and ready to face high-complexity ICFES scenarios.",
+        aiOptDesc: "No critical vulnerabilities detected. The operator is qualified and ready to face high-complexity math scenarios.",
         aiNoData: "Insufficient biometric data. The operator must complete more simulations to issue a valid verdict.",
         topicTitle: "MICRO-ANALYTICAL DOMAIN BREAKDOWN",
-        topicNoData: "Not enough chemical domains have been processed yet.",
+        topicNoData: "Not enough logical domains have been processed yet.",
         topicHit: "Hits",
         topicMiss: "Misses",
-        footer: "CLASSIFIED DOCUMENT GENERATED BY LEARNING LABS ENGINE V26.0",
+        footer: "CLASSIFIED DOCUMENT GENERATED BY LEARNING LABS ENGINE V27.0",
         footerSub: "Knowledge is the only unbreakable tactical advantage."
     },
     fr: {
         docTitle: "DOSSIER TACTIQUE ICFES",
-        docSub: "SIMULATION QUANTIQUE DE CHIMIE",
+        docSub: "SIMULATION QUANTIQUE DE MATHÉMATIQUES",
         dateLabel: "Date d'extraction",
         kpiTitle: "MÉTRIQUES GLOBALES DE PERFORMANCE",
         kpiAcc: "Précision Neuronale",
-        kpiTime: "Temps de Réaction",
+        kpiTime: "Temps de Résolution",
         kpiTotal: "Matrices Résolues",
         aiTitle: "VERDICT DU SYSTÈME D'INTELLIGENCE ARTIFICIELLE",
         aiVuln: "⚠️ VULNÉRABILITÉS TACTIQUES DÉTECTÉES",
@@ -576,22 +636,22 @@ const DICT_REPORT = {
         aiAction: "PLAN D'ACTION IA",
         aiActionDesc: "Il est impératif de demander le module 'Masterclass IA' dans le simulateur pour réentraîner les réseaux de neurones biologiques sur ces sujets.",
         aiOpt: "✅ PERFORMANCE OPTIMALE ATTEINTE",
-        aiOptDesc: "Aucune vulnérabilité critique détectée. L'opérateur est qualifié et prêt à affronter des scénarios ICFES de haute complexité.",
+        aiOptDesc: "Aucune vulnérabilité critique détectée. L'opérateur est qualifié et prêt à affronter des scénarios mathématiques complexes.",
         aiNoData: "Données biométriques insuffisantes. L'opérateur doit terminer plus de simulations pour émettre un verdict valide.",
         topicTitle: "RÉPARTITION MICRO-ANALYTIQUE PAR DOMAINE",
-        topicNoData: "Pas encore assez de domaines chimiques traités.",
+        topicNoData: "Pas encore assez de domaines logiques traités.",
         topicHit: "Succès",
         topicMiss: "Échecs",
-        footer: "DOCUMENT CLASSIFIÉ GÉNÉRÉ PAR LEARNING LABS ENGINE V26.0",
+        footer: "DOCUMENT CLASSIFIÉ GÉNÉRÉ PAR LEARNING LABS ENGINE V27.0",
         footerSub: "La connaissance est le seul avantage tactique inébranlable."
     },
     de: {
         docTitle: "ICFES TAKTISCHES DOSSIER",
-        docSub: "QUANTENCHEMIE-SIMULATION",
+        docSub: "QUANTENMATHEMATIK-SIMULATION",
         dateLabel: "Extraktionsdatum",
         kpiTitle: "GLOBALE LEISTUNGSKENNZAHLEN",
         kpiAcc: "Neuronale Genauigkeit",
-        kpiTime: "Reaktionszeit",
+        kpiTime: "Lösungszeit",
         kpiTotal: "Gelöste Matrizen",
         aiTitle: "URTEIL DES KÜNSTLICHEN INTELLIGENZSYSTEMS",
         aiVuln: "⚠️ TAKTISCHE SCHWACHSTELLEN ERKANNT",
@@ -599,45 +659,45 @@ const DICT_REPORT = {
         aiAction: "KI-AKTIONSPLAN",
         aiActionDesc: "Es ist zwingend erforderlich, das 'KI-Masterclass'-Modul im Simulator anzufordern, um biologische neuronale Netze in diesen Themenbereichen neu zu trainieren.",
         aiOpt: "✅ OPTIMALE LEISTUNG ERREICHT",
-        aiOptDesc: "Keine kritischen Schwachstellen erkannt. Der Bediener ist qualifiziert und bereit für hochkomplexe ICFES-Szenarien.",
+        aiOptDesc: "Keine kritischen Schwachstellen erkannt. Der Bediener ist qualifiziert und bereit für hochkomplexe mathematische Szenarien.",
         aiNoData: "Unzureichende biometrische Daten. Der Bediener muss weitere Simulationen abschließen, um ein gültiges Urteil zu fällen.",
         topicTitle: "MIKROANALYTISCHE DOMÄNENAUFSCHLÜSSELUNG",
-        topicNoData: "Noch nicht genügend chemische Domänen verarbeitet.",
+        topicNoData: "Noch nicht genügend logische Domänen verarbeitet.",
         topicHit: "Treffer",
         topicMiss: "Fehler",
-        footer: "KLASSIFIZIERTES DOKUMENT, ERSTELLT VON LEARNING LABS ENGINE V26.0",
+        footer: "KLASSIFIZIERTES DOKUMENT, ERSTELLT VON LEARNING LABS ENGINE V27.0",
         footerSub: "Wissen ist der einzige unzerbrechliche taktische Vorteil."
     }
 };
 
 const TIPS_DB = {
   es: [
-    "RECUERDA: La Molaridad siempre exige MOLES y LITROS. Jamás uses gramos directamente.",
-    "TRUCO ICFES: Si el volumen de un gas se duplica a presión constante, la temperatura en Kelvin también lo hizo.",
-    "OJO: El pH y el pOH siempre sumarán 14. Lee bien lo que pide la pregunta.",
-    "ESTRATEGIA: Balancea siempre la ecuación antes de hacer cualquier cálculo estequiométrico.",
-    "CONCEPTO: El enlace covalente apolar ocurre cuando la diferencia de electronegatividad es casi cero."
+    "RECUERDA: En el ICFES, el volumen de un cilindro se CUADRUPLICA si duplicas el radio. No asumas que es una relación lineal.",
+    "TRUCO ICFES: Si te piden una probabilidad, revisa las opciones. Toda probabilidad DEBE ser un número entre 0 y 1.",
+    "OJO: Un descuento del 20% más un IVA del 19% NO te da el precio original. Los porcentajes son multiplicativos, no sumas planas.",
+    "ESTRATEGIA: En preguntas de tablas y gráficas, lee SIEMPRE los títulos de los ejes antes de mirar los datos.",
+    "CONCEPTO: Si el orden de los elementos importa es Permutación. Si el orden da igual, es Combinación."
   ],
   en: [
-    "REMEMBER: Molarity requires MOLES and LITERS. Never use grams directly.",
-    "ICFES TRICK: Gas volume doubles = absolute temperature doubles.",
-    "WATCH OUT: pH + pOH = 14. Read what they ask carefully.",
-    "STRATEGY: Always balance the equation first.",
-    "CONCEPT: Non-polar = electronegativity difference near zero."
+    "REMEMBER: The volume of a cylinder QUADRUPLES if you double the radius. Do not assume a linear relationship.",
+    "ICFES TRICK: Probability must ALWAYS be between 0 and 1. Check the options carefully.",
+    "WATCH OUT: A 20% discount plus a 19% tax does NOT equal the original price. Percentages are multiplicative.",
+    "STRATEGY: In graph questions, ALWAYS read the axis titles before looking at the data.",
+    "CONCEPT: If order matters, it's a Permutation. If order doesn't matter, it's a Combination."
   ],
   fr: [
-    "RAPPEL : La molarité exige des MOLES et des LITRES.",
-    "ASTUCE ICFES : Si le volume d'un gaz double, sa température absolue a doublé.",
-    "ATTENTION : pH + pOH = 14.",
-    "STRATÉGIE : Équilibrez toujours l'équation d'abord.",
-    "CONCEPT : Liaison covalente apolaire = différence d'électronégativité proche de zéro."
+    "RAPPEL : Le volume d'un cylindre QUADRUPLE si vous doublez le rayon.",
+    "ASTUCE ICFES : La probabilité doit TOUJOURS être comprise entre 0 et 1.",
+    "ATTENTION : Une remise de 20 % plus une taxe de 19 % NE DONNE PAS le prix d'origine.",
+    "STRATÉGIE : Lisez TOUJOURS les titres des axes avant de regarder les données graphiques.",
+    "CONCEPT : Si l'ordre compte, c'est une Permutation. Sinon, c'est une Combinaison."
   ],
   de: [
-    "DENKEN SIE DARAN: Molarität erfordert MOL und LITER.",
-    "ICFES-TRICK: Wenn sich das Gasvolumen verdoppelt, verdoppelt sich die absolute Temperatur.",
-    "VORSICHT: pH + pOH = 14.",
-    "STRATEGIE: Gleichen Sie die Gleichung immer zuerst aus.",
-    "KONZEPT: Unpolare kovalente Bindung = Elektronegativitätsdifferenz nahe Null."
+    "DENKEN SIE DARAN: Das Volumen eines Zylinders VERVIERFACHT sich, wenn Sie den Radius verdoppeln.",
+    "ICFES-TRICK: Wahrscheinlichkeiten liegen IMMER zwischen 0 und 1.",
+    "VORSICHT: 20% Rabatt plus 19% Steuern ergeben NICHT den ursprünglichen Preis.",
+    "STRATEGIE: Lesen Sie bei Diagrammen IMMER zuerst die Achsenbeschriftungen.",
+    "KONZEPT: Wenn die Reihenfolge wichtig ist, ist es eine Permutation. Wenn nicht, eine Kombination."
   ]
 };
 
@@ -932,16 +992,16 @@ const getInitialStats = () => {
       correctQ: 0,
       totalTime: 0,
       topics: {
-          'GASES_IDEALES': { c: 0, w: 0 },
-          'ESTEQUIOMETRIA': { c: 0, w: 0 },
-          'DENSIDAD': { c: 0, w: 0 },
-          'PH': { c: 0, w: 0 },
-          'ENLACES_QUIMICOS': { c: 0, w: 0 },
-          'CONFIGURACION_ELECTRONICA': { c: 0, w: 0 },
-          'SOLUCIONES': { c: 0, w: 0 },
-          'BALANCEO_ECUACIONES': { c: 0, w: 0 },
-          'ISOTOPOS_Y_ESTRUCTURA': { c: 0, w: 0 },
-          'CINETICA_QUIMICA': { c: 0, w: 0 }
+          'RAZONAMIENTO_CUANTITATIVO': { c: 0, w: 0 },
+          'PORCENTAJES_Y_PROPORCIONES': { c: 0, w: 0 },
+          'ESTADISTICA_DESCRIPTIVA': { c: 0, w: 0 },
+          'PROBABILIDAD_CLASICA': { c: 0, w: 0 },
+          'GEOMETRIA_PLANA': { c: 0, w: 0 },
+          'GEOMETRIA_ESPACIAL': { c: 0, w: 0 },
+          'TRIGONOMETRIA': { c: 0, w: 0 },
+          'ALGEBRA_LINEAL': { c: 0, w: 0 },
+          'FUNCIONES_Y_GRAFICAS': { c: 0, w: 0 },
+          'TECNICAS_DE_CONTEO': { c: 0, w: 0 }
       },
       needsReview: [] 
   };
@@ -1107,6 +1167,7 @@ function GameApp() {
 
       const isCorrect = selectedOpt === currentQ.correctIdx;
 
+      // MANEJO UNIFICADO DE CALIFICACIÓN
       if (phase === "GAME") {
           const timeTaken = MAX_TIME - timeLeft;
           updateStats(isCorrect, timeTaken);
@@ -1578,7 +1639,7 @@ function GameApp() {
             {/* OVERLAY: MICRO-CLASE SOCRÁTICA */}
             {phase === "MICROCLASS" && (
               <div style={{ position:'absolute', inset:0, zIndex:2000, background:'rgba(40,0,0,0.95)', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:'20px', backdropFilter:'blur(10px)' }}>
-                  <div className="glass-panel" style={{borderColor:'#f00', maxWidth:'1000px', width:'100%', textAlign:'left', boxShadow:'0 0 50px rgba(255,0,0,0.3)', maxHeight:'90vh', overflowY:'auto'}}>
+                  <div className="glass-panel" style={{borderColor:'#f00', maxWidth:'1000px', width:'100%', textAlign:'left', boxShadow:'0 0 50px rgba(255,0,255,0.3)', maxHeight:'90vh', overflowY:'auto'}}>
                       <h1 style={{color:'#f00', fontSize:'clamp(28px, 6vw, 50px)', marginBottom:'20px', textAlign:'center', borderBottom:'2px solid #f00', paddingBottom:'10px'}}>
                           ⚠️ {timeLeft === 0 ? UI.timeout : UI.wrongTitle}
                       </h1>
