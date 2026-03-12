@@ -6,9 +6,9 @@ console.log("%c >>> PROTOCOLO OMEGA V40 ACTIVADO <<< ", "background: #ff0000; co
 
 const FallbackError = ({ name }) => (
   <div style={{ width: '100vw', height: '100vh', background: '#300', color: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', fontFamily: 'monospace', zIndex: 9999 }}>
-    <h1 style={{ fontSize: '40px' }}>⚠️ ERROR CRÍTICO DE RUTA</h1>
+    <h1 style={{ fontSize: 'clamp(24px, 5vw, 40px)', textAlign: 'center' }}>⚠️ ERROR CRÍTICO DE RUTA</h1>
     <p>No se encontró el módulo: <strong>{name}</strong></p>
-    <button onClick={() => window.location.reload()} style={{ padding: '15px', background: '#f00', color: '#fff', border: 'none', cursor: 'pointer' }}>REVENTAR CACHÉ Y REINTENTAR</button>
+    <button onClick={() => window.location.reload()} style={{ padding: '15px', background: '#f00', color: '#fff', border: 'none', cursor: 'pointer', marginTop: '20px', borderRadius: '5px' }}>REVENTAR CACHÉ Y REINTENTAR</button>
   </div>
 );
 
@@ -110,7 +110,7 @@ export default function SimulatorCatalog() {
     return (
       <Suspense fallback={
         <div style={{ position: 'absolute', inset: 0, background: '#000', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <h1 style={{ color: '#00f2ff', fontFamily: 'Orbitron', animation: 'pulse 1s infinite' }}>CARGANDO...</h1>
+          <h1 style={{ color: '#00f2ff', fontFamily: 'Orbitron', animation: 'pulse 1s infinite', textAlign: 'center', padding: '20px' }}>CARGANDO...</h1>
         </div>
       }>
         {view === 'gas' && <GasSimulator onBack={() => setView('cat_phys')} />}
@@ -124,18 +124,20 @@ export default function SimulatorCatalog() {
   return (
     <div style={st.container}>
       
-      {/* 🌐 HUD SELECTOR DE IDIOMAS */}
-      <div style={st.langPanel}>
-        {['es', 'en', 'fr', 'de'].map((lng) => (
-          <button key={lng} onClick={() => setLanguage(lng)} style={language === lng ? st.langBtnActive : st.langBtn}>
-            {lng.toUpperCase()}
-          </button>
-        ))}
-      </div>
+      {/* 🌐 TOP BAR LÍQUIDA (ANDROID FIRST) - Evita que los botones choquen */}
+      <div style={st.topBar}>
+        {view !== 'nexus' ? (
+          <button onClick={() => setView('nexus')} style={st.backBtn}>{dict.backBtn}</button>
+        ) : <div style={{ width: '1px' }} />} {/* Div fantasma para mantener flexbox alineado */}
 
-      {view !== 'nexus' && (
-        <button onClick={() => setView('nexus')} style={st.backBtn}>{dict.backBtn}</button>
-      )}
+        <div style={st.langPanel}>
+          {['es', 'en', 'fr', 'de'].map((lng) => (
+            <button key={lng} onClick={() => setLanguage(lng)} style={language === lng ? st.langBtnActive : st.langBtn}>
+              {lng.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <header style={st.header}>
         <h1 style={st.mainTitle}>{view === 'nexus' ? dict.nexusTitle : dict.header}</h1>
@@ -204,22 +206,76 @@ export default function SimulatorCatalog() {
   );
 }
 
+// ============================================================
+// 🎨 ESTILOS "ANDROID FIRST" (FLUIDOS, CLAMP, FLEX WRAP)
+// ============================================================
 const st = {
-  container: { position: 'absolute', inset: 0, background: '#000', color: '#fff', fontFamily: 'Orbitron, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflowY: 'auto', padding: '40px' },
-  langPanel: { position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '10px', background: 'rgba(0,10,20,0.8)', padding: '10px', borderRadius: '12px', border: '1px solid #00f2ff', zIndex: 1000 },
-  langBtn: { background: 'transparent', border: 'none', color: '#fff', padding: '5px 12px', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '12px', fontWeight: 'bold', borderRadius: '6px', transition: '0.3s' },
-  langBtnActive: { background: '#00f2ff', border: 'none', color: '#000', padding: '5px 12px', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '12px', fontWeight: 'bold', borderRadius: '6px', boxShadow: '0 0 15px #00f2ff' },
-  header: { textAlign: 'center', marginBottom: '40px' },
-  mainTitle: { fontSize: 'clamp(24px, 4vw, 45px)', letterSpacing: '10px', textShadow: '0 0 30px rgba(255,255,255,0.2)' },
-  subTitle: { color: '#00f2ff', letterSpacing: '5px', fontSize: '18px', fontWeight: 'bold', textTransform: 'uppercase' },
-  backBtn: { position: 'absolute', top: '20px', left: '20px', background: 'transparent', border: '1px solid #00f2ff', color: '#00f2ff', padding: '10px 20px', cursor: 'pointer', fontFamily: 'Orbitron', borderRadius: '5px', transition: '0.3s', zIndex: 1000, fontWeight: 'bold' },
-  grid: { display: 'flex', flexWrap: 'wrap', gap: '40px', justifyContent: 'center', maxWidth: '1400px', width: '100%' },
-  cardSubject: (color) => ({ width: '350px', padding: '50px 30px', background: 'rgba(255,255,255,0.03)', border: `2px solid ${color}66`, borderRadius: '25px', cursor: 'pointer', transition: 'all 0.4s ease', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', backdropFilter: 'blur(10px)' }),
-  cardGame: (color) => ({ width: '320px', padding: '40px', background: 'rgba(0,10,20,0.8)', border: `1px solid ${color}44`, borderRadius: '20px', cursor: 'pointer', transition: 'all 0.4s ease', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', backdropFilter: 'blur(10px)' }),
-  icon: { fontSize: '60px', marginBottom: '20px', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.3))' },
-  cardTitle: { fontSize: '22px', margin: '10px 0', fontWeight: '900', letterSpacing: '2px' },
-  cardDesc: { fontSize: '14px', color: '#aaa', lineHeight: '1.6', height: '60px' },
-  cardBtn: (color) => ({ marginTop: '20px', padding: '12px 30px', background: 'transparent', border: `2px solid ${color}`, color: color, fontWeight: 'bold', fontFamily: 'Orbitron', borderRadius: '5px', cursor: 'pointer' }),
-  hoverOn: (color) => (e) => { e.currentTarget.style.transform = 'translateY(-15px) scale(1.02)'; e.currentTarget.style.borderColor = color; e.currentTarget.style.boxShadow = `0 0 50px ${color}44`; e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; },
+  container: { 
+    position: 'absolute', inset: 0, background: '#000', color: '#fff', 
+    fontFamily: 'Orbitron, sans-serif', display: 'flex', flexDirection: 'column', 
+    alignItems: 'center', overflowY: 'auto', overflowX: 'hidden', 
+    padding: 'clamp(15px, 4vw, 40px)', boxSizing: 'border-box', width: '100vw'
+  },
+  topBar: {
+    width: '100%', maxWidth: '1400px', display: 'flex', justifyContent: 'space-between', 
+    alignItems: 'center', marginBottom: 'clamp(20px, 5vw, 40px)', flexWrap: 'wrap-reverse', 
+    gap: '15px', zIndex: 1000
+  },
+  langPanel: { 
+    display: 'flex', gap: 'clamp(5px, 1.5vw, 10px)', background: 'rgba(0,10,20,0.8)', 
+    padding: 'clamp(5px, 2vw, 10px)', borderRadius: '12px', border: '1px solid #00f2ff'
+  },
+  langBtn: { 
+    background: 'transparent', border: 'none', color: '#fff', 
+    padding: 'clamp(4px, 1.5vw, 8px) clamp(8px, 2vw, 12px)', cursor: 'pointer', 
+    fontFamily: 'Orbitron', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 'bold', 
+    borderRadius: '6px', transition: '0.3s' 
+  },
+  langBtnActive: { 
+    background: '#00f2ff', border: 'none', color: '#000', 
+    padding: 'clamp(4px, 1.5vw, 8px) clamp(8px, 2vw, 12px)', cursor: 'pointer', 
+    fontFamily: 'Orbitron', fontSize: 'clamp(10px, 2.5vw, 12px)', fontWeight: 'bold', 
+    borderRadius: '6px', boxShadow: '0 0 15px #00f2ff' 
+  },
+  header: { textAlign: 'center', marginBottom: 'clamp(20px, 5vw, 40px)', width: '100%' },
+  mainTitle: { 
+    fontSize: 'clamp(22px, 5vw, 45px)', letterSpacing: 'clamp(2px, 1vw, 10px)', 
+    textShadow: '0 0 30px rgba(255,255,255,0.2)', lineHeight: '1.2', margin: '0 0 10px 0'
+  },
+  subTitle: { 
+    color: '#00f2ff', letterSpacing: 'clamp(2px, 1vw, 5px)', fontSize: 'clamp(12px, 3vw, 18px)', 
+    fontWeight: 'bold', textTransform: 'uppercase', margin: 0
+  },
+  backBtn: { 
+    background: 'transparent', border: '1px solid #00f2ff', color: '#00f2ff', 
+    padding: 'clamp(8px, 2vw, 10px) clamp(10px, 3vw, 20px)', cursor: 'pointer', 
+    fontFamily: 'Orbitron', borderRadius: '5px', transition: '0.3s', fontWeight: 'bold', 
+    fontSize: 'clamp(11px, 2.5vw, 14px)'
+  },
+  grid: { 
+    display: 'flex', flexWrap: 'wrap', gap: 'clamp(20px, 5vw, 40px)', 
+    justifyContent: 'center', maxWidth: '1400px', width: '100%', paddingBottom: '40px'
+  },
+  cardSubject: (color) => ({ 
+    width: '100%', maxWidth: '350px', boxSizing: 'border-box', 
+    padding: 'clamp(30px, 8vw, 50px) clamp(20px, 5vw, 30px)', background: 'rgba(255,255,255,0.03)', 
+    border: `2px solid ${color}66`, borderRadius: '25px', cursor: 'pointer', transition: 'all 0.4s ease', 
+    display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', backdropFilter: 'blur(10px)' 
+  }),
+  cardGame: (color) => ({ 
+    width: '100%', maxWidth: '320px', boxSizing: 'border-box', 
+    padding: 'clamp(20px, 6vw, 40px)', background: 'rgba(0,10,20,0.8)', border: `1px solid ${color}44`, 
+    borderRadius: '20px', cursor: 'pointer', transition: 'all 0.4s ease', display: 'flex', 
+    flexDirection: 'column', alignItems: 'center', textAlign: 'center', backdropFilter: 'blur(10px)' 
+  }),
+  icon: { fontSize: 'clamp(40px, 10vw, 60px)', marginBottom: '15px', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.3))' },
+  cardTitle: { fontSize: 'clamp(18px, 4.5vw, 22px)', margin: '10px 0', fontWeight: '900', letterSpacing: 'clamp(1px, 0.5vw, 2px)' },
+  cardDesc: { fontSize: 'clamp(12px, 3vw, 14px)', color: '#aaa', lineHeight: '1.6', height: 'clamp(40px, 10vw, 60px)' },
+  cardBtn: (color) => ({ 
+    marginTop: '20px', padding: 'clamp(10px, 2.5vw, 12px) clamp(20px, 5vw, 30px)', 
+    background: 'transparent', border: `2px solid ${color}`, color: color, fontWeight: 'bold', 
+    fontFamily: 'Orbitron', borderRadius: '5px', cursor: 'pointer', fontSize: 'clamp(12px, 3vw, 14px)', width: '100%'
+  }),
+  hoverOn: (color) => (e) => { e.currentTarget.style.transform = 'translateY(-10px) scale(1.02)'; e.currentTarget.style.borderColor = color; e.currentTarget.style.boxShadow = `0 0 40px ${color}44`; e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; },
   hoverOff: (color) => (e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = `${color}66`; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }
 };
