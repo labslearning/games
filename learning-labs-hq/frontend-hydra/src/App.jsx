@@ -6,11 +6,12 @@ import MolecularPhysics from './components/MolecularPhysics';
 import { useGameStore, i18n, audioSys } from './store/useGameStore';
 import { MATERIALS } from './data/materials';
 
-// 📦 IMPORTAMOS TUS 4 JUEGOS ("Cartuchos")
+// 📦 IMPORTAMOS TUS 5 JUEGOS ACTIVOS ("Cartuchos")
 import GasLaws from './games/chemistry/GasLaws';
 import RedoxLab from './games/chemistry/RedoxLab';
 import RedoxBalancer from './games/chemistry/RedoxBalancer';
 import GasTheory from './games/chemistry/GasTheory';
+import MendeleevGrid from './games/chemistry/MendeleevGrid/MendeleevGrid'; // 🔥 LA RED DE MENDELEIEV
 
 /* ============================================================
    📱 HOOK DE RESPONSIVIDAD (MOBILE FIRST)
@@ -31,10 +32,52 @@ function useMobile() {
    🌍 TRADUCCIONES DEL CATÁLOGO DE JUEGOS
 ============================================================ */
 const CATALOG = {
-  es: { title: "CATÁLOGO DE SIMULADORES", back: "⬅ VOLVER", games: { gasLaws: { t: "🧪 LEYES DE GASES", d: "Termodinámica, 150 elementos, Plasma y Presión." }, gasTheory: { t: "📚 GAS THEORY MASTER", d: "Campaña Guiada: Cinética, Boyle y Charles." }, redoxLab: { t: "⚡ QUÍMICA REDOX LAB", d: "Mecánicas de balanceo y transferencia de electrones." }, redoxBalancer: { t: "⚖️ REDOX BALANCER", d: "Simulador avanzado de balanceo por cargas." }, new: "NUEVO" } },
-  en: { title: "SIMULATOR CATALOG", back: "⬅ BACK", games: { gasLaws: { t: "🧪 GAS LAWS", d: "Thermodynamics, 150 elements, Plasma and Pressure." }, gasTheory: { t: "📚 GAS THEORY MASTER", d: "Guided Campaign: Kinetics, Boyle and Charles." }, redoxLab: { t: "⚡ REDOX CHEMISTRY LAB", d: "Balancing mechanics and electron transfer." }, redoxBalancer: { t: "⚖️ REDOX BALANCER", d: "Advanced charge balancing simulator." }, new: "NEW" } },
-  fr: { title: "CATALOGUE DES SIMULATEURS", back: "⬅ RETOUR", games: { gasLaws: { t: "🧪 LOIS DES GAZ", d: "Thermodynamique, 150 éléments, Plasma et Pression." }, gasTheory: { t: "📚 GAS THEORY MASTER", d: "Campagne Guidée : Cinétique, Boyle et Charles." }, redoxLab: { t: "⚡ LABO CHIMIE REDOX", d: "Mécaniques d'équilibrage et transfert d'électrons." }, redoxBalancer: { t: "⚖️ ÉQUILIBREUR REDOX", d: "Simulateur avancé d'équilibrage des charges." }, new: "NOUVEAU" } },
-  de: { title: "SIMULATORKATALOG", back: "⬅ ZURÜCK", games: { gasLaws: { t: "🧪 GASGESETZE", d: "Thermodynamik, 150 Elemente, Plasma und Druck." }, gasTheory: { t: "📚 GAS THEORY MASTER", d: "Geführte Kampagne: Kinetik, Boyle und Charles." }, redoxLab: { t: "⚡ REDOX-CHEMIE-LABOR", d: "Ausgleichsmechanik und Elektronentransfer." }, redoxBalancer: { t: "⚖️ REDOX-BALANCER", d: "Fortschrittlicher Ladungsausgleichssimulator." }, new: "NEU" } }
+  es: { 
+    title: "CENTRO DE SIMULACIÓN", 
+    back: "⬅ VOLVER AL SELECTOR", 
+    new: "NUEVA MISIÓN",
+    games: { 
+      gasLaws: { t: "🧪 LEYES DE GASES", d: "Termodinámica interactiva: Plasma, Presión y Temperatura." }, 
+      gasTheory: { t: "📚 GAS THEORY MASTER", d: "Campaña Guiada: Cinética de partículas y leyes clásicas." }, 
+      redoxLab: { t: "⚡ QUÍMICA REDOX LAB", d: "Mecánicas de balanceo y transferencia de electrones en 3D." }, 
+      //redoxBalancer: { t: "⚖️ REDOX BALANCER", d: "Simulador avanzado de balanceo por cargas y estequiometría." },
+      redoxBalancer: { t: "⚖️ LABORATORIO ICFES QUÍMICA", d: "Motor generativo avanzado con micro-clases Socráticas." },
+      mendeleevGrid: { t: "🛰️ MENDELEEV'S GRID", d: "Malla Periódica: Navega y deduce Radio y Electronegatividad." }
+    } 
+  },
+  en: { 
+    title: "SIMULATION CENTER", 
+    back: "⬅ BACK TO SELECTOR", 
+    new: "NEW MISSION",
+    games: { 
+      gasLaws: { t: "🧪 GAS LAWS", d: "Interactive thermodynamics: Plasma, Pressure, and Temp." }, 
+      gasTheory: { t: "📚 GAS THEORY MASTER", d: "Guided Campaign: Particle kinetics and classic laws." }, 
+      redoxLab: { t: "⚡ REDOX CHEMISTRY LAB", d: "Balancing mechanics and 3D electron transfer." }, 
+      //redoxBalancer: { t: "⚖️ REDOX BALANCER", d: "Advanced charge balancing and stoichiometry." },
+      redoxBalancer: { t: "⚖️ ICFES CHEMISTRY LAB", d: "Advanced generative engine with Socratic micro-classes." },
+      mendeleevGrid: { t: "🛰️ MENDELEEV'S GRID", d: "Periodic Grid: Navigate and deduce Radius and EN." }
+    } 
+  },
+  fr: { 
+    title: "CENTRE DE SIMULATION", back: "⬅ RETOUR", new: "NOUVEAU",
+    games: { 
+      gasLaws: { t: "🧪 LOIS DES GAZ", d: "Thermodynamique, 150 éléments, Plasma et Pression." }, 
+      gasTheory: { t: "📚 GAS THEORY MASTER", d: "Campagne Guidée : Cinétique, Boyle et Charles." }, 
+      redoxLab: { t: "⚡ LABO CHIMIE REDOX", d: "Mécaniques d'équilibrage et transfert d'électrons." }, 
+      redoxBalancer: { t: "⚖️ LAB. DE CHIMIE ICFES", d: "Moteur génératif avancé avec micro-cours socratiques." },
+      mendeleevGrid: { t: "🛰️ GRILLE DE MENDELEÏEV", d: "Naviguez dans la grille et déduisez les tendances." }
+    } 
+  },
+  de: { 
+    title: "SIMULATIONSZENTRUM", back: "⬅ ZURÜCK", new: "NEU",
+    games: { 
+      gasLaws: { t: "🧪 GASGESETZE", d: "Thermodynamik, 150 Elemente, Plasma und Druck." }, 
+      gasTheory: { t: "📚 GAS THEORY MASTER", d: "Geführte Kampagne: Kinetik, Boyle und Charles." }, 
+      redoxLab: { t: "⚡ REDOX-CHEMIE-LABOR", d: "Ausgleichsmechanik und Elektronentransfer." }, 
+      redoxBalancer: { t: "⚖️ ICFES CHEMIE LABOR", d: "Erweiterte generative Engine mit sokratischen Mikro-Klassen." },
+      mendeleevGrid: { t: "🛰️ MENDELEJEW-GITTER", d: "Navigieren Sie im Gitter und leiten Sie Trends ab." }
+    } 
+  }
 };
 
 const LiveEquation = ({ mode, p, v, t }) => {
@@ -47,47 +90,20 @@ const LiveEquation = ({ mode, p, v, t }) => {
       <div style={{ padding: '0 2px' }}>{bottom}</div>
     </div>
   );
-
-  const k_boyle = (p * v).toFixed(0);
-  const k_charles = (v / t).toFixed(3);
-  const k_gl = (p / t).toFixed(3);
-
-  if (mode === 'FREE') return (
-    <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', fontSize:'clamp(14px, 2vw, 20px)', fontWeight:'bold'}}>
-      <div><Var char="P" color={cP}/> · <Var char="V" color={cV}/> = nR · <Var char="T" color={cT}/></div>
-      <div style={{fontSize:'clamp(10px, 1.5vw, 16px)', color:'#aaa'}}>{val(p, cP)} · {val(v, cV)} = k · {val(t, cT)}</div>
-    </div>
-  );
-  if (mode === 'BOYLE') return (
-    <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', fontSize:'clamp(14px, 2vw, 20px)', fontWeight:'bold'}}>
-      <div><Var char="P" sub="1" color={cP}/> · <Var char="V" sub="1" color={cV}/> = <Var char="P" sub="2" color={cP}/> · <Var char="V" sub="2" color={cV}/></div>
-      <div style={{fontSize:'clamp(10px, 1.5vw, 16px)', color:'#aaa'}}>{val(p, cP)} · {val(v, cV)} = {k_boyle} (k)</div>
-    </div>
-  );
-  if (mode === 'CHARLES') return (
-    <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', fontSize:'clamp(14px, 2vw, 20px)', fontWeight:'bold'}}>
-      <div><Fraction top={<Var char="V" sub="1" color={cV}/>} bottom={<Var char="T" sub="1" color={cT}/>} /> = <Fraction top={<Var char="V" sub="2" color={cV}/>} bottom={<Var char="T" sub="2" color={cT}/>} /></div>
-      <div style={{fontSize:'clamp(10px, 1.5vw, 16px)', color:'#aaa'}}><Fraction top={val(v, cV)} bottom={val(t, cT)} /> = {k_charles} (k)</div>
-    </div>
-  );
-  if (mode === 'GAY_LUSSAC') return (
-    <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', fontSize:'clamp(14px, 2vw, 20px)', fontWeight:'bold'}}>
-      <div><Fraction top={<Var char="P" sub="1" color={cP}/>} bottom={<Var char="T" sub="1" color={cT}/>} /> = <Fraction top={<Var char="P" sub="2" color={cP}/>} bottom={<Var char="T" sub="2" color={cT}/>} /></div>
-      <div style={{fontSize:'clamp(10px, 1.5vw, 16px)', color:'#aaa'}}><Fraction top={val(p, cP)} bottom={val(t, cT)} /> = {k_gl} (k)</div>
-    </div>
-  );
+  if (mode === 'FREE') return (<div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', fontSize:'clamp(14px, 2vw, 20px)', fontWeight:'bold'}}><div><Var char="P" color={cP}/> · <Var char="V" color={cV}/> = nR · <Var char="T" color={cT}/></div><div style={{fontSize:'clamp(10px, 1.5vw, 16px)', color:'#aaa'}}>{val(p, cP)} · {val(v, cV)} = k · {val(t, cT)}</div></div>);
+  if (mode === 'BOYLE') return (<div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', fontSize:'clamp(14px, 2vw, 20px)', fontWeight:'bold'}}><div><Var char="P" sub="1" color={cP}/> · <Var char="V" sub="1" color={cV}/> = <Var char="P" sub="2" color={cP}/> · <Var char="V" sub="2" color={cV}/></div><div style={{fontSize:'clamp(10px, 1.5vw, 16px)', color:'#aaa'}}>{val(p, cP)} · {val(v, cV)} = {(p * v).toFixed(0)} (k)</div></div>);
+  if (mode === 'CHARLES') return (<div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', fontSize:'clamp(14px, 2vw, 20px)', fontWeight:'bold'}}><div><Fraction top={<Var char="V" sub="1" color={cV}/>} bottom={<Var char="T" sub="1" color={cT}/>} /> = <Fraction top={<Var char="V" sub="2" color={cV}/>} bottom={<Var char="T" sub="2" color={cT}/>} /></div><div style={{fontSize:'clamp(10px, 1.5vw, 16px)', color:'#aaa'}}><Fraction top={val(v, cV)} bottom={val(t, cT)} /> = {(v/t).toFixed(3)} (k)</div></div>);
+  if (mode === 'GAY_LUSSAC') return (<div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', fontSize:'clamp(14px, 2vw, 20px)', fontWeight:'bold'}}><div><Fraction top={<Var char="P" sub="1" color={cP}/>} bottom={<Var char="T" sub="1" color={cT}/>} /> = <Fraction top={<Var char="P" sub="2" color={cP}/>} bottom={<Var char="T" sub="2" color={cT}/>} /></div><div style={{fontSize:'clamp(10px, 1.5vw, 16px)', color:'#aaa'}}><Fraction top={val(p, cP)} bottom={val(t, cT)} /> = {(p/t).toFixed(3)} (k)</div></div>);
   return null;
 };
 
 export default function App() {
-  const isMobile = useMobile(); // 🔥 Inyectamos el Hook
-  
+  const isMobile = useMobile();
   const { appState, activeGame, temp, volume, pressure, phaseID, isCritical, activeMaterial, setMaterial, activeMode, setMode, updatePhysics, language, setLanguage, startGame, resetProgress, activeQuiz, answerQuizQuestion, quizFeedback, clearFeedback, closeQuiz, score, triggerExercise, exampleSession, loadExampleScenario, exitExample, searchTerm, setSearchTerm, filterCategory, setFilterCategory, isGeneratingQuiz } = useGameStore();
+  
   const mat = MATERIALS[activeMaterial] || MATERIALS['H2O'];
-  
   const t_i18n = i18n[language] || i18n.es;
-  const cat = CATALOG[language] || CATALOG.es; // Diccionario del Catálogo
-  
+  const cat = CATALOG[language] || CATALOG.es; 
   const t = t_i18n.ui;
   const lesson = t_i18n.lessons[activeMode];
   const examples = t_i18n.examples[activeMode];
@@ -130,7 +146,6 @@ export default function App() {
 
       {appState === 'GAME_SELECT' && (
         <div style={ui.screenGame}><div style={ui.hexBackground} />
-          {/* 🔥 Botón BACK Dinámico (No recarga la página) */}
           <button onClick={() => useGameStore.setState({ appState: 'LANG_SELECT' })} style={ui.resetBtnGame}>{cat.back}</button>
           <div style={{...ui.centerBoxGame, width: '95%', maxWidth: '1200px'}}>
             <h1 style={ui.titleGame}>{cat.title}</h1>
@@ -141,20 +156,26 @@ export default function App() {
                 <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.gasLaws.d}</p>
               </div>
 
-              <div style={{...ui.gameCard, border: '1px solid #00ff88', background: 'rgba(0, 30, 15, 0.8)', boxShadow: '0 0 20px rgba(0,255,136,0.2)', position: 'relative'}} onClick={() => startGame('GAS_THEORY')}>
-                <div style={{position:'absolute', top:'-10px', right:'-10px', background:'#00ff88', color:'#000', padding:'4px 10px', fontSize:'12px', fontWeight:'bold', borderRadius:'4px'}}>{cat.games.new}</div>
+              <div style={{...ui.gameCard, border: '1px solid #00ff88', background: 'rgba(0, 30, 15, 0.8)'}} onClick={() => startGame('GAS_THEORY')}>
                 <h2 style={{color: '#00ff88', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.gasTheory.t}</h2>
                 <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.gasTheory.d}</p>
               </div>
 
-              <div style={{...ui.gameCard, border: '1px solid #ff0055', background: 'rgba(30, 0, 10, 0.8)', boxShadow: '0 0 20px rgba(255,0,85,0.2)'}} onClick={() => startGame('REDOX_LAB')}>
+              <div style={{...ui.gameCard, border: '1px solid #ff0055', background: 'rgba(30, 0, 10, 0.8)'}} onClick={() => startGame('REDOX_LAB')}>
                 <h2 style={{color: '#ff0055', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.redoxLab.t}</h2>
                 <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.redoxLab.d}</p>
               </div>
 
-              <div style={{...ui.gameCard, border: '1px solid #ffea00', background: 'rgba(30, 25, 0, 0.8)', boxShadow: '0 0 20px rgba(255,234,0,0.2)'}} onClick={() => startGame('REDOX_BALANCER')}>
+              <div style={{...ui.gameCard, border: '1px solid #ffea00', background: 'rgba(30, 25, 0, 0.8)'}} onClick={() => startGame('REDOX_BALANCER')}>
                 <h2 style={{color: '#ffea00', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.redoxBalancer.t}</h2>
                 <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.redoxBalancer.d}</p>
+              </div>
+
+              {/* 🔥 CARTUCHO 5: MENDELEEV GRID */}
+              <div style={{...ui.gameCard, border: '1px solid #00ff00', background: 'rgba(0, 30, 0, 0.8)', position: 'relative'}} onClick={() => startGame('MENDELEEV_GRID')}>
+                <div style={{position:'absolute', top:'-10px', right:'-10px', background:'#00ff00', color:'#000', padding:'4px 10px', fontSize:'12px', fontWeight:'bold', borderRadius:'4px'}}>{cat.new}</div>
+                <h2 style={{color: '#00ff00', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.mendeleevGrid.t}</h2>
+                <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.mendeleevGrid.d}</p>
               </div>
 
             </div>
@@ -206,7 +227,10 @@ export default function App() {
             </div>
           )}
 
-          {activeGame === 'REDOX_LAB' ? (
+          {/* 🔥 ENRUTADOR DINÁMICO DE LOS 5 JUEGOS ACTIVOS */}
+          {activeGame === 'MENDELEEV_GRID' ? (
+             <MendeleevGrid />
+          ) : activeGame === 'REDOX_LAB' ? (
              <RedoxLab />
           ) : activeGame === 'REDOX_BALANCER' ? (
              <RedoxBalancer />
@@ -214,10 +238,9 @@ export default function App() {
              <GasTheory />
           ) : (
              <>
-                {/* ⬅️ PANEL IZQUIERDO: Materiales (Se vuelve horizontal en móvil) */}
+                {/* ⬅️ PANEL IZQUIERDO: Materiales */}
                 <div className="game-panel-left" style={ui.leftPanel(isMobile)}>
                   <div className="material-selector-box" style={{...ui.sectionBox, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, pointerEvents: 'auto'}}>
-                    
                     <div className="search-filter-wrap" style={{display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '10px', alignItems: 'center'}}>
                       <input type="text" placeholder={t.search} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={ui.searchInput(isMobile)} />
                       <div className="filter-buttons" style={{display:'flex', gap:'5px', flexShrink: 0, overflowX: 'auto', width: isMobile ? 'auto' : '100%'}}>
@@ -226,8 +249,6 @@ export default function App() {
                         <button onClick={()=>setFilterCategory('Compuesto')} style={filterCategory==='Compuesto'?ui.pillA:ui.pill}>{t.filterComp}</button>
                       </div>
                     </div>
-                    
-                    {/* Lista de materiales horizontal en móvil, vertical en PC */}
                     <div className="materials-list" style={{flex: 1, overflowY: isMobile ? 'hidden' : 'auto', overflowX: isMobile ? 'auto' : 'hidden', marginTop: '10px', display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '8px', paddingBottom: isMobile ? '10px' : '0'}}>
                       {filteredMaterials.map(m => (
                         <button key={m.id} className="mat-btn-item" onClick={() => setMaterial(m.id)} style={activeMaterial === m.id ? ui.matBtnActive(isMobile) : ui.matBtn(isMobile)}>
@@ -236,10 +257,7 @@ export default function App() {
                         </button>
                       ))}
                     </div>
-
                   </div>
-                  
-                  {/* Stats del elemento seleccionado (Solo PC para ahorrar espacio en móvil) */}
                   {!isMobile && (
                     <div className="element-stats-box" style={{...ui.sectionBox, background:'rgba(0,15,30,0.8)', borderLeft:'3px solid #00f2ff', flexShrink: 0, pointerEvents: 'auto'}}>
                       <h3 style={ui.panelTitle}>// {mat.symbol} ({t[phaseID]?.toUpperCase() || phaseID.toUpperCase()})</h3>
@@ -253,12 +271,11 @@ export default function App() {
                   )}
                 </div>
 
-                {/* ➡️ PANEL DERECHO: Modos y Ecuación (Se mueve abajo en móvil) */}
+                {/* ➡️ PANEL DERECHO */}
                 <div className="game-panel-right" style={ui.rightPanel(isMobile)}>
                   <div className="score-box" style={{...ui.sectionBox, borderLeft:'4px solid #ffea00', background:'rgba(50,40,0,0.8)', flexShrink: 0, pointerEvents: 'auto'}}>
                     <h3 style={{...ui.panelTitle, color:'#ffea00', fontSize:'clamp(12px, 2.5vw, 14px)', margin:0}}>🏆 SCORE: {score} PTS</h3>
                   </div>
-                  
                   <div className="mode-selector-box" style={{...ui.sectionBox, flexShrink: 0, pointerEvents: 'auto'}}>
                     <h3 style={ui.panelTitle}>// {t.classMode || "LEYES"}</h3>
                     <div style={ui.modeGrid(isMobile)}>
@@ -268,7 +285,6 @@ export default function App() {
                       <div style={{marginTop:'15px', fontSize:'11px', color:'#ccc', lineHeight:'1.5'}}><strong style={{color:'#00f2ff'}}>{lesson.title}</strong><br/><span style={{color:'#ffea00'}}>{t.goal}:</span> {lesson.goal}<br/><span style={{color:'#00f2ff'}}>{t.idea}:</span> {lesson.idea}</div>
                     )}
                   </div>
-
                   {activeMode !== 'FREE' && !isMobile && (
                     <div style={{...ui.sectionBox, borderLeft:'3px solid #ff0055', background:'rgba(30,0,10,0.8)', flexShrink: 0, maxHeight: '25vh', overflowY: 'auto', pointerEvents: 'auto'}}>
                       <h3 style={{...ui.panelTitle, color:'#ff0055'}}>{t.labTitle}</h3>
@@ -285,11 +301,9 @@ export default function App() {
                       )}
                     </div>
                   )}
-
                   <div className="equation-box" style={{...ui.sectionBox, textAlign:'center', flexShrink: 0, pointerEvents: 'auto'}}>
                     <LiveEquation mode={activeMode} p={pressure} v={volume} t={temp} />
                   </div>
-
                   <button className="generate-quiz-btn" onClick={triggerExercise} disabled={isGeneratingQuiz} style={{...ui.iaButton, opacity: isGeneratingQuiz ? 0.5 : 1, flexShrink: 0, pointerEvents: 'auto'}}>
                     {isGeneratingQuiz ? t.loadingAI : t.generate}
                   </button>
@@ -309,7 +323,7 @@ export default function App() {
                   <OrbitControls makeDefault enablePan={false} maxPolarAngle={Math.PI / 1.8} />
                 </Canvas>
 
-                {/* ⬇️ PANEL DE CONTROLES INFERIOR: FlexWrap dinámico */}
+                {/* ⬇️ PANEL DE CONTROLES INFERIOR */}
                 <div className="main-controls-dock" style={ui.controlPanel(isMobile)}>
                    <div className="control-column" style={{...ui.controlGroup, opacity: (activeMode==='BOYLE')?0.2:1, pointerEvents: (activeMode==='BOYLE')?'none':'auto'}}>
                      <div style={ui.controlLabel('#00f2ff')}>{t.temp}</div>
@@ -351,9 +365,8 @@ export default function App() {
   );
 }
 
-// 🎨 DICCIONARIO DE ESTILOS MOBILE-FIRST (Uso intensivo de clamp y flexWrap)
+// 🎨 DICCIONARIO DE ESTILOS MOBILE-FIRST
 const ui = {
-  // Screens globales
   screenGame: { width:'100vw', height:'100dvh', backgroundColor:'#010204', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', fontFamily:'Orbitron, sans-serif', position:'relative', overflow:'hidden', padding: 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)' },
   hexBackground: { position:'absolute', inset:0, backgroundImage:'radial-gradient(circle at center, rgba(0,242,255,0.05) 0%, transparent 60%)', backgroundSize:'40px 40px', zIndex: 1 },
   vignette: { position:'absolute', inset:0, boxShadow:'inset 0 0 250px rgba(0,0,0,0.95)', zIndex:2 },
@@ -373,7 +386,6 @@ const ui = {
   screen: { width:'100vw', height:'100dvh', background:'#010204', fontFamily:'Orbitron', overflow:'hidden', position:'relative', pointerEvents: 'auto' },
   criticalOverlay: { position:'absolute', inset:0, boxShadow:'inset 0 0 200px rgba(255,0,85,0.4)', pointerEvents:'none', zIndex:99, transition:'0.3s' },
   
-  // Paneles Laterales Flexibles (pointerEvents: none en el contenedor principal para no bloquear la cámara)
   leftPanel: (isMobile) => ({ position:'absolute', top: isMobile ? 'max(60px, calc(env(safe-area-inset-top) + 50px))' : '80px', left: isMobile ? '10px' : '30px', right: isMobile ? '10px' : 'auto', zIndex:50, display: 'flex', flexDirection: isMobile ? 'column' : 'column', gap:'10px', width: isMobile ? 'auto' : 'clamp(200px, 25vw, 280px)', height: isMobile ? 'auto' : 'calc(100vh - 180px)', pointerEvents: 'none' }),
   rightPanel: (isMobile) => ({ position:'absolute', top: isMobile ? 'auto' : '80px', bottom: isMobile ? 'calc(clamp(90px, 15vh, 120px) + env(safe-area-inset-bottom))' : 'auto', right: isMobile ? '10px' : '30px', left: isMobile ? '10px' : 'auto', zIndex:50, display: 'flex', flexDirection: isMobile ? 'row' : 'column', flexWrap: isMobile ? 'wrap' : 'nowrap', justifyContent: 'space-around', gap:'10px', width: isMobile ? 'auto' : 'clamp(220px, 28vw, 300px)', maxHeight: isMobile ? 'auto' : 'calc(100vh - 180px)', pointerEvents: 'none' }),
   
@@ -391,7 +403,6 @@ const ui = {
   
   iaButton: { width:'100%', padding:'clamp(12px, 3vw, 15px)', background:'linear-gradient(45deg, #7b2cbf, #b5179e)', border:'2px solid #f72585', color:'#fff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(14px, 3vw, 16px)', fontWeight:'bold', marginTop:'5px', boxShadow:'0 0 15px rgba(247, 37, 133, 0.5)', borderRadius: '8px', minHeight: '48px' },
   
-  // Controles Inferiores (Dashboard Central): Envueltos y centrados
   controlPanel: (isMobile) => ({ position:'absolute', bottom: 'max(10px, env(safe-area-inset-bottom))', left:'50%', transform:'translateX(-50%)', zIndex:150, display:'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems:'center', gap:'clamp(10px, 2vw, 20px)', background:'rgba(0,5,15,0.85)', padding:'clamp(10px, 2vw, 15px) clamp(15px, 3vw, 30px)', borderRadius:'15px', border:'1px solid #00f2ff', boxShadow:'0 0 20px rgba(0,242,255,0.15)', backdropFilter:'blur(10px)', width: '95%', maxWidth: '900px', boxSizing: 'border-box', pointerEvents: 'auto' }),
   
   controlGroup: { display:'flex', flexDirection:'column', gap:'8px', alignItems: 'center' },
@@ -401,14 +412,12 @@ const ui = {
   hudControl: (isCrit, phase, isMobile) => ({ background:'rgba(0,0,0,0.6)', padding:'clamp(8px, 2vw, 10px) clamp(15px, 4vw, 30px)', border:`2px solid ${phase==='plasma'?'#fff':(isCrit?'#ff0055':'#00f2ff')}`, textAlign:'center', minWidth:'clamp(120px, 30vw, 150px)', borderRadius:'10px', boxShadow: phase==='plasma'?'0 0 30px #fff':'', display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: isMobile ? '15px' : '5px', alignItems: 'center', justifyContent: 'center' }),
   hudVal: (isCrit, baseColor, isMobile) => ({ fontSize: isMobile ? 'clamp(14px, 3.5vw, 18px)' : 'clamp(20px, 4vw, 24px)', fontWeight:'bold', color: isCrit ? '#ff0055' : baseColor, margin: 0, textShadow:`0 0 10px ${baseColor}` }),
   
-  // Modales
   quizOverlay: { position:'absolute', inset:0, background:'rgba(0,5,10,0.95)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(15px)', padding: 'clamp(15px, 4vw, 30px)', boxSizing: 'border-box', pointerEvents: 'auto' },
   quizBox: { background:'rgba(0,10,20,0.9)', border:'2px solid #00f2ff', padding:'clamp(20px, 6vw, 50px)', maxWidth:'900px', width:'100%', maxHeight:'85dvh', overflowY:'auto', textAlign:'center', boxShadow:'0 0 60px rgba(0,242,255,0.2)', borderRadius: '20px', boxSizing: 'border-box' },
   quizGrid: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(250px, 1fr))', gap:'clamp(15px, 3vw, 20px)', marginBottom:'20px', width: '100%' },
   quizBtn: { padding:'clamp(15px, 3vw, 25px)', background:'rgba(255,255,255,0.05)', border:'2px solid #555', color:'#fff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(14px, 3.5vw, 18px)', textAlign:'center', transition:'0.3s', borderRadius: '10px', minHeight: '60px', fontWeight: 'bold' }
 };
 
-// Parches Inyectados puros para CSS
 if (typeof document !== 'undefined' && !document.getElementById("app-styles-mobile")) {
   const styleSheet = document.createElement("style");
   styleSheet.id = "app-styles-mobile";
@@ -417,13 +426,12 @@ if (typeof document !== 'undefined' && !document.getElementById("app-styles-mobi
     ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 10px; }
     ::-webkit-scrollbar-thumb { background: rgba(0,242,255,0.4); border-radius: 10px; }
     
-    /* Reglas Mágicas Mobile First */
     @media (max-width: 768px) {
        .game-panel-left { background: rgba(0,5,15,0.85); backdrop-filter: blur(10px); padding: 10px; border-radius: 15px; border: 1px solid #005577; }
        .game-panel-right { padding-bottom: 5px; }
        .material-selector-box { flex-direction: row !important; align-items: center; padding: 10px !important; }
        .filter-buttons { margin-top: 0 !important; }
-       .element-stats-box { display: none !important; /* Ocultamos los stats extra arriba para salvar espacio, ya salen en HUD central */ }
+       .element-stats-box { display: none !important; }
        
        .score-box { padding: 8px 15px !important; flex: 1 1 100% !important; margin-bottom: 5px; }
        .mode-selector-box { padding: 8px 10px !important; flex: 1 1 45% !important; min-width: 150px; }
