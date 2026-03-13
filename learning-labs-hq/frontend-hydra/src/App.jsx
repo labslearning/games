@@ -7,14 +7,17 @@ import { useGameStore, i18n, audioSys } from './store/useGameStore';
 import { MATERIALS } from './data/materials';
 
 // ============================================================
-// 📦 IMPORTAMOS TUS 6 JUEGOS ACTIVOS ("Cartuchos Cuánticos")
+// 📦 IMPORTAMOS TUS 8 JUEGOS ACTIVOS ("Cartuchos Cuánticos")
 // ============================================================
 import GasLaws from './games/chemistry/GasLaws';
 import RedoxLab from './games/chemistry/RedoxLab';
 import RedoxBalancer from './games/chemistry/RedoxBalancer';
 import GasTheory from './games/chemistry/GasTheory';
 import MendeleevGrid from './games/chemistry/MendeleevGrid/MendeleevGrid';
-import MathLab from './games/mathematics/MathLab'; // 🔴 MATEMÁTICAS CONECTADO
+import MathLab from './games/mathematics/MathLab'; 
+import ScienceLab from './games/science/science_icfes';
+// 🟣 RUTA CORREGIDA: LECTURA CRÍTICA CONECTADA A TU ARCHIVO EXACTO EN LINUX
+import ReadingLab from './games/lectura_critica/lectura'; 
 
 /* ============================================================
    📱 HOOK DE RESPONSIVIDAD (MOBILE FIRST)
@@ -42,7 +45,9 @@ const CATALOG = {
     subjects: {
       chem: { t: "QUÍMICA", d: "Termodinámica, Reacciones, Enlaces y Estructura." },
       math: { t: "MATEMÁTICAS", d: "Álgebra, Geometría, Estadística y Lógica." },
-      phys: { t: "FÍSICA", d: "Mecánica, Fluidos, Ondas y Electromagnetismo." }
+      phys: { t: "FÍSICA", d: "Mecánica, Fluidos, Ondas y Electromagnetismo." },
+      nat:  { t: "CIENCIAS NATURALES", d: "Biología, Entorno Físico, Químico y CTS." },
+      read: { t: "LECTURA CRÍTICA", d: "Niveles literal, inferencial y crítico. Análisis de textos." }
     },
     games: { 
       gasLaws: { t: "🧪 LEYES DE GASES", d: "Termodinámica interactiva: Plasma, Presión y Temperatura." }, 
@@ -50,7 +55,9 @@ const CATALOG = {
       redoxLab: { t: "⚡ QUÍMICA REDOX LAB", d: "Mecánicas de balanceo y transferencia de electrones en 3D." }, 
       redoxBalancer: { t: "⚖️ LAB. ICFES QUÍMICA", d: "Motor generativo avanzado con micro-clases Socráticas." },
       mendeleevGrid: { t: "🛰️ MENDELEEV'S GRID", d: "Malla Periódica: Navega y deduce Radio y Electronegatividad." },
-      mathLab: { t: "📐 MATEMÁTICAS ICFES", d: "Simulación Cuántica: Álgebra, Geometría, Probabilidad con IA." }
+      mathLab: { t: "📐 MATEMÁTICAS ICFES", d: "Simulación Cuántica: Álgebra, Geometría, Probabilidad con IA." },
+      scienceLab: { t: "🧬 CIENCIAS ICFES", d: "Simulador Integral: Biología, Química y Física en entorno real." },
+      readingLab: { t: "📖 LECTURA CRÍTICA ICFES", d: "Simulador Cognitivo: Análisis semántico y pragmático con IA." }
     } 
   },
   en: { 
@@ -60,7 +67,9 @@ const CATALOG = {
     subjects: {
       chem: { t: "CHEMISTRY", d: "Thermodynamics, Reactions, Bonds, and Structure." },
       math: { t: "MATHEMATICS", d: "Algebra, Geometry, Statistics, and Logic." },
-      phys: { t: "PHYSICS", d: "Mechanics, Fluids, Waves, and Electromagnetism." }
+      phys: { t: "PHYSICS", d: "Mechanics, Fluids, Waves, and Electromagnetism." },
+      nat:  { t: "NATURAL SCIENCES", d: "Biology, Physical Environment, Chemistry & STS." },
+      read: { t: "CRITICAL READING", d: "Literal, inferential, and critical levels. Text analysis." }
     },
     games: { 
       gasLaws: { t: "🧪 GAS LAWS", d: "Interactive thermodynamics: Plasma, Pressure, and Temp." }, 
@@ -68,7 +77,9 @@ const CATALOG = {
       redoxLab: { t: "⚡ REDOX CHEMISTRY LAB", d: "Balancing mechanics and 3D electron transfer." }, 
       redoxBalancer: { t: "⚖️ ICFES CHEMISTRY LAB", d: "Advanced generative engine with Socratic micro-classes." },
       mendeleevGrid: { t: "🛰️ MENDELEEV'S GRID", d: "Periodic Grid: Navigate and deduce Radius and EN." },
-      mathLab: { t: "📐 ICFES MATH LAB", d: "Quantum Simulation: Algebra, Geometry, Probability with AI." }
+      mathLab: { t: "📐 ICFES MATH LAB", d: "Quantum Simulation: Algebra, Geometry, Probability with AI." },
+      scienceLab: { t: "🧬 ICFES SCIENCE LAB", d: "Integral Simulator: Biology, Chemistry & Physics in real-time." },
+      readingLab: { t: "📖 ICFES CRITICAL READING", d: "Cognitive Simulator: Semantic and pragmatic analysis with AI." }
     } 
   },
   fr: { 
@@ -78,7 +89,9 @@ const CATALOG = {
     subjects: {
       chem: { t: "CHIMIE", d: "Thermodynamique, Réactions, Liaisons." },
       math: { t: "MATHÉMATIQUES", d: "Algèbre, Géométrie, Statistiques et Logique." },
-      phys: { t: "PHYSIQUE", d: "Mécanique, Fluides, Ondes." }
+      phys: { t: "PHYSIQUE", d: "Mécanique, Fluides, Ondes." },
+      nat:  { t: "SCIENCES NATURELLES", d: "Biologie, Chimie, Physique et Environnement." },
+      read: { t: "LECTURE CRITIQUE", d: "Niveaux littéral, inférentiel et critique. Analyse de textes." }
     },
     games: { 
       gasLaws: { t: "🧪 LOIS DES GAZ", d: "Thermodynamique, 150 éléments, Plasma et Pression." }, 
@@ -86,7 +99,9 @@ const CATALOG = {
       redoxLab: { t: "⚡ LABO CHIMIE REDOX", d: "Mécaniques d'équilibrage et transfert d'électrons." }, 
       redoxBalancer: { t: "⚖️ LAB. DE CHIMIE ICFES", d: "Moteur génératif avec micro-cours socratiques." },
       mendeleevGrid: { t: "🛰️ GRILLE DE MENDELEÏEV", d: "Naviguez dans la grille et déduisez les tendances." },
-      mathLab: { t: "📐 LABO MATHS ICFES", d: "Simulation Quantique : Algèbre, Géométrie, Probabilités IA." }
+      mathLab: { t: "📐 LABO MATHS ICFES", d: "Simulation Quantique : Algèbre, Géométrie, Probabilités IA." },
+      scienceLab: { t: "🧬 LABO SCIENCES ICFES", d: "Simulateur Intégral : Biologie, Chimie et Physique en direct." },
+      readingLab: { t: "📖 LECTURE CRITIQUE ICFES", d: "Simulateur Cognitif: Analyse sémantique et pragmatique avec IA." }
     } 
   },
   de: { 
@@ -96,7 +111,9 @@ const CATALOG = {
     subjects: {
       chem: { t: "CHEMIE", d: "Thermodynamik, Reaktionen, Bindungen." },
       math: { t: "MATHEMATIK", d: "Algebra, Geometrie, Statistik." },
-      phys: { t: "PHYSIK", d: "Mechanik, Flüssigkeiten, Wellen." }
+      phys: { t: "PHYSIK", d: "Mechanik, Flüssigkeiten, Wellen." },
+      nat:  { t: "NATURWISSENSCHAFTEN", d: "Biologie, Physik, Chemie und Umwelt." },
+      read: { t: "KRITISCHES LESEN", d: "Wörtliche, schlussfolgernde und kritische Ebenen. Textanalyse." }
     },
     games: { 
       gasLaws: { t: "🧪 GASGESETZE", d: "Thermodynamik, 150 Elemente, Plasma und Druck." }, 
@@ -104,7 +121,9 @@ const CATALOG = {
       redoxLab: { t: "⚡ REDOX-CHEMIE-LABOR", d: "Ausgleichsmechanik und Elektronentransfer." }, 
       redoxBalancer: { t: "⚖️ ICFES CHEMIE LABOR", d: "Erweiterte generative Engine mit sokratischen Mikro-Klassen." },
       mendeleevGrid: { t: "🛰️ MENDELEJEW-GITTER", d: "Navigieren Sie im Gitter und leiten Sie Trends ab." },
-      mathLab: { t: "📐 ICFES MATH LABOR", d: "Quantensimulation: Algebra, Geometrie, Wahrscheinlichkeit KI." }
+      mathLab: { t: "📐 ICFES MATH LABOR", d: "Quantensimulation: Algebra, Geometrie, Wahrscheinlichkeit KI." },
+      scienceLab: { t: "🧬 ICFES WISSENSCHAFTEN", d: "Integraler Simulator: Biologie, Chemie und Physik mit KI." },
+      readingLab: { t: "📖 ICFES KRITISCHES LESEN", d: "Kognitiver Simulator: Semantische und pragmatische Analyse mit KI." }
     } 
   }
 };
@@ -169,7 +188,7 @@ export default function App() {
   const isMobile = useMobile();
   const { appState, activeGame, temp, volume, pressure, phaseID, isCritical, activeMaterial, setMaterial, activeMode, setMode, updatePhysics, language, setLanguage, startGame, resetProgress, activeQuiz, answerQuizQuestion, quizFeedback, clearFeedback, closeQuiz, score, triggerExercise, exampleSession, loadExampleScenario, exitExample, searchTerm, setSearchTerm, filterCategory, setFilterCategory, isGeneratingQuiz } = useGameStore();
   
-  // 🔴 ESTADO DEL ENRUTADOR NEXUS ('nexus' | 'cat_chem' | 'cat_math' | 'cat_phys')
+  // 🔴 ESTADO DEL ENRUTADOR NEXUS ('nexus' | 'cat_chem' | 'cat_math' | 'cat_phys' | 'cat_nat' | 'cat_read')
   const [menuView, setMenuView] = useState('nexus');
 
   const mat = MATERIALS[activeMaterial] || MATERIALS['H2O'];
@@ -245,6 +264,19 @@ export default function App() {
             <header style={{textAlign: 'center', marginBottom: 'clamp(20px, 6vw, 40px)', width: '100%'}}>
               <h1 style={ui.titleGame}>{menuView === 'nexus' ? cat.titleNexus : cat.titleCatalog}</h1>
               {menuView === 'nexus' && <p style={{color: '#00f2ff', letterSpacing: 'clamp(1px, 1vw, 3px)', margin: 0, fontSize: 'clamp(12px, 3vw, 16px)', fontWeight: 'bold'}}>{cat.subNexus}</p>}
+              
+              {/* INDICADOR DINÁMICO DE MATERIA */}
+              {menuView !== 'nexus' && (
+                <p style={{color: '#00f2ff', letterSpacing: 'clamp(1px, 1vw, 3px)', margin: 0, fontSize: 'clamp(14px, 3vw, 18px)', fontWeight: 'bold'}}>
+                  // {
+                    menuView === 'cat_chem' ? cat.subjects.chem.t : 
+                    menuView === 'cat_math' ? cat.subjects.math.t : 
+                    menuView === 'cat_nat' ? cat.subjects.nat.t : 
+                    menuView === 'cat_read' ? cat.subjects.read.t : 
+                    cat.subjects.phys.t
+                  }
+                </p>
+              )}
             </header>
 
             <div style={ui.gameGrid}>
@@ -254,7 +286,9 @@ export default function App() {
                 <>
                   <GameCard uiColor="#00ff88" icon="⚛️" title={cat.subjects.phys.t} desc={cat.subjects.phys.d} onClick={() => setMenuView('cat_phys')} />
                   <GameCard uiColor="#ff0055" icon="🧪" title={cat.subjects.chem.t} desc={cat.subjects.chem.d} onClick={() => setMenuView('cat_chem')} />
+                  <GameCard uiColor="#0f0" icon="🧬" title={cat.subjects.nat.t} desc={cat.subjects.nat.d} onClick={() => setMenuView('cat_nat')} />
                   <GameCard uiColor="#ffea00" icon="📐" title={cat.subjects.math.t} desc={cat.subjects.math.d} onClick={() => setMenuView('cat_math')} />
+                  <GameCard uiColor="#00f2ff" icon="📖" title={cat.subjects.read.t} desc={cat.subjects.read.d} onClick={() => setMenuView('cat_read')} />
                 </>
               )}
 
@@ -271,12 +305,29 @@ export default function App() {
 
               {/* === VISTA 3: JUEGOS DE MATEMÁTICAS === */}
               {menuView === 'cat_math' && (
-                <GameCard uiColor="#e000ff" icon="📐" title={cat.games.mathLab.t} desc={cat.games.mathLab.d} badge="NEXUS" badgeColor="#e000ff" onClick={() => startGame('MATH_LAB')} />
+                <GameCard uiColor="#ffea00" icon="📐" title={cat.games.mathLab.t} desc={cat.games.mathLab.d} badge="NEXUS" badgeColor="#ffea00" onClick={() => startGame('MATH_LAB')} />
               )}
 
               {/* === VISTA 4: JUEGOS DE FÍSICA === */}
               {menuView === 'cat_phys' && (
-                <GameCard uiColor="#00f2ff" icon="🌡️" title={cat.games.gasLaws.t} desc={cat.games.gasLaws.d} onClick={() => startGame('GAS_LAWS')} />
+                <>
+                  <GameCard uiColor="#00f2ff" icon="🌡️" title={cat.games.gasLaws.t} desc={cat.games.gasLaws.d} onClick={() => startGame('GAS_LAWS')} />
+                </>
+              )}
+
+              {/* === VISTA 5: JUEGOS DE CIENCIAS NATURALES === */}
+              {menuView === 'cat_nat' && (
+                <>
+                  <GameCard uiColor="#0f0" icon="🧬" title={cat.games.scienceLab.t} desc={cat.games.scienceLab.d} badge="NEXUS" badgeColor="#0f0" onClick={() => startGame('SCIENCE_LAB')} />
+                  <GameCard uiColor="#ff0055" icon="⚖️" title={cat.games.redoxBalancer.t} desc={cat.games.redoxBalancer.d} onClick={() => startGame('REDOX_BALANCER')} />
+                </>
+              )}
+
+              {/* === VISTA 6: JUEGOS DE LECTURA CRÍTICA (CONECTADO) === */}
+              {menuView === 'cat_read' && (
+                <>
+                  <GameCard uiColor="#00f2ff" icon="📖" title={cat.games.readingLab.t} desc={cat.games.readingLab.d} badge="NEXUS" badgeColor="#00f2ff" onClick={() => startGame('READING_LAB')} />
+                </>
               )}
 
             </div>
@@ -335,7 +386,11 @@ export default function App() {
           )}
 
           {/* 🔥 ENRUTADOR DINÁMICO DE LOS JUEGOS ACTIVOS 🔥 */}
-          {activeGame === 'MATH_LAB' ? (
+          {activeGame === 'READING_LAB' ? (
+             <ReadingLab />
+          ) : activeGame === 'SCIENCE_LAB' ? (
+             <ScienceLab />
+          ) : activeGame === 'MATH_LAB' ? (
              <MathLab />
           ) : activeGame === 'MENDELEEV_GRID' ? (
              <MendeleevGrid />
