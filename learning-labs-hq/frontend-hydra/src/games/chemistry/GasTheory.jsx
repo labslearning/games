@@ -6,7 +6,6 @@ import { GlitchMode } from 'postprocessing';
 import * as THREE from 'three';
 import { useGameStore } from '../../store/useGameStore';
 
-
 /* ============================================================
   🔊 1. MOTOR DE AUDIO SCI-FI TIER-GOD (MÚLTIPLES CAPAS)
 ============================================================ */
@@ -38,7 +37,6 @@ class ThermoAudio {
 }
 const sfx = new ThermoAudio();
 
-
 const triggerVoice = (text, langCode) => {
  if (!('speechSynthesis' in window)) return;
  window.speechSynthesis.cancel();
@@ -54,7 +52,6 @@ const triggerVoice = (text, langCode) => {
    }
  }, 50);
 };
-
 
 /* ============================================================
   🌍 2. MATRIZ PEDAGÓGICA TOTAL (4 IDIOMAS - 10 NIVELES)
@@ -75,7 +72,7 @@ const DICT = {
      { id: "GAY_LUSSAC_1", name: "Ley de Gay-Lussac (V Constante)", th: "A volumen fijo, la Presión es DIRECTAMENTE proporcional a la Temperatura. Calentar un recipiente de metal cerrado aumenta críticamente su presión interna.", q: "¿Por qué no debes tirar una lata de aerosol vacía al fuego?", o: ["Se derrite", "La presión la hace explotar", "Apaga el fuego", "Cambia de color"], a: 1, m: "El volumen de la lata de metal rígido es fijo. Al subir la temperatura, la presión aumenta exponencialmente hasta reventarla.", rw: "Esta es la física exacta y mortal detrás de las ollas de presión que usamos en la cocina para elevar el punto de ebullición del agua.", targetVar: "t", targetVal: 800, cond: ">=", ctrl: "t", targetText: "Temperatura" },
      { id: "BOYLE_2", name: "Boyle: Expansión Biológica", th: "Bajo la ley P1·V1 = P2·V2, al expandir artificialmente el volumen de los pulmones, la presión interna debe caer para que el aire exterior sea succionado.", q: "Tengo un gas a 2 atmósferas en 1 Litro. Si lo expando usando fuerza a 2 Litros, ¿cuál es la nueva presión?", o: ["4 atm", "1 atm", "2 atm", "0.5 atm"], a: 1, m: "Si el volumen se multiplica por dos, la presión debe dividirse por dos para mantener el equilibrio de la constante. El resultado es 1 atmósfera.", rw: "El diafragma baja, expande el volumen total del tórax, la presión interna cae por debajo de 1 atm y el aire entra solo por tu nariz.", targetVar: "v", targetVal: 9, cond: ">=", ctrl: "v", targetText: "Volumen" },
      { id: "CHARLES_2", name: "Charles: Dilatación Mecánica", th: "Para calcular la ley de Charles con precisión, la temperatura DEBE estar siempre en escala absoluta (Kelvin). A más calor, más expansión agresiva.", q: "Si un gas está a 0 grados centígrados (273 Kelvin) y lo caliento a 273 grados (546 Kelvin), ¿su volumen...?", o: ["Sube poco", "Se duplica", "Se reduce", "Es cero"], a: 1, m: "La temperatura absoluta en escala Kelvin se duplicó de 273 a 546. En consecuencia, el volumen también debe duplicarse geométricamente.", rw: "El motor de combustión interna de los vehículos calienta gases súbitamente; su rápida y violenta expansión es lo que empuja el pistón.", targetVar: "t", targetVal: 900, cond: ">=", ctrl: "t", targetText: "Temperatura" },
-     { id: "GAY_LUSSAC_2", name: "Gay-Lussac: Implosión Estructural", th: "Basado en P1/T1 = P2/T2. Si enfrías drásticamente un recipiente rígido sellado, la presión interior colapsará hacia el vacío.", q: "Un tanque sellado a 600 Kelvin y 4 atmósferas se enfría de golpe a 300 Kelvin. ¿Cuál es su presión final?", o: ["8 atm", "4 atm", "2 atm", "1 atm"], a: 2, m: "La temperatura bajó exactamente a la mitad. Por lo tanto, la presión también debe bajar a la mitad, quedando en 2 atmósferas.", rw: "Si lavas un bidón de plástico con agua hirviendo y lo tapas rápidamente, al enfriarse, la presión caerá y la botella se aplastará sola.", targetVar: "t", targetVal: 100, cond: "<=", ctrl: "t", targetText: "Temperatura" },
+     { id: "GAY_LUSSAC_2", name: "Gay-Lussac: Implosion Estructural", th: "Basado en P1/T1 = P2/T2. Si enfrías drásticamente un recipiente rígido sellado, la presión interior colapsará hacia el vacío.", q: "Un tanque sellado a 600 Kelvin y 4 atmósferas se enfría de golpe a 300 Kelvin. ¿Cuál es su presión final?", o: ["8 atm", "4 atm", "2 atm", "1 atm"], a: 2, m: "La temperatura bajó exactamente a la mitad. Por lo tanto, la presión también debe bajar a la mitad, quedando en 2 atmósferas.", rw: "Si lavas un bidón de plástico con agua hirviendo y lo tapas rápidamente, al enfriarse, la presión caerá y la botella se aplastará sola.", targetVar: "t", targetVal: 100, cond: "<=", ctrl: "t", targetText: "Temperatura" },
      { id: "AVOGADRO", name: "Principio Cuántico de Avogadro", th: "Sorprendentemente, volúmenes iguales de gases distintos bajo las mismas condiciones exactas contienen exactamente el mismo número de moléculas.", q: "Compara 1 Litro de gas Oxígeno pesado versus 1 Litro de gas Hidrógeno súper ligero a la misma presión y temperatura. ¿Quién tiene más moléculas?", o: ["Oxígeno", "Hidrógeno", "Iguales", "Depende"], a: 2, m: "El tamaño individual o la masa del átomo no importa en absoluto. El volumen en el espacio depende de la presión y la temperatura, no de la identidad del elemento.", rw: "Esta genialidad permitió a los científicos del siglo XIX deducir las fórmulas moleculares correctas de nuestro universo, como H2O y CO2.", targetVar: "v", targetVal: 8, cond: ">=", ctrl: "v", targetText: "Volumen" },
      { id: "GAS_IDEAL", name: "Ecuación de Estado (PV=nRT)", th: "P multiplicado por V es igual a nRT. Esta es la ecuación maestra. Unifica todas las leyes y demuestra que todo en termodinámica está conectado.", q: "Piensa como un ingeniero: Si la Temperatura y el Volumen de un sistema se duplican simultáneamente, ¿qué le pasa a la Presión?", o: ["Sube", "Baja", "Se queda igual", "Cero"], a: 2, m: "Si la temperatura sube, la presión quiere subir. Si el volumen sube, la presión quiere bajar. Al duplicarse ambos parámetros, el efecto se anula matemáticamente.", rw: "Esta es la ecuación exacta que rige el diseño de los delicados sistemas de soporte vital presurizados en la Estación Espacial Internacional.", targetVar: "t", targetVal: 700, cond: ">=", ctrl: "t", targetText: "Temperatura" },
      { id: "ZERO", name: "El Abismo del Cero Absoluto", th: "El Cero Absoluto (0 Kelvin o -273.15 °C) es el límite inferior teórico del universo. Toda transferencia de calor y movimiento cinético se detiene.", q: "Según la física teórica clásica, ¿qué volumen tiene un gas ideal al llegar exactamente a 0 Kelvin?", o: ["Infinito", "Cero", "Negativo", "Invariable"], a: 1, m: "La gráfica lineal de Charles cruza el origen coordenado. A 0 Kelvin, el volumen matemático es cero. En el mundo real, la materia se licúa o solidifica antes.", rw: "Los misteriosos condensados de Bose-Einstein (materia con propiedades cuánticas a escala macroscópica) ocurren a millonésimas de grado de este límite mortal.", targetVar: "t", targetVal: 0, cond: "<=", ctrl: "t", targetText: "Temperatura" }
@@ -132,7 +129,6 @@ const DICT = {
 };
 const LANG_MAP = { es: 'es-ES', en: 'en-US', fr: 'fr-FR', de: 'de-DE' };
 
-
 /* ============================================================
   🎥 3. COMPONENTE DE CÁMARA (TERREMOTO TÉRMICO)
 ============================================================ */
@@ -142,12 +138,13 @@ const CameraController = ({ isCritical }) => {
      state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, Math.sin(state.clock.elapsedTime * 60) * 0.1, 0.5);
      state.camera.position.y = THREE.MathUtils.lerp(state.camera.position.y, 2 + Math.cos(state.clock.elapsedTime * 50) * 0.1, 0.5);
    } else {
-     state.camera.position.lerp(new THREE.Vector3(0, 2, 16), 0.1);
+     // Ajuste responsivo de cámara para celulares (aleja la vista si es angosto)
+     const isMob = window.innerWidth < 768;
+     state.camera.position.lerp(new THREE.Vector3(0, 2, isMob ? 24 : 16), 0.1);
    }
  });
  return null;
 };
-
 
 /* ============================================================
   ⚛️ 4. SIMULADOR 3D FÍSICO: EL PISTÓN CUÁNTICO TIER-GOD
@@ -162,7 +159,6 @@ const QuantumPiston = ({ temp, volume, pressure, isCritical }) => {
  const coreEmissive = new THREE.Color(temp / 1000, 0, (1000 - temp) / 2000);
  const coreIntensity = temp / 100;
 
-
  // Animación suave mecánica del pistón con resistencia de lerp
  const pistonRef = useRef();
  useFrame((state) => {
@@ -174,6 +170,7 @@ const QuantumPiston = ({ temp, volume, pressure, isCritical }) => {
    }
  });
 
+ const isMobile = window.innerWidth < 768;
 
  return (
    <group position={[0, -4, 0]}>
@@ -225,34 +222,36 @@ const QuantumPiston = ({ temp, volume, pressure, isCritical }) => {
      </group>
     
      {/* 🔹 Nube de Gas Cuántico (Múltiples capas para profundidad) */}
-     <Sparkles count={250} scale={[4.8, volume, 4.8]} position={[0, volume / 2, 0]} size={10} speed={particleSpeed} color={particleColor} />
-     <Sparkles count={150} scale={[4.0, volume - 0.5, 4.0]} position={[0, volume / 2, 0]} size={4} speed={particleSpeed * 1.5} color="#ffffff" opacity={0.5} />
+     <Sparkles count={isMobile ? 120 : 250} scale={[4.8, volume, 4.8]} position={[0, volume / 2, 0]} size={isMobile ? 15 : 10} speed={particleSpeed} color={particleColor} />
+     <Sparkles count={isMobile ? 80 : 150} scale={[4.0, volume - 0.5, 4.0]} position={[0, volume / 2, 0]} size={isMobile ? 6 : 4} speed={particleSpeed * 1.5} color="#ffffff" opacity={0.5} />
     
      {/* 🔹 Telemetría Holográfica (HTML dentro del WebGL) */}
-     <Html position={[3.8, 5, 0]} center zIndexRange={[100, 0]}>
+     {/* Posición ajustada para móviles: Arriba del cilindro si es angosto */}
+     <Html position={[isMobile ? 0 : 3.8, isMobile ? 10.5 : 5, 0]} center zIndexRange={[100, 0]}>
        <div style={{
          background: isCritical ? 'rgba(255,0,0,0.2)' : 'rgba(0,10,25,0.85)',
          border: `1px solid ${isCritical ? '#ff0000' : '#00f2ff55'}`,
          borderLeft: `4px solid ${particleColor}`,
-         padding: '20px', borderRadius: '12px', color: '#fff', fontFamily: 'Orbitron',
-         width: '260px', backdropFilter: 'blur(15px)',
+         padding: 'clamp(10px, 3vw, 20px)', borderRadius: '12px', color: '#fff', fontFamily: 'Orbitron',
+         width: 'clamp(150px, 40vw, 260px)', backdropFilter: 'blur(15px)',
          boxShadow: `0 0 40px ${particleColor}44`,
          transition: 'all 0.1s ease',
-         animation: isCritical ? 'glitch-anim 0.2s infinite' : 'none'
+         animation: isCritical ? 'glitch-anim 0.2s infinite' : 'none',
+         textAlign: 'center'
        }}>
-         <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '3px', borderBottom: '1px solid #333', paddingBottom: '5px', marginBottom: '15px', fontWeight:'bold' }}>
+         <div style={{ fontSize: 'clamp(8px, 1.5vw, 10px)', color: '#aaa', letterSpacing: '2px', borderBottom: '1px solid #333', paddingBottom: '5px', marginBottom: '10px', fontWeight:'bold' }}>
            {isCritical ? '⚠️ RIESGO ESTRUCTURAL' : 'SISTEMA NOMINAL'}
          </div>
-         <div style={{ fontSize: '30px', fontWeight: '900', color: isHot ? '#ff0055' : '#0f0', textShadow:'0 0 10px currentColor' }}>
-           T: {temp.toFixed(0)}<span style={{fontSize:'14px', color:'#aaa'}}> K</span>
+         <div style={{ fontSize: 'clamp(18px, 4vw, 30px)', fontWeight: '900', color: isHot ? '#ff0055' : '#0f0', textShadow:'0 0 10px currentColor' }}>
+           T: {temp.toFixed(0)}<span style={{fontSize:'clamp(10px, 2vw, 14px)', color:'#aaa'}}> K</span>
          </div>
-         <div style={{ fontSize: '30px', fontWeight: '900', color: '#00f2ff', textShadow:'0 0 10px currentColor' }}>
-           V: {volume.toFixed(1)}<span style={{fontSize:'14px', color:'#aaa'}}> L</span>
+         <div style={{ fontSize: 'clamp(18px, 4vw, 30px)', fontWeight: '900', color: '#00f2ff', textShadow:'0 0 10px currentColor' }}>
+           V: {volume.toFixed(1)}<span style={{fontSize:'clamp(10px, 2vw, 14px)', color:'#aaa'}}> L</span>
          </div>
-         <div style={{ fontSize: '30px', fontWeight: '900', color: isCritical ? '#ff0000' : '#ffea00', textShadow:'0 0 10px currentColor' }}>
-           P: {pressure.toFixed(2)}<span style={{fontSize:'14px', color:'#aaa'}}> atm</span>
+         <div style={{ fontSize: 'clamp(18px, 4vw, 30px)', fontWeight: '900', color: isCritical ? '#ff0000' : '#ffea00', textShadow:'0 0 10px currentColor' }}>
+           P: {pressure.toFixed(2)}<span style={{fontSize:'clamp(10px, 2vw, 14px)', color:'#aaa'}}> atm</span>
          </div>
-         <div style={{ marginTop: '15px', fontSize: '12px', color: isCritical ? '#ff0000' : '#00f2ff', textAlign: 'center', background: isCritical ? 'rgba(255,0,0,0.1)' : 'rgba(0,242,255,0.1)', padding: '8px', borderRadius: '6px', fontWeight:'bold', letterSpacing:'2px' }}>
+         <div style={{ display: isMobile ? 'none' : 'block', marginTop: '15px', fontSize: '12px', color: isCritical ? '#ff0000' : '#00f2ff', textAlign: 'center', background: isCritical ? 'rgba(255,0,0,0.1)' : 'rgba(0,242,255,0.1)', padding: '8px', borderRadius: '6px', fontWeight:'bold', letterSpacing:'2px' }}>
            PV = nRT ENGINE
          </div>
        </div>
@@ -260,7 +259,6 @@ const QuantumPiston = ({ temp, volume, pressure, isCritical }) => {
    </group>
  );
 };
-
 
 /* ============================================================
   🎮 5. MÁQUINA DE ESTADOS PRINCIPAL (EL CEREBRO FSM)
@@ -272,7 +270,6 @@ export default function GasTheory() {
  const d = DICT[safeLang];
  const lCode = LANG_MAP[safeLang] || 'es-ES';
 
-
  const [phase, setPhase] = useState("BOOT");
  const [levelIdx, setLevelIdx] = useState(0);
  const [microClassActive, setMicroClassActive] = useState(false);
@@ -283,9 +280,7 @@ export default function GasTheory() {
  const pressure = (K * temp) / (vol * 100);
  const isCritical = pressure > 18;
 
-
  const lvl = d.levels[levelIdx] || d.levels[0];
-
 
  // 🛑 PROTECCIÓN DE MEMORIA Y CORTADOR DE AUDIO DESTRUCTOR
  const isMounted = useRef(true);
@@ -297,7 +292,6 @@ export default function GasTheory() {
    };
  }, []);
 
-
  // Control de Alarmas Críticas Continuas
  useEffect(() => {
    if (isCritical && phase === "EXECUTION") {
@@ -306,12 +300,10 @@ export default function GasTheory() {
    }
  }, [isCritical, pressure, phase]);
 
-
  const handleBack = () => {
    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
    resetProgress();
  };
-
 
  const loadLevel = (idx) => {
    if (!isMounted.current) return;
@@ -326,7 +318,6 @@ export default function GasTheory() {
    triggerVoice(d.levels[idx].th, lCode);
  };
 
-
  const handleAnswer = (idx) => {
    if (idx === lvl.a) {
      sfx.success();
@@ -339,15 +330,12 @@ export default function GasTheory() {
    }
  };
 
-
  const verifyPhysicalState = () => {
    let currentVal = lvl.targetVar === 't' ? temp : vol;
    let isDone = false;
 
-
    if (lvl.cond === '>=') isDone = currentVal >= lvl.targetVal;
    if (lvl.cond === '<=') isDone = currentVal <= lvl.targetVal;
-
 
    if (isDone) {
      sfx.success();
@@ -357,7 +345,6 @@ export default function GasTheory() {
      sfx.error();
    }
  };
-
 
  // ==========================================
  // 🖥️ UI RENDERIZADO REACT
@@ -371,61 +358,56 @@ export default function GasTheory() {
    </div>
  );
 
-
  if (phase === "END") return (
    <div style={ui.overlayFull}>
-     <h1 style={{color: '#0f0', fontSize: '70px', textShadow: '0 0 50px #0f0', letterSpacing: '10px', textAlign:'center', margin:'0 20px'}}>{d.ui.winTitle}</h1>
-     <button style={{...ui.btnHex('#0f0'), marginTop: '50px'}} onClick={handleBack}>{d.ui.btnBack}</button>
+     <h1 style={{color: '#0f0', fontSize: 'clamp(30px, 8vw, 70px)', textShadow: '0 0 50px #0f0', letterSpacing: 'clamp(2px, 1vw, 10px)', textAlign:'center', margin:'0 20px'}}>{d.ui.winTitle}</h1>
+     <button style={{...ui.btnHex('#0f0'), marginTop: 'clamp(30px, 5vh, 50px)'}} onClick={handleBack}>{d.ui.btnBack}</button>
    </div>
  );
-
 
  return (
    <div style={ui.screen}>
      <button style={ui.backBtn} onClick={handleBack}>{d.ui.btnBack}</button>
 
-
      {/* TOP HUD CIBERNÉTICO */}
      <div style={ui.topHud}>
        <div style={ui.badge}>{d.ui.exp} {levelIdx + 1} / {d.levels.length}</div>
-       <h2 style={{color:'#00f2ff', margin:'10px 0', fontSize:'40px', letterSpacing:'6px', textShadow:'0 0 20px rgba(0,242,255,0.8)'}}>{lvl.name}</h2>
+       <h2 style={{color:'#00f2ff', margin:'10px 0', fontSize:'clamp(18px, 5vw, 40px)', letterSpacing:'clamp(2px, 1vw, 6px)', textShadow:'0 0 20px rgba(0,242,255,0.8)'}}>{lvl.name}</h2>
        {phase === "EXECUTION" && (
-         <div style={{background: 'rgba(255,234,0,0.15)', border: '2px solid #ffea00', padding: '12px 30px', borderRadius: '10px', color:'#ffea00', fontWeight: '900', display:'inline-block', fontSize:'18px', letterSpacing:'2px', boxShadow:'0 0 20px rgba(255,234,0,0.4)'}}>
+         <div style={{background: 'rgba(255,234,0,0.15)', border: '2px solid #ffea00', padding: 'clamp(6px, 2vw, 12px) clamp(10px, 3vw, 30px)', borderRadius: '10px', color:'#ffea00', fontWeight: '900', display:'inline-block', fontSize:'clamp(10px, 2.5vw, 18px)', letterSpacing:'1px', boxShadow:'0 0 20px rgba(255,234,0,0.4)'}}>
            ⚡ {d.ui.targetMsg} {lvl.targetText} a {lvl.cond} {lvl.targetVal}
          </div>
        )}
      </div>
 
-
      {/* MODAL TEORÍA */}
      {phase === "THEORY" && (
        <div style={ui.modalBg}>
          <div style={ui.glassModal('#00f2ff')}>
-           <h2 style={{color: '#00f2ff', letterSpacing:'6px', borderBottom: '2px solid #00f2ff55', paddingBottom: '15px', fontSize:'35px'}}>{d.ui.theoryTitle}</h2>
-           <p style={{fontSize:'28px', lineHeight:'1.7', margin:'50px 0', color: '#fff'}}>{lvl.th}</p>
+           <h2 style={{color: '#00f2ff', letterSpacing:'clamp(2px, 1vw, 6px)', borderBottom: '2px solid #00f2ff55', paddingBottom: '15px', fontSize:'clamp(18px, 5vw, 35px)', margin: 0}}>{d.ui.theoryTitle}</h2>
+           <p style={{fontSize:'clamp(14px, 4vw, 28px)', lineHeight:'1.5', margin:'clamp(20px, 5vh, 50px) 0', color: '#fff'}}>{lvl.th}</p>
            <button style={ui.btnSolid('#00f2ff')} onClick={() => { setPhase("AI"); triggerVoice(d.ai.intro, lCode); }}>{d.ui.theoryBtn}</button>
          </div>
        </div>
      )}
 
-
      {/* MODAL IA SOCRÁTICA */}
      {phase === "AI" && (
        <div style={ui.modalBg}>
          <div style={ui.glassModal('#ff00ff')}>
-           <h2 style={{color:'#ff00ff', letterSpacing:'6px', borderBottom: '2px solid #ff00ff55', paddingBottom: '15px', fontSize:'35px'}}>
+           <h2 style={{color:'#ff00ff', letterSpacing:'clamp(2px, 1vw, 6px)', borderBottom: '2px solid #ff00ff55', paddingBottom: '15px', fontSize:'clamp(18px, 5vw, 35px)', margin: 0}}>
              {microClassActive ? d.ui.microTitle : d.ui.diagTitle}
            </h2>
            {!microClassActive ? (
              <>
-               <p style={{fontSize:'32px', margin:'50px 0', color: '#fff', fontWeight: '900'}}>{lvl.q}</p>
+               <p style={{fontSize:'clamp(16px, 4.5vw, 32px)', margin:'clamp(20px, 5vh, 50px) 0', color: '#fff', fontWeight: '900', lineHeight: 1.3}}>{lvl.q}</p>
                <div style={ui.grid}>
                  {lvl.o.map((opt, i) => <button key={i} style={ui.btnOpt} onClick={() => handleAnswer(i)}>{opt}</button>)}
                </div>
              </>
            ) : (
              <>
-               <p style={{color:'#ffea00', fontSize:'30px', lineHeight:'1.6', margin:'50px 0', fontWeight:'bold'}}>{lvl.m}</p>
+               <p style={{color:'#ffea00', fontSize:'clamp(14px, 4vw, 30px)', lineHeight:'1.5', margin:'clamp(20px, 5vh, 50px) 0', fontWeight:'bold'}}>{lvl.m}</p>
                <button style={ui.btnSolid('#ff00ff')} onClick={() => { setPhase("AI"); setMicroClassActive(false); window.speechSynthesis.cancel(); }}>{d.ui.btnContinue}</button>
              </>
            )}
@@ -433,13 +415,12 @@ export default function GasTheory() {
        </div>
      )}
 
-
      {/* DOCK DE CONTROLES FÍSICOS (EXECUTION) */}
      {phase === "EXECUTION" && (
        <div style={ui.dockPanel}>
          {lvl.ctrl === 't' ? (
            <div style={ui.sliderContainer}>
-             <div style={{color:'#ff0055', marginBottom:'20px', fontWeight:'900', letterSpacing:'3px', fontSize:'22px', textShadow:'0 0 10px #ff0055'}}>🔥 INYECCIÓN TÉRMICA (K)</div>
+             <div style={{color:'#ff0055', marginBottom:'15px', fontWeight:'900', letterSpacing:'1px', fontSize:'clamp(14px, 3.5vw, 22px)', textShadow:'0 0 10px #ff0055'}}>🔥 INYECCIÓN TÉRMICA (K)</div>
              <input type="range" min="0" max="1000" value={temp} onChange={(e) => {
                setTemp(Number(e.target.value));
                if(Number(e.target.value) > 800) sfx.valve();
@@ -447,7 +428,7 @@ export default function GasTheory() {
            </div>
          ) : (
            <div style={ui.sliderContainer}>
-             <div style={{color:'#00f2ff', marginBottom:'20px', fontWeight:'900', letterSpacing:'3px', fontSize:'22px', textShadow:'0 0 10px #00f2ff'}}>⚙️ PRENSA HIDRÁULICA (L)</div>
+             <div style={{color:'#00f2ff', marginBottom:'15px', fontWeight:'900', letterSpacing:'1px', fontSize:'clamp(14px, 3.5vw, 22px)', textShadow:'0 0 10px #00f2ff'}}>⚙️ PRENSA HIDRÁULICA (L)</div>
              <input type="range" min="1" max="10" step="0.1" value={vol} onChange={(e) => {
                setVol(Number(e.target.value));
                if(Number(e.target.value) < 2) sfx.valve();
@@ -458,18 +439,16 @@ export default function GasTheory() {
        </div>
      )}
 
-
      {/* MODAL DE SÍNTESIS DEL MUNDO REAL */}
      {phase === "SYNTHESIS" && (
        <div style={ui.modalBg}>
          <div style={ui.glassModal('#0f0')}>
-           <h2 style={{color:'#0f0', letterSpacing:'6px', borderBottom: '2px solid #0f05', paddingBottom: '15px', fontSize:'35px'}}>{d.ui.synthTitle}</h2>
-           <p style={{fontSize:'32px', lineHeight:'1.7', margin:'50px 0', color: '#fff', fontWeight:'bold'}}>{lvl.rw}</p>
+           <h2 style={{color:'#0f0', letterSpacing:'clamp(2px, 1vw, 6px)', borderBottom: '2px solid #0f05', paddingBottom: '15px', fontSize:'clamp(18px, 5vw, 35px)', margin: 0}}>{d.ui.synthTitle}</h2>
+           <p style={{fontSize:'clamp(14px, 4vw, 32px)', lineHeight:'1.5', margin:'clamp(20px, 5vh, 50px) 0', color: '#fff', fontWeight:'bold'}}>{lvl.rw}</p>
            <button style={ui.btnSolid('#0f0')} onClick={() => loadLevel(levelIdx + 1)}>{d.ui.btnNext}</button>
          </div>
        </div>
      )}
-
 
      {/* 🌌 MOTOR DE RENDERIZADO THREE.JS PROFESIONAL */}
      <div style={{position:'absolute', inset:0, zIndex:1, pointerEvents:'none'}}>
@@ -502,41 +481,57 @@ export default function GasTheory() {
  );
 }
 
-
-// 🎨 ESTILOS "GOD TIER ABSOLUTO"
+// 🎨 ESTILOS "MOBILE FIRST GOD TIER" (Clamp + Flex Wrap)
 const ui = {
- screen: { position:'absolute', inset:0, overflow:'hidden', background:'#000', fontFamily:'Orbitron, sans-serif', color:'#fff' },
- overlayFull: { display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100vh', background:'radial-gradient(circle at center, #001122 0%, #000 100%)', zIndex:1000, position:'relative' },
- glitchText: { color: '#00f2ff', fontSize: '24px', letterSpacing: '25px', marginBottom: '0px', fontWeight: 'bold' },
- titleGlow: { color:'#00f2ff', fontSize:'80px', letterSpacing:'15px', textShadow:'0 0 60px rgba(0, 242, 255, 0.8)', margin:'0 0 30px 0', textAlign: 'center', fontWeight: '900' },
-  btnHex: (c) => ({ padding:'30px 80px', background:`linear-gradient(45deg, rgba(0,0,0,0.9), ${c}33)`, border:`3px solid ${c}`, color:c, fontSize:'26px', fontWeight:'900', cursor:'pointer', borderRadius:'15px', fontFamily:'Orbitron', transition:'all 0.3s ease', boxShadow: `0 0 30px ${c}55`, letterSpacing: '4px' }),
- btnGhost: { marginTop:'30px', padding:'15px 50px', background:'transparent', border:'2px solid #555', color:'#aaa', fontSize:'18px', cursor:'pointer', borderRadius:'10px', fontFamily:'Orbitron', transition:'0.3s', fontWeight: 'bold', letterSpacing: '2px' },
-  backBtn: { position:'absolute', top:'40px', left:'40px', zIndex:500, padding:'15px 35px', background:'rgba(255,0,85,0.15)', border:'2px solid #ff0055', color:'#ff0055', cursor:'pointer', borderRadius:'10px', fontFamily:'Orbitron', fontWeight:'900', backdropFilter: 'blur(8px)', letterSpacing: '2px', boxShadow: '0 0 20px rgba(255,0,85,0.3)' },
-  topHud: { position:'absolute', top:'40px', left:'50%', transform: 'translateX(-50%)', zIndex:100, textAlign: 'center', width: '100%', pointerEvents:'none' },
- badge: { background:'#00f2ff', color:'#000', padding:'10px 25px', borderRadius:'8px', display:'inline-block', fontSize:'18px', fontWeight:'900', letterSpacing: '3px', boxShadow: '0 0 20px #00f2ff' },
-  dockPanel: { position:'absolute', bottom:'50px', left:'50%', transform:'translateX(-50%)', zIndex:150, background:'rgba(0,15,30,0.9)', padding:'50px 80px', borderRadius:'30px', border:'2px solid #00f2ff', textAlign:'center', display:'flex', alignItems:'center', gap:'80px', pointerEvents:'auto', backdropFilter: 'blur(25px)', boxShadow: '0 30px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,242,255,0.1)' },
- sliderContainer: { display:'flex', flexDirection:'column', alignItems:'center', width:'500px' },
- cyberSlider: (c) => ({ width:'100%', cursor:'pointer', accentColor: c, height: '16px', borderRadius: '8px', outline: 'none', background: 'rgba(255,255,255,0.15)', boxShadow: `0 0 15px ${c}66` }),
- checkBtn: { padding:'30px 60px', background:'#00f2ff', border:'none', color:'#000', fontWeight:'900', fontSize:'24px', borderRadius:'15px', cursor:'pointer', fontFamily:'Orbitron', boxShadow:'0 0 40px rgba(0, 242, 255, 0.8)', letterSpacing: '3px' },
-  modalBg: { position:'absolute', inset:0, zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,5,15,0.92)', backdropFilter:'blur(30px)', pointerEvents:'auto' },
- glassModal: (c) => ({ border:`3px solid ${c}`, background:'rgba(0, 15, 30, 0.85)', padding:'80px', borderRadius:'35px', textAlign:'center', maxWidth:'1200px', width:'90%', boxShadow:`0 0 100px ${c}55`, backdropFilter: 'blur(15px)' }),
-  grid: { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'35px', marginTop:'50px' },
- btnOpt: { padding:'30px', background:'rgba(255,255,255,0.03)', border:'2px solid #555', color:'#fff', borderRadius:'15px', fontSize:'24px', cursor:'pointer', fontFamily:'Orbitron', transition:'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' },
- btnSolid: (c) => ({ marginTop:'60px', padding:'30px 90px', background:c, color:'#000', fontWeight:'900', fontSize:'26px', borderRadius:'15px', border:'none', cursor:'pointer', fontFamily:'Orbitron', letterSpacing: '4px', boxShadow: `0 0 50px ${c}88` })
+ screen: { position:'absolute', inset:0, overflow:'hidden', background:'#000', fontFamily:'Orbitron, sans-serif', color:'#fff', WebkitTapHighlightColor: 'transparent', padding: 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)' },
+ overlayFull: { display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100dvh', background:'radial-gradient(circle at center, #001122 0%, #000 100%)', zIndex:1000, position:'relative', padding: 'clamp(20px, 5vw, 40px)', boxSizing: 'border-box' },
+ glitchText: { color: '#00f2ff', fontSize: 'clamp(14px, 3vw, 24px)', letterSpacing: 'clamp(5px, 2vw, 25px)', marginBottom: '10px', fontWeight: 'bold', textAlign: 'center' },
+ titleGlow: { color:'#00f2ff', fontSize:'clamp(32px, 8vw, 80px)', letterSpacing:'clamp(4px, 2vw, 15px)', textShadow:'0 0 40px rgba(0, 242, 255, 0.8)', margin:'0 0 30px 0', textAlign: 'center', fontWeight: '900', lineHeight: 1.1 },
+ btnHex: (c) => ({ padding:'clamp(15px, 4vw, 30px) clamp(30px, 8vw, 80px)', background:`linear-gradient(45deg, rgba(0,0,0,0.9), ${c}33)`, border:`3px solid ${c}`, color:c, fontSize:'clamp(16px, 4vw, 26px)', fontWeight:'900', cursor:'pointer', borderRadius:'15px', fontFamily:'Orbitron', transition:'all 0.3s ease', boxShadow: `0 0 30px ${c}55`, letterSpacing: '2px', width: '100%', maxWidth: '400px' }),
+ btnGhost: { marginTop:'clamp(20px, 4vw, 30px)', padding:'clamp(10px, 3vw, 15px) clamp(20px, 5vw, 50px)', background:'transparent', border:'2px solid #555', color:'#aaa', fontSize:'clamp(12px, 3vw, 18px)', cursor:'pointer', borderRadius:'10px', fontFamily:'Orbitron', transition:'0.3s', fontWeight: 'bold', letterSpacing: '2px' },
+ 
+ backBtn: { position:'absolute', top:'max(15px, env(safe-area-inset-top))', left:'clamp(15px, 4vw, 40px)', zIndex:500, padding:'clamp(10px, 2.5vw, 15px) clamp(15px, 4vw, 35px)', background:'rgba(255,0,85,0.15)', border:'2px solid #ff0055', color:'#ff0055', cursor:'pointer', borderRadius:'10px', fontFamily:'Orbitron', fontWeight:'900', backdropFilter: 'blur(8px)', letterSpacing: '2px', boxShadow: '0 0 20px rgba(255,0,85,0.3)', fontSize: 'clamp(10px, 2.5vw, 16px)' },
+ topHud: { position:'absolute', top:'calc(max(15px, env(safe-area-inset-top)) + 60px)', left:'50%', transform: 'translateX(-50%)', zIndex:100, textAlign: 'center', width: '95%', maxWidth: '800px', pointerEvents:'none' },
+ badge: { background:'#00f2ff', color:'#000', padding:'clamp(6px, 2vw, 10px) clamp(15px, 4vw, 25px)', borderRadius:'8px', display:'inline-block', fontSize:'clamp(12px, 3vw, 18px)', fontWeight:'900', letterSpacing: '3px', boxShadow: '0 0 20px #00f2ff' },
+ 
+ dockPanel: { position:'absolute', bottom:'max(20px, env(safe-area-inset-bottom))', left:'50%', transform:'translateX(-50%)', zIndex:150, background:'rgba(0,15,30,0.9)', padding:'clamp(20px, 5vw, 50px) clamp(20px, 5vw, 80px)', borderRadius:'30px', border:'2px solid #00f2ff', textAlign:'center', display:'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems:'center', gap:'clamp(20px, 4vh, 80px)', pointerEvents:'auto', backdropFilter: 'blur(25px)', boxShadow: '0 30px 60px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,242,255,0.1)', width: '95%', maxWidth: '900px', boxSizing: 'border-box' },
+ sliderContainer: { display:'flex', flexDirection:'column', alignItems:'center', width:'100%', maxWidth: '500px' },
+ cyberSlider: (c) => ({ width:'100%', cursor:'pointer', accentColor: c, height: 'clamp(12px, 3vw, 16px)', borderRadius: '8px', outline: 'none', background: 'rgba(255,255,255,0.15)', boxShadow: `0 0 15px ${c}66` }),
+ checkBtn: { padding:'clamp(15px, 4vw, 30px) clamp(20px, 5vw, 60px)', background:'#00f2ff', border:'none', color:'#000', fontWeight:'900', fontSize:'clamp(16px, 4vw, 24px)', borderRadius:'15px', cursor:'pointer', fontFamily:'Orbitron', boxShadow:'0 0 40px rgba(0, 242, 255, 0.8)', letterSpacing: '1px', width: '100%', maxWidth: '300px' },
+ 
+ modalBg: { position:'absolute', inset:0, zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,5,15,0.92)', backdropFilter:'blur(30px)', pointerEvents:'auto', padding: 'clamp(15px, 4vw, 30px)', boxSizing: 'border-box' },
+ glassModal: (c) => ({ border:`3px solid ${c}`, background:'rgba(0, 15, 30, 0.85)', padding:'clamp(30px, 6vw, 80px) clamp(20px, 5vw, 80px)', borderRadius:'35px', textAlign:'center', maxWidth:'1200px', width:'100%', maxHeight: '90dvh', overflowY: 'auto', boxShadow:`0 0 100px ${c}55`, backdropFilter: 'blur(15px)', boxSizing: 'border-box' }),
+ grid: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(clamp(130px, 30vw, 200px), 1fr))', gap:'clamp(15px, 3vw, 35px)', marginTop:'clamp(25px, 5vh, 50px)', width: '100%' },
+ btnOpt: { padding:'clamp(15px, 4vw, 30px)', background:'rgba(255,255,255,0.03)', border:'2px solid #555', color:'#fff', borderRadius:'15px', fontSize:'clamp(14px, 4vw, 24px)', cursor:'pointer', fontFamily:'Orbitron', transition:'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' },
+ btnSolid: (c) => ({ marginTop:'clamp(30px, 6vh, 60px)', padding:'clamp(15px, 4vw, 30px) clamp(30px, 6vw, 90px)', background:c, color:'#000', fontWeight:'900', fontSize:'clamp(16px, 4vw, 26px)', borderRadius:'15px', border:'none', cursor:'pointer', fontFamily:'Orbitron', letterSpacing: '2px', boxShadow: `0 0 50px ${c}88`, width: '100%' })
 };
 
-
-// Necesario inyectar estilos globales sutiles para el input range y animaciones glitch si no existieran en App.css
-const styleSheet = document.createElement("style");
-styleSheet.innerText = `
- @keyframes glitch-anim {
-   0% { transform: translate(0) }
-   20% { transform: translate(-2px, 2px) }
-   40% { transform: translate(-2px, -2px) }
-   60% { transform: translate(2px, 2px) }
-   80% { transform: translate(2px, -2px) }
-   100% { transform: translate(0) }
- }
-`;
-document.head.appendChild(styleSheet);
-
+// Necesario inyectar estilos globales sutiles para el input range y animaciones glitch
+if (typeof document !== 'undefined' && !document.getElementById("gas-theory-styles")) {
+  const styleSheet = document.createElement("style");
+  styleSheet.id = "gas-theory-styles";
+  styleSheet.innerText = `
+    * { -webkit-tap-highlight-color: transparent; }
+    @keyframes glitch-anim {
+      0% { transform: translate(0) }
+      20% { transform: translate(-2px, 2px) }
+      40% { transform: translate(-2px, -2px) }
+      60% { transform: translate(2px, 2px) }
+      80% { transform: translate(2px, -2px) }
+      100% { transform: translate(0) }
+    }
+    input[type=range] {
+      -webkit-appearance: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 25px;
+      width: 25px;
+      border-radius: 50%;
+      background: currentColor;
+      cursor: pointer;
+      box-shadow: 0 0 10px currentColor;
+    }
+  `;
+  document.head.appendChild(styleSheet);
+}
