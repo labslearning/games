@@ -6,15 +6,18 @@ import MolecularPhysics from './components/MolecularPhysics';
 import { useGameStore, i18n, audioSys } from './store/useGameStore';
 import { MATERIALS } from './data/materials';
 
-// 📦 IMPORTAMOS TUS 5 JUEGOS ACTIVOS ("Cartuchos")
+// ============================================================
+// 📦 IMPORTAMOS TUS 6 JUEGOS ACTIVOS
+// ============================================================
 import GasLaws from './games/chemistry/GasLaws';
 import RedoxLab from './games/chemistry/RedoxLab';
 import RedoxBalancer from './games/chemistry/RedoxBalancer';
 import GasTheory from './games/chemistry/GasTheory';
-import MendeleevGrid from './games/chemistry/MendeleevGrid/MendeleevGrid'; // 🔥 LA RED DE MENDELEIEV
+import MendeleevGrid from './games/chemistry/MendeleevGrid/MendeleevGrid';
+import MathLab from './games/mathematics/MathLab'; // 🔴 MATEMÁTICAS CONECTADO
 
 /* ============================================================
-   📱 HOOK DE RESPONSIVIDAD (MOBILE FIRST)
+   📱 HOOK DE RESPONSIVIDAD
 ============================================================ */
 function useMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -29,53 +32,79 @@ function useMobile() {
 }
 
 /* ============================================================
-   🌍 TRADUCCIONES DEL CATÁLOGO DE JUEGOS
+   🌍 TRADUCCIONES DEL NEXUS Y CATÁLOGO
 ============================================================ */
 const CATALOG = {
   es: { 
-    title: "CENTRO DE SIMULACIÓN", 
-    back: "⬅ VOLVER AL SELECTOR", 
-    new: "NUEVA MISIÓN",
+    titleNexus: "NEXUS DE ASIGNATURAS", subNexus: "SELECCIONE EL DOMINIO DE ENTRENAMIENTO",
+    titleCatalog: "CATÁLOGO DE SIMULADORES",
+    backLang: "⬅ CAMBIAR IDIOMA", backNexus: "⬅ VOLVER A ASIGNATURAS", new: "NUEVA MISIÓN",
+    subjects: {
+      chem: { t: "QUÍMICA", d: "Termodinámica, Reacciones, Enlaces y Estructura." },
+      math: { t: "MATEMÁTICAS", d: "Álgebra, Geometría, Estadística y Lógica." },
+      phys: { t: "FÍSICA", d: "Mecánica, Fluidos, Ondas y Electromagnetismo." }
+    },
     games: { 
       gasLaws: { t: "🧪 LEYES DE GASES", d: "Termodinámica interactiva: Plasma, Presión y Temperatura." }, 
       gasTheory: { t: "📚 GAS THEORY MASTER", d: "Campaña Guiada: Cinética de partículas y leyes clásicas." }, 
       redoxLab: { t: "⚡ QUÍMICA REDOX LAB", d: "Mecánicas de balanceo y transferencia de electrones en 3D." }, 
-      //redoxBalancer: { t: "⚖️ REDOX BALANCER", d: "Simulador avanzado de balanceo por cargas y estequiometría." },
-      redoxBalancer: { t: "⚖️ LABORATORIO ICFES QUÍMICA", d: "Motor generativo avanzado con micro-clases Socráticas." },
-      mendeleevGrid: { t: "🛰️ MENDELEEV'S GRID", d: "Malla Periódica: Navega y deduce Radio y Electronegatividad." }
+      redoxBalancer: { t: "⚖️ LAB. ICFES QUÍMICA", d: "Motor generativo avanzado con micro-clases Socráticas." },
+      mendeleevGrid: { t: "🛰️ MENDELEEV'S GRID", d: "Malla Periódica: Navega y deduce Radio y Electronegatividad." },
+      mathLab: { t: "📐 MATEMÁTICAS ICFES", d: "Simulación Cuántica: Álgebra, Geometría, Probabilidad con IA." }
     } 
   },
   en: { 
-    title: "SIMULATION CENTER", 
-    back: "⬅ BACK TO SELECTOR", 
-    new: "NEW MISSION",
+    titleNexus: "SUBJECT NEXUS", subNexus: "SELECT TRAINING DOMAIN",
+    titleCatalog: "SIMULATION CATALOG",
+    backLang: "⬅ CHANGE LANGUAGE", backNexus: "⬅ BACK TO SUBJECTS", new: "NEW MISSION",
+    subjects: {
+      chem: { t: "CHEMISTRY", d: "Thermodynamics, Reactions, Bonds, and Structure." },
+      math: { t: "MATHEMATICS", d: "Algebra, Geometry, Statistics, and Logic." },
+      phys: { t: "PHYSICS", d: "Mechanics, Fluids, Waves, and Electromagnetism." }
+    },
     games: { 
       gasLaws: { t: "🧪 GAS LAWS", d: "Interactive thermodynamics: Plasma, Pressure, and Temp." }, 
       gasTheory: { t: "📚 GAS THEORY MASTER", d: "Guided Campaign: Particle kinetics and classic laws." }, 
       redoxLab: { t: "⚡ REDOX CHEMISTRY LAB", d: "Balancing mechanics and 3D electron transfer." }, 
-      //redoxBalancer: { t: "⚖️ REDOX BALANCER", d: "Advanced charge balancing and stoichiometry." },
       redoxBalancer: { t: "⚖️ ICFES CHEMISTRY LAB", d: "Advanced generative engine with Socratic micro-classes." },
-      mendeleevGrid: { t: "🛰️ MENDELEEV'S GRID", d: "Periodic Grid: Navigate and deduce Radius and EN." }
+      mendeleevGrid: { t: "🛰️ MENDELEEV'S GRID", d: "Periodic Grid: Navigate and deduce Radius and EN." },
+      mathLab: { t: "📐 ICFES MATH LAB", d: "Quantum Simulation: Algebra, Geometry, Probability with AI." }
     } 
   },
   fr: { 
-    title: "CENTRE DE SIMULATION", back: "⬅ RETOUR", new: "NOUVEAU",
+    titleNexus: "NEXUS DES MATIÈRES", subNexus: "SÉLECTIONNEZ LE DOMAINE D'ENTRAÎNEMENT",
+    titleCatalog: "CATALOGUE DE SIMULATEURS",
+    backLang: "⬅ CHANGER DE LANGUE", backNexus: "⬅ RETOUR AUX MATIÈRES", new: "NOUVEAU",
+    subjects: {
+      chem: { t: "CHIMIE", d: "Thermodynamique, Réactions, Liaisons." },
+      math: { t: "MATHÉMATIQUES", d: "Algèbre, Géométrie, Statistiques et Logique." },
+      phys: { t: "PHYSIQUE", d: "Mécanique, Fluides, Ondes." }
+    },
     games: { 
       gasLaws: { t: "🧪 LOIS DES GAZ", d: "Thermodynamique, 150 éléments, Plasma et Pression." }, 
       gasTheory: { t: "📚 GAS THEORY MASTER", d: "Campagne Guidée : Cinétique, Boyle et Charles." }, 
       redoxLab: { t: "⚡ LABO CHIMIE REDOX", d: "Mécaniques d'équilibrage et transfert d'électrons." }, 
-      redoxBalancer: { t: "⚖️ LAB. DE CHIMIE ICFES", d: "Moteur génératif avancé avec micro-cours socratiques." },
-      mendeleevGrid: { t: "🛰️ GRILLE DE MENDELEÏEV", d: "Naviguez dans la grille et déduisez les tendances." }
+      redoxBalancer: { t: "⚖️ LAB. DE CHIMIE ICFES", d: "Moteur génératif avec micro-cours socratiques." },
+      mendeleevGrid: { t: "🛰️ GRILLE DE MENDELEÏEV", d: "Naviguez dans la grille et déduisez les tendances." },
+      mathLab: { t: "📐 LABO MATHS ICFES", d: "Simulation Quantique : Algèbre, Géométrie, Probabilités IA." }
     } 
   },
   de: { 
-    title: "SIMULATIONSZENTRUM", back: "⬅ ZURÜCK", new: "NEU",
+    titleNexus: "FÄCHER-NEXUS", subNexus: "WÄHLEN SIE DEN TRAININGSBEREICH",
+    titleCatalog: "SIMULATORKATALOG",
+    backLang: "⬅ SPRACHE ÄNDERN", backNexus: "⬅ ZURÜCK ZU DEN FÄCHERN", new: "NEU",
+    subjects: {
+      chem: { t: "CHEMIE", d: "Thermodynamik, Reaktionen, Bindungen." },
+      math: { t: "MATHEMATIK", d: "Algebra, Geometrie, Statistik." },
+      phys: { t: "PHYSIK", d: "Mechanik, Flüssigkeiten, Wellen." }
+    },
     games: { 
       gasLaws: { t: "🧪 GASGESETZE", d: "Thermodynamik, 150 Elemente, Plasma und Druck." }, 
       gasTheory: { t: "📚 GAS THEORY MASTER", d: "Geführte Kampagne: Kinetik, Boyle und Charles." }, 
       redoxLab: { t: "⚡ REDOX-CHEMIE-LABOR", d: "Ausgleichsmechanik und Elektronentransfer." }, 
       redoxBalancer: { t: "⚖️ ICFES CHEMIE LABOR", d: "Erweiterte generative Engine mit sokratischen Mikro-Klassen." },
-      mendeleevGrid: { t: "🛰️ MENDELEJEW-GITTER", d: "Navigieren Sie im Gitter und leiten Sie Trends ab." }
+      mendeleevGrid: { t: "🛰️ MENDELEJEW-GITTER", d: "Navigieren Sie im Gitter und leiten Sie Trends ab." },
+      mathLab: { t: "📐 ICFES MATH LABOR", d: "Quantensimulation: Algebra, Geometrie, Wahrscheinlichkeit KI." }
     } 
   }
 };
@@ -97,10 +126,16 @@ const LiveEquation = ({ mode, p, v, t }) => {
   return null;
 };
 
+// ============================================================
+// 🎯 COMPONENTE PRINCIPAL APP
+// ============================================================
 export default function App() {
   const isMobile = useMobile();
   const { appState, activeGame, temp, volume, pressure, phaseID, isCritical, activeMaterial, setMaterial, activeMode, setMode, updatePhysics, language, setLanguage, startGame, resetProgress, activeQuiz, answerQuizQuestion, quizFeedback, clearFeedback, closeQuiz, score, triggerExercise, exampleSession, loadExampleScenario, exitExample, searchTerm, setSearchTerm, filterCategory, setFilterCategory, isGeneratingQuiz } = useGameStore();
   
+  // 🔴 ESTADO DEL ENRUTADOR NEXUS ('nexus' | 'cat_chem' | 'cat_math' | 'cat_phys')
+  const [menuView, setMenuView] = useState('nexus');
+
   const mat = MATERIALS[activeMaterial] || MATERIALS['H2O'];
   const t_i18n = i18n[language] || i18n.es;
   const cat = CATALOG[language] || CATALOG.es; 
@@ -135,54 +170,125 @@ export default function App() {
       <audio id="snd-success" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/success.wav" />
       <audio id="snd-quiz" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/quiz.wav" />
 
+      {/* ==============================================
+          PANTALLA 1: SELECCIÓN DE IDIOMA
+      ============================================== */}
       {appState === 'LANG_SELECT' && (
         <div style={ui.screenGame}><div style={ui.vignette} /><div style={ui.hexBackground} />
           <div style={ui.centerBoxGame}>
             <h1 style={ui.titleGame}>LEARNING <span style={{color:'#fff'}}>LABS</span></h1>
-            <div style={ui.btnGridGame}>{[{ id:'es', flag:'🇪🇸' }, { id:'en', flag:'🇬🇧' }, { id:'fr', flag:'🇫🇷' }, { id:'de', flag:'🇩🇪' }].map(l => <button key={l.id} onClick={()=>setLanguage(l.id)} style={ui.cyberBtn}><span style={{marginRight:'10px'}}>{l.flag}</span> {i18n[l.id].ui.lang}</button>)}</div>
+            <div style={ui.btnGridGame}>{[{ id:'es', flag:'🇪🇸' }, { id:'en', flag:'🇬🇧' }, { id:'fr', flag:'🇫🇷' }, { id:'de', flag:'🇩🇪' }].map(l => <button key={l.id} onClick={()=>{ setLanguage(l.id); setMenuView('nexus'); }} style={ui.cyberBtn}><span style={{marginRight:'10px'}}>{l.flag}</span> {i18n[l.id].ui.lang}</button>)}</div>
           </div>
         </div>
       )}
 
+      {/* ==============================================
+          PANTALLA 2: NEXUS (ASIGNATURAS) Y CATÁLOGOS
+      ============================================== */}
       {appState === 'GAME_SELECT' && (
         <div style={ui.screenGame}><div style={ui.hexBackground} />
-          <button onClick={() => useGameStore.setState({ appState: 'LANG_SELECT' })} style={ui.resetBtnGame}>{cat.back}</button>
+          
+          {/* BOTÓN VOLVER DINÁMICO */}
+          <button 
+            onClick={() => {
+              if (menuView === 'nexus') useGameStore.setState({ appState: 'LANG_SELECT' });
+              else setMenuView('nexus');
+            }} 
+            style={ui.resetBtnGame}
+          >
+            {menuView === 'nexus' ? cat.backLang : cat.backNexus}
+          </button>
+
           <div style={{...ui.centerBoxGame, width: '95%', maxWidth: '1200px'}}>
-            <h1 style={ui.titleGame}>{cat.title}</h1>
+            <h1 style={ui.titleGame}>{menuView === 'nexus' ? cat.titleNexus : cat.titleCatalog}</h1>
+            {menuView === 'nexus' && <p style={{color: '#00f2ff', letterSpacing: '3px', marginBottom: '20px', fontSize: '14px', fontWeight: 'bold'}}>{cat.subNexus}</p>}
+
             <div style={ui.gameGrid}>
               
-              <div style={ui.gameCard} onClick={() => startGame('GAS_LAWS')}>
-                <h2 style={{color: '#00f2ff', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.gasLaws.t}</h2>
-                <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.gasLaws.d}</p>
-              </div>
+              {/* ==========================================
+                  VISTA 1: EL NEXUS DE MATERIAS
+              ========================================== */}
+              {menuView === 'nexus' && (
+                <>
+                  <div style={{...ui.gameCard, border: '2px solid #00ff88', padding: '40px 20px'}} onClick={() => setMenuView('cat_phys')}>
+                    <div style={{fontSize: '50px', marginBottom: '10px'}}>⚛️</div>
+                    <h2 style={{color: '#00ff88', margin: '0 0 10px 0', fontSize: 'clamp(20px, 4vw, 26px)'}}>{cat.subjects.phys.t}</h2>
+                    <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.subjects.phys.d}</p>
+                  </div>
+                  
+                  <div style={{...ui.gameCard, border: '2px solid #ff0055', padding: '40px 20px'}} onClick={() => setMenuView('cat_chem')}>
+                    <div style={{fontSize: '50px', marginBottom: '10px'}}>🧪</div>
+                    <h2 style={{color: '#ff0055', margin: '0 0 10px 0', fontSize: 'clamp(20px, 4vw, 26px)'}}>{cat.subjects.chem.t}</h2>
+                    <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.subjects.chem.d}</p>
+                  </div>
 
-              <div style={{...ui.gameCard, border: '1px solid #00ff88', background: 'rgba(0, 30, 15, 0.8)'}} onClick={() => startGame('GAS_THEORY')}>
-                <h2 style={{color: '#00ff88', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.gasTheory.t}</h2>
-                <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.gasTheory.d}</p>
-              </div>
+                  <div style={{...ui.gameCard, border: '2px solid #ffea00', padding: '40px 20px'}} onClick={() => setMenuView('cat_math')}>
+                    <div style={{fontSize: '50px', marginBottom: '10px'}}>📐</div>
+                    <h2 style={{color: '#ffea00', margin: '0 0 10px 0', fontSize: 'clamp(20px, 4vw, 26px)'}}>{cat.subjects.math.t}</h2>
+                    <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.subjects.math.d}</p>
+                  </div>
+                </>
+              )}
 
-              <div style={{...ui.gameCard, border: '1px solid #ff0055', background: 'rgba(30, 0, 10, 0.8)'}} onClick={() => startGame('REDOX_LAB')}>
-                <h2 style={{color: '#ff0055', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.redoxLab.t}</h2>
-                <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.redoxLab.d}</p>
-              </div>
+              {/* ==========================================
+                  VISTA 2: JUEGOS DE QUÍMICA
+              ========================================== */}
+              {menuView === 'cat_chem' && (
+                <>
+                  <div style={ui.gameCard} onClick={() => startGame('GAS_LAWS')}>
+                    <h2 style={{color: '#00f2ff', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.gasLaws.t}</h2>
+                    <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.gasLaws.d}</p>
+                  </div>
+                  <div style={{...ui.gameCard, border: '1px solid #00ff88'}} onClick={() => startGame('GAS_THEORY')}>
+                    <h2 style={{color: '#00ff88', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.gasTheory.t}</h2>
+                    <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.gasTheory.d}</p>
+                  </div>
+                  <div style={{...ui.gameCard, border: '1px solid #ff0055'}} onClick={() => startGame('REDOX_LAB')}>
+                    <h2 style={{color: '#ff0055', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.redoxLab.t}</h2>
+                    <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.redoxLab.d}</p>
+                  </div>
+                  <div style={{...ui.gameCard, border: '1px solid #ffea00'}} onClick={() => startGame('REDOX_BALANCER')}>
+                    <h2 style={{color: '#ffea00', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.redoxBalancer.t}</h2>
+                    <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.redoxBalancer.d}</p>
+                  </div>
+                  <div style={{...ui.gameCard, border: '1px solid #00ff00', position: 'relative'}} onClick={() => startGame('MENDELEEV_GRID')}>
+                    <div style={{position:'absolute', top:'-10px', right:'-10px', background:'#00ff00', color:'#000', padding:'4px 10px', fontSize:'12px', fontWeight:'bold', borderRadius:'4px'}}>{cat.new}</div>
+                    <h2 style={{color: '#00ff00', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.mendeleevGrid.t}</h2>
+                    <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.mendeleevGrid.d}</p>
+                  </div>
+                </>
+              )}
 
-              <div style={{...ui.gameCard, border: '1px solid #ffea00', background: 'rgba(30, 25, 0, 0.8)'}} onClick={() => startGame('REDOX_BALANCER')}>
-                <h2 style={{color: '#ffea00', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.redoxBalancer.t}</h2>
-                <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.redoxBalancer.d}</p>
-              </div>
+              {/* ==========================================
+                  VISTA 3: JUEGOS DE MATEMÁTICAS
+              ========================================== */}
+              {menuView === 'cat_math' && (
+                <div style={{...ui.gameCard, border: '1px solid #e000ff', boxShadow: '0 0 20px rgba(224, 0, 255, 0.2)'}} onClick={() => startGame('MATH_LAB')}>
+                  <div style={{fontSize: '40px', marginBottom: '10px'}}>📐</div>
+                  <h2 style={{color: '#e000ff', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.mathLab.t}</h2>
+                  <p style={{color: '#ddd', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.mathLab.d}</p>
+                </div>
+              )}
 
-              {/* 🔥 CARTUCHO 5: MENDELEEV GRID */}
-              <div style={{...ui.gameCard, border: '1px solid #00ff00', background: 'rgba(0, 30, 0, 0.8)', position: 'relative'}} onClick={() => startGame('MENDELEEV_GRID')}>
-                <div style={{position:'absolute', top:'-10px', right:'-10px', background:'#00ff00', color:'#000', padding:'4px 10px', fontSize:'12px', fontWeight:'bold', borderRadius:'4px'}}>{cat.new}</div>
-                <h2 style={{color: '#00ff00', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.mendeleevGrid.t}</h2>
-                <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.mendeleevGrid.d}</p>
-              </div>
+              {/* ==========================================
+                  VISTA 4: JUEGOS DE FÍSICA
+              ========================================== */}
+              {menuView === 'cat_phys' && (
+                <div style={ui.gameCard} onClick={() => startGame('GAS_LAWS')}>
+                  <div style={{fontSize: '40px', marginBottom: '10px'}}>🌡️</div>
+                  <h2 style={{color: '#00f2ff', margin: '0 0 10px 0', fontSize: 'clamp(18px, 4vw, 24px)'}}>{cat.games.gasLaws.t}</h2>
+                  <p style={{color: '#aaa', fontSize: 'clamp(12px, 3vw, 14px)', margin: 0}}>{cat.games.gasLaws.d}</p>
+                </div>
+              )}
 
             </div>
           </div>
         </div>
       )}
 
+      {/* ==============================================
+          PANTALLA 3: ENRUTADOR DEL JUEGO (Visor 3D)
+      ============================================== */}
       {appState === 'PLAYING' && (
         <div style={ui.screen}>
           <div style={{...ui.criticalOverlay, opacity: isCritical ? 1 : 0}} />
@@ -227,8 +333,10 @@ export default function App() {
             </div>
           )}
 
-          {/* 🔥 ENRUTADOR DINÁMICO DE LOS 5 JUEGOS ACTIVOS */}
-          {activeGame === 'MENDELEEV_GRID' ? (
+          {/* 🔥 ENRUTADOR DINÁMICO DE LOS JUEGOS ACTIVOS 🔥 */}
+          {activeGame === 'MATH_LAB' ? (
+             <MathLab />
+          ) : activeGame === 'MENDELEEV_GRID' ? (
              <MendeleevGrid />
           ) : activeGame === 'REDOX_LAB' ? (
              <RedoxLab />
@@ -238,7 +346,7 @@ export default function App() {
              <GasTheory />
           ) : (
              <>
-                {/* ⬅️ PANEL IZQUIERDO: Materiales */}
+                {/* EL MOTOR BASE ORIGINAL (GAS LAWS) SE MANTIENE INTACTO */}
                 <div className="game-panel-left" style={ui.leftPanel(isMobile)}>
                   <div className="material-selector-box" style={{...ui.sectionBox, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, pointerEvents: 'auto'}}>
                     <div className="search-filter-wrap" style={{display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '10px', alignItems: 'center'}}>
@@ -271,7 +379,6 @@ export default function App() {
                   )}
                 </div>
 
-                {/* ➡️ PANEL DERECHO */}
                 <div className="game-panel-right" style={ui.rightPanel(isMobile)}>
                   <div className="score-box" style={{...ui.sectionBox, borderLeft:'4px solid #ffea00', background:'rgba(50,40,0,0.8)', flexShrink: 0, pointerEvents: 'auto'}}>
                     <h3 style={{...ui.panelTitle, color:'#ffea00', fontSize:'clamp(12px, 2.5vw, 14px)', margin:0}}>🏆 SCORE: {score} PTS</h3>
@@ -323,7 +430,7 @@ export default function App() {
                   <OrbitControls makeDefault enablePan={false} maxPolarAngle={Math.PI / 1.8} />
                 </Canvas>
 
-                {/* ⬇️ PANEL DE CONTROLES INFERIOR */}
+                {/* PANEL DE CONTROLES INFERIOR */}
                 <div className="main-controls-dock" style={ui.controlPanel(isMobile)}>
                    <div className="control-column" style={{...ui.controlGroup, opacity: (activeMode==='BOYLE')?0.2:1, pointerEvents: (activeMode==='BOYLE')?'none':'auto'}}>
                      <div style={ui.controlLabel('#00f2ff')}>{t.temp}</div>
@@ -365,23 +472,23 @@ export default function App() {
   );
 }
 
-// 🎨 DICCIONARIO DE ESTILOS MOBILE-FIRST
+// 🎨 DICCIONARIO DE ESTILOS MOBILE-FIRST (INTACTO)
 const ui = {
   screenGame: { width:'100vw', height:'100dvh', backgroundColor:'#010204', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', fontFamily:'Orbitron, sans-serif', position:'relative', overflow:'hidden', padding: 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)' },
   hexBackground: { position:'absolute', inset:0, backgroundImage:'radial-gradient(circle at center, rgba(0,242,255,0.05) 0%, transparent 60%)', backgroundSize:'40px 40px', zIndex: 1 },
   vignette: { position:'absolute', inset:0, boxShadow:'inset 0 0 250px rgba(0,0,0,0.95)', zIndex:2 },
   
   centerBoxGame: { zIndex:10, display:'flex', flexDirection:'column', alignItems:'center', backdropFilter:'blur(8px)', padding:'clamp(20px, 5vw, 50px)', background:'rgba(0,5,15,0.7)', border:'1px solid rgba(0,242,255,0.2)', borderRadius:'15px', boxShadow:'0 0 50px rgba(0,0,0,0.8)', boxSizing: 'border-box' },
-  titleGame: { color:'#00f2ff', fontSize:'clamp(28px, 6vw, 65px)', letterSpacing:'clamp(2px, 1vw, 8px)', textAlign:'center', margin:'0 0 30px 0', textShadow:'0 0 20px rgba(0,242,255,0.5)', fontWeight:900 },
+  titleGame: { color:'#00f2ff', fontSize:'clamp(28px, 6vw, 65px)', letterSpacing:'clamp(2px, 1vw, 8px)', textAlign:'center', margin:'0 0 10px 0', textShadow:'0 0 20px rgba(0,242,255,0.5)', fontWeight:900 },
   
   btnGridGame: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(140px, 1fr))', gap:'20px', width:'100%' },
   gameGrid: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(clamp(250px, 40vw, 350px), 1fr))', gap:'clamp(15px, 3vw, 30px)', width:'100%', marginTop:'20px' },
-  gameCard: { background: 'rgba(0,15,30,0.8)', border: '1px solid #00f2ff', padding: 'clamp(15px, 4vw, 30px)', borderRadius: '12px', cursor: 'pointer', transition: '0.3s', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '120px' },
+  gameCard: { background: 'rgba(0,15,30,0.8)', border: '1px solid rgba(0,242,255,0.3)', padding: 'clamp(15px, 4vw, 30px)', borderRadius: '12px', cursor: 'pointer', transition: 'transform 0.3s, box-shadow 0.3s', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '120px' },
   
   cyberBtn: { padding:'clamp(12px, 3vw, 15px) clamp(15px, 4vw, 20px)', background:'rgba(0,10,20,0.8)', border:'1px solid #005577', color:'#00f2ff', cursor:'pointer', fontSize:'clamp(14px, 3vw, 16px)', fontFamily:'Orbitron', fontWeight:'bold', transition:'0.2s', borderRadius: '8px', minHeight: '48px' },
   solidCyberBtn: { padding:'clamp(12px, 3vw, 15px) clamp(20px, 4vw, 40px)', background:'linear-gradient(45deg, rgba(0,242,255,0.3), rgba(0,0,0,0.8))', borderLeft:'4px solid #00f2ff', color:'#fff', cursor:'pointer', fontSize:'clamp(14px, 3vw, 18px)', fontFamily:'Orbitron', fontWeight:'bold', width:'100%', margin:'0 auto', display:'block', borderRadius: '8px', minHeight: '48px' },
   
-  resetBtnGame: { position:'absolute', top: 'max(10px, env(safe-area-inset-top))', left: 'clamp(10px, 3vw, 25px)', zIndex:100, padding:'clamp(8px, 2vw, 10px) clamp(15px, 4vw, 20px)', background:'rgba(0,0,0,0.5)', border:'1px solid #ff4444', color:'white', cursor:'pointer', fontFamily:'Orbitron', fontSize: 'clamp(12px, 3vw, 16px)', borderRadius: '8px', minHeight: '40px' },
+  resetBtnGame: { position:'absolute', top: 'max(20px, env(safe-area-inset-top))', left: 'clamp(10px, 3vw, 25px)', zIndex:100, padding:'clamp(8px, 2vw, 10px) clamp(15px, 4vw, 20px)', background:'rgba(0,0,0,0.5)', border:'1px solid #ff0055', color:'#ff0055', cursor:'pointer', fontFamily:'Orbitron', fontSize: 'clamp(12px, 3vw, 16px)', borderRadius: '8px', minHeight: '40px', fontWeight: 'bold' },
   
   screen: { width:'100vw', height:'100dvh', background:'#010204', fontFamily:'Orbitron', overflow:'hidden', position:'relative', pointerEvents: 'auto' },
   criticalOverlay: { position:'absolute', inset:0, boxShadow:'inset 0 0 200px rgba(255,0,85,0.4)', pointerEvents:'none', zIndex:99, transition:'0.3s' },
@@ -442,6 +549,9 @@ if (typeof document !== 'undefined' && !document.getElementById("app-styles-mobi
        .control-column { flex-direction: row !important; align-items: center; width: 100%; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
        .hud-readout-center { width: 100%; justify-content: space-around !important; padding: 10px 0 !important; margin-bottom: 10px; border: none !important; background: transparent !important; box-shadow: none !important; }
     }
+    
+    /* EFECTO HOVER PARA TARJETAS */
+    div[style*="cursor: pointer"]:hover { transform: translateY(-5px) scale(1.02); background: rgba(255,255,255,0.05) !important; }
   `;
   document.head.appendChild(styleSheet);
 }
