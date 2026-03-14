@@ -7,7 +7,7 @@ import { useGameStore, i18n, audioSys } from './store/useGameStore';
 import { MATERIALS } from './data/materials';
 
 // ============================================================
-// 📦 IMPORTAMOS TUS 9 JUEGOS ACTIVOS ("Cartuchos Cuánticos")
+// 📦 IMPORTAMOS TUS JUEGOS ACTIVOS ("Cartuchos Cuánticos")
 // ============================================================
 import GasLaws from './games/chemistry/GasLaws';
 import RedoxLab from './games/chemistry/RedoxLab';
@@ -17,8 +17,9 @@ import MendeleevGrid from './games/chemistry/MendeleevGrid/MendeleevGrid';
 import MathLab from './games/mathematics/MathLab'; 
 import ScienceLab from './games/science/science_icfes'; 
 import ReadingLab from './games/lectura_critica/lectura'; 
-// 🟠 RUTA CORREGIDA: SOCIALES Y CIUDADANAS CONECTADO A TU ARCHIVO EXACTO EN LINUX
 import SocialesLab from './games/sociales/sociales_icfes'; 
+// 🟢 NUEVO CARTUCHO IMPORTADO: FÍSICA CINEMÁTICA
+import PhysicsLab from './games/physics/physics_1'; 
 
 /* ============================================================
    📱 HOOK DE RESPONSIVIDAD (MOBILE FIRST)
@@ -49,7 +50,7 @@ const CATALOG = {
       phys: { t: "FÍSICA", d: "Mecánica, Fluidos, Ondas y Electromagnetismo." },
       nat:  { t: "CIENCIAS NATURALES", d: "Biología, Entorno Físico, Químico y CTS." },
       read: { t: "LECTURA CRÍTICA", d: "Niveles literal, inferencial y crítico. Análisis de textos." },
-      soc:  { t: "SOCIALES Y CIUDADANAS", d: "Historia, Geografía, Constitución y Competencias Ciudadanas." } // 🟠 NUEVA CATEGORÍA
+      soc:  { t: "SOCIALES Y CIUDADANAS", d: "Historia, Geografía, Constitución y Competencias Ciudadanas." }
     },
     games: { 
       gasLaws: { t: "🧪 LEYES DE GASES", d: "Termodinámica interactiva: Plasma, Presión y Temperatura." }, 
@@ -60,7 +61,9 @@ const CATALOG = {
       mathLab: { t: "📐 MATEMÁTICAS ICFES", d: "Simulación Cuántica: Álgebra, Geometría, Probabilidad con IA." },
       scienceLab: { t: "🧬 CIENCIAS ICFES", d: "Simulador Integral: Biología, Química y Física en entorno real." },
       readingLab: { t: "📖 LECTURA CRÍTICA ICFES", d: "Simulador Cognitivo: Análisis semántico y pragmático con IA." },
-      socialesLab: { t: "⚖️ SOCIALES ICFES", d: "Simulador Cartográfico: Constitución, Historia y Multiperspectivismo." } // 🟠 NUEVO JUEGO
+      socialesLab: { t: "⚖️ SOCIALES ICFES", d: "Simulador Cartográfico: Constitución, Historia y Multiperspectivismo." },
+      // 🟢 NUEVO JUEGO EN EL CATÁLOGO (ESPAÑOL)
+      physicsLab: { t: "🚀 THE MOTION LAB", d: "Simulador Cinemático: Vectores, MRU y MRUA con IA." }
     } 
   },
   en: { 
@@ -84,7 +87,9 @@ const CATALOG = {
       mathLab: { t: "📐 ICFES MATH LAB", d: "Quantum Simulation: Algebra, Geometry, Probability with AI." },
       scienceLab: { t: "🧬 ICFES SCIENCE LAB", d: "Integral Simulator: Biology, Chemistry & Physics in real-time." },
       readingLab: { t: "📖 ICFES CRITICAL READING", d: "Cognitive Simulator: Semantic and pragmatic analysis with AI." },
-      socialesLab: { t: "⚖️ ICFES SOCIAL SCIENCES", d: "Cartographic Simulator: Constitution, History, and Multiperspectivism." }
+      socialesLab: { t: "⚖️ ICFES SOCIAL SCIENCES", d: "Cartographic Simulator: Constitution, History, and Multiperspectivism." },
+      // 🟢 NUEVO JUEGO EN EL CATÁLOGO (INGLÉS)
+      physicsLab: { t: "🚀 THE MOTION LAB", d: "Kinematic Simulator: Vectors, MRU, and MRUA with AI." }
     } 
   },
   fr: { 
@@ -108,7 +113,9 @@ const CATALOG = {
       mathLab: { t: "📐 LABO MATHS ICFES", d: "Simulation Quantique : Algèbre, Géométrie, Probabilités IA." },
       scienceLab: { t: "🧬 LABO SCIENCES ICFES", d: "Simulateur Intégral : Biologie, Chimie et Physique en direct." },
       readingLab: { t: "📖 LECTURE CRITIQUE ICFES", d: "Simulateur Cognitif: Analyse sémantique et pragmatique avec IA." },
-      socialesLab: { t: "⚖️ SCIENCES SOCIALES ICFES", d: "Simulateur Cartographique : Constitution, Histoire et Multiperspectivisme." }
+      socialesLab: { t: "⚖️ SCIENCES SOCIALES ICFES", d: "Simulateur Cartographique : Constitution, Histoire et Multiperspectivisme." },
+      // 🟢 NUEVO JUEGO EN EL CATÁLOGO (FRANCÉS)
+      physicsLab: { t: "🚀 THE MOTION LAB", d: "Simulateur Cinématique : Vecteurs, MRU et MRUA avec IA." }
     } 
   },
   de: { 
@@ -132,7 +139,9 @@ const CATALOG = {
       mathLab: { t: "📐 ICFES MATH LABOR", d: "Quantensimulation: Algebra, Geometrie, Wahrscheinlichkeit KI." },
       scienceLab: { t: "🧬 ICFES WISSENSCHAFTEN", d: "Integraler Simulator: Biologie, Chemie und Physik mit KI." },
       readingLab: { t: "📖 ICFES KRITISCHES LESEN", d: "Kognitiver Simulator: Semantische und pragmatische Analyse mit KI." },
-      socialesLab: { t: "⚖️ ICFES SOZIALWISSENSCHAFTEN", d: "Kartographischer Simulator: Verfassung, Geschichte und Multiperspektivismus." }
+      socialesLab: { t: "⚖️ ICFES SOZIALWISSENSCHAFTEN", d: "Kartographischer Simulator: Verfassung, Geschichte und Multiperspektivismus." },
+      // 🟢 NUEVO JUEGO EN EL CATÁLOGO (ALEMÁN)
+      physicsLab: { t: "🚀 THE MOTION LAB", d: "Kinematischer Simulator: Vektoren, MRU und MRUA mit KI." }
     } 
   }
 };
@@ -299,7 +308,6 @@ export default function App() {
                   <GameCard uiColor="#0f0" icon="🧬" title={cat.subjects.nat.t} desc={cat.subjects.nat.d} onClick={() => setMenuView('cat_nat')} />
                   <GameCard uiColor="#ffea00" icon="📐" title={cat.subjects.math.t} desc={cat.subjects.math.d} onClick={() => setMenuView('cat_math')} />
                   <GameCard uiColor="#00f2ff" icon="📖" title={cat.subjects.read.t} desc={cat.subjects.read.d} onClick={() => setMenuView('cat_read')} />
-                  {/* 🟠 NUEVO BOTÓN: SOCIALES Y CIUDADANAS */}
                   <GameCard uiColor="#ffaa00" icon="🌍" title={cat.subjects.soc.t} desc={cat.subjects.soc.d} onClick={() => setMenuView('cat_soc')} />
                 </>
               )}
@@ -323,6 +331,10 @@ export default function App() {
               {/* === VISTA 4: JUEGOS DE FÍSICA === */}
               {menuView === 'cat_phys' && (
                 <>
+                  {/* 🟢 NUEVO CARTUCHO INYECTADO AQUÍ 🟢 */}
+                  <GameCard uiColor="#ff00ff" icon="🚀" title={cat.games.physicsLab.t} desc={cat.games.physicsLab.d} badge="NEXUS" badgeColor="#ff00ff" onClick={() => startGame('PHYSICS_LAB')} />
+                  
+                  {/* Mantenemos el de Gases que ya estaba catalogado como física */}
                   <GameCard uiColor="#00f2ff" icon="🌡️" title={cat.games.gasLaws.t} desc={cat.games.gasLaws.d} onClick={() => startGame('GAS_LAWS')} />
                 </>
               )}
@@ -342,7 +354,7 @@ export default function App() {
                 </>
               )}
 
-              {/* === VISTA 7: JUEGOS DE SOCIALES (NUEVA CONEXIÓN) 🟠 === */}
+              {/* === VISTA 7: JUEGOS DE SOCIALES === */}
               {menuView === 'cat_soc' && (
                 <>
                   <GameCard uiColor="#ffaa00" icon="⚖️" title={cat.games.socialesLab.t} desc={cat.games.socialesLab.d} badge="NEXUS" badgeColor="#ffaa00" onClick={() => startGame('SOCIALES_LAB')} />
@@ -366,6 +378,7 @@ export default function App() {
           </nav>
 
           {activeQuiz && (
+            // ... (Overlay de Quiz genérico de GasLaws, no tocar) ...
             <div style={ui.quizOverlay}>
               <div style={ui.quizBox}>
                 <h2 style={{color:'#00f2ff', margin:0, letterSpacing:'1px', fontSize: 'clamp(18px, 5vw, 28px)'}}>{activeQuiz.title}</h2>
@@ -405,7 +418,9 @@ export default function App() {
           )}
 
           {/* 🔥 ENRUTADOR DINÁMICO DE LOS JUEGOS ACTIVOS 🔥 */}
-          {activeGame === 'SOCIALES_LAB' ? (
+          {activeGame === 'PHYSICS_LAB' ? (
+             <PhysicsLab />
+          ) : activeGame === 'SOCIALES_LAB' ? (
              <SocialesLab />
           ) : activeGame === 'READING_LAB' ? (
              <ReadingLab />
@@ -424,6 +439,7 @@ export default function App() {
           ) : (
              <>
                 {/* EL MOTOR BASE ORIGINAL (GAS LAWS) SE MANTIENE INTACTO */}
+                {/* ... (Renderizado de GasLaws igual que lo tenías) ... */}
                 <div className="game-panel-left" style={ui.leftPanel(isMobile)}>
                   <div className="material-selector-box" style={{...ui.sectionBox, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, pointerEvents: 'auto'}}>
                     <div className="search-filter-wrap" style={{display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '8px', alignItems: 'center'}}>
@@ -551,6 +567,10 @@ export default function App() {
 // ============================================================
 // 🎨 DICCIONARIO DE ESTILOS MOBILE-FIRST (GOD TIER)
 // ============================================================
+
+// ============================================================
+// 🎨 DICCIONARIO DE ESTILOS MOBILE-FIRST (GOD TIER)
+// ============================================================
 const ui = {
   screenGame: { 
     width:'100vw', height:'100dvh', backgroundColor:'#010204', display:'flex', flexDirection:'column', 
@@ -614,7 +634,11 @@ const ui = {
   pillA: { flex:1, padding:'10px 6px', fontSize:'clamp(10px, 2.5vw, 12px)', background:'rgba(0,242,255,0.15)', color:'#fff', border:'1px solid #00f2ff', cursor:'pointer', fontFamily:'Orbitron', borderRadius: '6px', whiteSpace: 'nowrap' },
   matBtn: (isMobile) => ({ padding:'14px 10px', background:'rgba(0,0,0,0.6)', color:'#00f2ff', border:'1px solid #005577', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(14px, 3vw, 15px)', textAlign:'center', borderRadius: '8px', minWidth: isMobile ? '75px' : '100%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }),
   matBtnActive: (isMobile) => ({ padding:'14px 10px', background:'rgba(0,242,255,0.2)', color:'#fff', border:'2px solid #00f2ff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(14px, 3vw, 15px)', fontWeight:'bold', textAlign:'center', borderRadius: '8px', minWidth: isMobile ? '75px' : '100%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }),
+  
+  /* 🔴 LA LÍNEA CORREGIDA ESTÁ AQUÍ ABAJO */
   dataRow: (isMobile) => ({ display:'flex', justifyContent:'space-between', alignItems: 'center', gap: '5px', fontSize:'clamp(11px, 2.5vw, 13px)', marginBottom: isMobile ? '0' : '8px', color:'#fff', borderBottom: isMobile ? 'none' : '1px solid rgba(255,255,255,0.1)', paddingBottom: isMobile ? '0' : '4px', whiteSpace: 'nowrap', padding: isMobile ? '6px 12px' : '0', background: isMobile ? 'rgba(0,0,0,0.5)' : 'transparent', borderRadius: isMobile ? '6px' : '0' }),
+  /* -------------------------------------- */
+
   modeGrid: (isMobile) => ({ display:'grid', gridTemplateColumns: isMobile ? 'repeat(4, 1fr)' : '1fr 1fr', gap:'8px' }),
   modeBtn: { padding:'14px 4px', background:'rgba(0,0,0,0.6)', color:'#888', border:'1px solid #333', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(10px, 2.5vw, 12px)', borderRadius: '8px' },
   modeBtnA: { padding:'14px 4px', background:'rgba(255,234,0,0.15)', color:'#ffea00', border:'1px solid #ffea00', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(10px, 2.5vw, 12px)', fontWeight:'bold', borderRadius: '8px' },
@@ -635,7 +659,6 @@ const ui = {
   quizGrid: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'clamp(12px, 3vw, 20px)', marginBottom:'20px', width: '100%' },
   quizBtn: { padding:'clamp(15px, 4vw, 20px)', background:'rgba(255,255,255,0.05)', border:'1px solid #444', color:'#fff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(14px, 3.5vw, 16px)', textAlign:'center', borderRadius: '12px', minHeight: '60px', fontWeight: 'bold' }
 };
-
 // ============================================================
 // 🎨 MEDIA QUERIES GLOBALES (HACK PARA SCROLL Y FLEXBOX MÓVIL)
 // ============================================================
