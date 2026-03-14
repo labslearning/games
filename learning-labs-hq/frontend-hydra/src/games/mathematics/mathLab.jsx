@@ -29,7 +29,7 @@ class GameErrorBoundary extends React.Component {
         <div style={{ width: '100vw', height: '100vh', background: '#050000', color: '#00f2ff', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', fontFamily: 'monospace', padding: '40px', textAlign:'center', zIndex: 9999 }}>
           <h1 style={{ fontSize: 'clamp(30px, 8vw, 60px)', textShadow: '0 0 30px #f00', color: '#ff0033' }}>⚠️ FATAL QUANTUM ERROR</h1>
           <p style={{ background: 'rgba(255,0,0,0.1)', padding: '20px', borderRadius: '10px', border:'1px solid #f00', maxWidth:'800px', fontSize: '18px', color: '#fff' }}>{this.state.errorMsg}</p>
-          <button onClick={() => { window.localStorage.removeItem('icfes_telemetry_v7'); window.localStorage.removeItem('icfes_math_history_v1'); window.location.reload(); }} style={{ marginTop: '30px', padding: '15px 30px', fontSize: '18px', cursor: 'pointer', background: '#ff0033', color: '#fff', border: 'none', borderRadius: '5px', fontWeight:'bold', textTransform: 'uppercase' }}>Reignite Core (Clear Cache)</button>
+          <button onClick={() => { window.localStorage.removeItem('icfes_telemetry_v7'); window.location.reload(); }} style={{ marginTop: '30px', padding: '15px 30px', fontSize: '18px', cursor: 'pointer', background: '#ff0033', color: '#fff', border: 'none', borderRadius: '5px', fontWeight:'bold', textTransform: 'uppercase' }}>Reignite Core (Clear Cache)</button>
         </div>
       );
     }
@@ -364,6 +364,7 @@ class IcfesEngine {
    🧠 3. MOTOR DEEPSEEK (CONEXIÓN IA SANITIZADA Y PROTEGIDA)
 ============================================================ */
 
+// MAPEO ESTRICTO DE IDIOMAS PARA LA IA (God Tier Regex Fix)
 const LANG_MAP = {
     es: "SPANISH",
     en: "ENGLISH",
@@ -560,69 +561,16 @@ const DICT_UI = {
       aiSelectTopic: "Selecciona el dominio a repasar:", aiClose: "CERRAR SESIÓN IA",
       downloadReport: "DESCARGAR INFORME TÁCTICO",
       loadingData: "ESTABLECIENDO CONEXIÓN NEURONAL DEEPSEEK...",
-      warmupTitle: "⚡ RETO DE CALENTAMIENTO", warmupSub: "Mientras la IA Cuántica sintetiza tu matriz principal...",
-      
-      // 🟢 NUEVAS TRADUCCIONES PARA EL PDF E HISTORIAL
-      pdfTitleTheory: "NÚCLEO TEÓRICO MATEMÁTICO",
-      pdfTitleTrap: "TRAMPA COGNITIVA ICFES",
-      pdfTitleProtocol: "PROTOCOLO DE RESOLUCIÓN",
-      pdfTitleSim: "SIMULACIÓN PRÁCTICA",
-      pdfTitleAnalysis: "ANÁLISIS MATEMÁTICO",
-      downloadMasterclassBtn: "📄 DESCARGAR MASTERCLASS EN PDF",
-      historyBtn: "📚 HISTORIAL IA",
-      historyTitle: "ARCHIVOS CUÁNTICOS (HISTORIAL)",
-      historyEmpty: "No hay registros en la matriz. Solicita una clase primero.",
-      clearHistoryBtn: "🗑️ PURGAR HISTORIAL",
-      viewClassBtn: "👁️ VER ARCHIVO",
-      backToHistoryBtn: "VOLVER AL HISTORIAL"
+      warmupTitle: "⚡ RETO DE CALENTAMIENTO", warmupSub: "Mientras la IA Cuántica sintetiza tu matriz principal..."
   },
   en: {
-      start: "START ICFES SIMULATION", title: "ICFES MATHEMATICS LAB", scan: "LASER INQUIRY SCANNER", aiBtn: "AI TUTOR", time: "CHRONOMETER", mastery: "Quantum Mastery", btnCheck: "SYNTHESIZE ANSWER", btnNext: "NEXT MODULE ➔", btnRetrySame: "RETRY MATRIX ➔", correctTitle: "PERFECT ANALYSIS!", wrongTitle: "LOGICAL RUPTURE", statsBtn: "TELEMETRY", theoryText: "AI GENERATION SYSTEM ACTIVE. This simulator is hooked to DeepSeek Neural Net. Every math exercise is uniquely calculated. If latency is detected, an emergency algorithm will deploy.", timeout: "THERMAL COLLAPSE!", topic: "ACTIVE DOMAIN", dashboard: "GLOBAL TELEMETRY DASHBOARD", avgTime: "Avg Resolution Time", btnRetry: "PURGE CACHE", aiSocraticBtn: "REQUEST AI MASTERCLASS", socraticModal: "AI HAS DETECTED FAILURES IN:", aiPraise: "PERFECT PERFORMANCE!", aiSelectTopic: "Select the domain to review:", aiClose: "CLOSE AI SESSION", downloadReport: "DOWNLOAD TACTICAL REPORT", loadingData: "ESTABLISHING DEEPSEEK NEURAL LINK...", warmupTitle: "⚡ WARM-UP CHALLENGE", warmupSub: "While AI synthesizes your main matrix...",
-      
-      pdfTitleTheory: "MATHEMATICAL THEORETICAL CORE",
-      pdfTitleTrap: "ICFES COGNITIVE TRAP",
-      pdfTitleProtocol: "RESOLUTION PROTOCOL",
-      pdfTitleSim: "PRACTICAL SIMULATION",
-      pdfTitleAnalysis: "MATHEMATICAL ANALYSIS",
-      downloadMasterclassBtn: "📄 DOWNLOAD MASTERCLASS AS PDF",
-      historyBtn: "📚 AI HISTORY",
-      historyTitle: "QUANTUM RECORDS (HISTORY)",
-      historyEmpty: "No records in the matrix. Request a class first.",
-      clearHistoryBtn: "🗑️ PURGE HISTORY",
-      viewClassBtn: "👁️ VIEW RECORD",
-      backToHistoryBtn: "BACK TO HISTORY"
+      start: "START ICFES SIMULATION", title: "ICFES MATHEMATICS LAB", scan: "LASER INQUIRY SCANNER", aiBtn: "AI TUTOR", time: "CHRONOMETER", mastery: "Quantum Mastery", btnCheck: "SYNTHESIZE ANSWER", btnNext: "NEXT MODULE ➔", btnRetrySame: "RETRY MATRIX ➔", correctTitle: "PERFECT ANALYSIS!", wrongTitle: "LOGICAL RUPTURE", statsBtn: "TELEMETRY", theoryText: "AI GENERATION SYSTEM ACTIVE. This simulator is hooked to DeepSeek Neural Net. Every math exercise is uniquely calculated. If latency is detected, an emergency algorithm will deploy.", timeout: "THERMAL COLLAPSE!", topic: "ACTIVE DOMAIN", dashboard: "GLOBAL TELEMETRY DASHBOARD", avgTime: "Avg Resolution Time", btnRetry: "PURGE CACHE", aiSocraticBtn: "REQUEST AI MASTERCLASS", socraticModal: "AI HAS DETECTED FAILURES IN:", aiPraise: "PERFECT PERFORMANCE!", aiSelectTopic: "Select the domain to review:", aiClose: "CLOSE AI SESSION", downloadReport: "DOWNLOAD TACTICAL REPORT", loadingData: "ESTABLISHING DEEPSEEK NEURAL LINK...", warmupTitle: "⚡ WARM-UP CHALLENGE", warmupSub: "While AI synthesizes your main matrix..."
   },
   fr: {
-      start: "DÉMARRER LA SIMULATION", title: "LAB. DE MATHÉMATIQUES ICFES", scan: "SCANNER LASER", aiBtn: "TUTEUR IA", time: "CHRONOMÈTRE", mastery: "Maîtrise Quantique", btnCheck: "SYNTHÉTISER", btnNext: "MODULE SUIVANT ➔", btnRetrySame: "RÉESSAYER ➔", correctTitle: "ANALYSE PARFAITE!", wrongTitle: "RUPTURE LOGIQUE", statsBtn: "TÉLÉMÉTRIE", theoryText: "SYSTÈME IA ACTIF. Ce simulateur génère des exercices mathématiques uniques instantanément.", timeout: "EFFONDREMENT THERMIQUE!", topic: "DOMAINE ACTIF", dashboard: "TABLEAU DE BORD TÉLÉMÉTRIQUE", avgTime: "Temps Moyen de Résolution", btnRetry: "PURGER LE CACHE", aiSocraticBtn: "DEMANDER MASTERCLASS IA", socraticModal: "FAILLES DÉTECTÉES :", aiPraise: "PERFORMANCE PARFAITE !", aiSelectTopic: "Sélectionnez le domaine :", aiClose: "FERMER LA SESSION IA", downloadReport: "TÉLÉCHARGER LE RAPPORT TACTIQUE", loadingData: "ÉTABLISSEMENT DU LIEN NEURONAL...", warmupTitle: "⚡ DÉFI D'ÉCHAUFFEMENT", warmupSub: "Pendant que l'IA synthétise la matrice...",
-      
-      pdfTitleTheory: "NOYAU THÉORIQUE MATHÉMATIQUE",
-      pdfTitleTrap: "PIÈGE COGNITIF ICFES",
-      pdfTitleProtocol: "PROTOCOLE DE RÉSOLUTION",
-      pdfTitleSim: "SIMULATION PRATIQUE",
-      pdfTitleAnalysis: "ANALYSE MATHÉMATIQUE",
-      downloadMasterclassBtn: "📄 TÉLÉCHARGER MASTERCLASS EN PDF",
-      historyBtn: "📚 HISTORIQUE IA",
-      historyTitle: "ARCHIVES QUANTIQUES (HISTORIQUE)",
-      historyEmpty: "Aucun registre. Demandez un cours d'abord.",
-      clearHistoryBtn: "🗑️ PURGER L'HISTORIQUE",
-      viewClassBtn: "👁️ VOIR L'ARCHIVE",
-      backToHistoryBtn: "RETOUR À L'HISTORIQUE"
+      start: "DÉMARRER LA SIMULATION", title: "LAB. DE MATHÉMATIQUES ICFES", scan: "SCANNER LASER", aiBtn: "TUTEUR IA", time: "CHRONOMÈTRE", mastery: "Maîtrise Quantique", btnCheck: "SYNTHÉTISER", btnNext: "MODULE SUIVANT ➔", btnRetrySame: "RÉESSAYER ➔", correctTitle: "ANALYSE PARFAITE!", wrongTitle: "RUPTURE LOGIQUE", statsBtn: "TÉLÉMÉTRIE", theoryText: "SYSTÈME IA ACTIF. Ce simulateur génère des exercices mathématiques uniques instantanément.", timeout: "EFFONDREMENT THERMIQUE!", topic: "DOMAINE ACTIF", dashboard: "TABLEAU DE BORD TÉLÉMÉTRIQUE", avgTime: "Temps Moyen de Résolution", btnRetry: "PURGER LE CACHE", aiSocraticBtn: "DEMANDER MASTERCLASS IA", socraticModal: "FAILLES DÉTECTÉES :", aiPraise: "PERFORMANCE PARFAITE !", aiSelectTopic: "Sélectionnez le domaine :", aiClose: "FERMER LA SESSION IA", downloadReport: "TÉLÉCHARGER LE RAPPORT TACTIQUE", loadingData: "ÉTABLISSEMENT DU LIEN NEURONAL...", warmupTitle: "⚡ DÉFI D'ÉCHAUFFEMENT", warmupSub: "Pendant que l'IA synthétise la matrice..."
   },
   de: {
-      start: "SIMULATION STARTEN", title: "ICFES MATHEMATIK LABOR", scan: "LASER-SCANNER", aiBtn: "KI-TUTOR", time: "CHRONOMETER", mastery: "Quantenbeherrschung", btnCheck: "ANTWORT SYNTHETISIEREN", btnNext: "NÄCHSTES MODUL ➔", btnRetrySame: "WIEDERHOLEN ➔", correctTitle: "PERFEKTE ANALYSE!", wrongTitle: "LOGISCHER BRUCH", statsBtn: "TELEMETRIE", theoryText: "KI-SYSTEM AKTIV. Diese unendliche generative Engine erlaubt kein Auswendiglernen.", timeout: "THERMISCHER KOLLAPS!", topic: "AKTIVE DOMÄNE", dashboard: "GLOBALE TELEMETRIE", avgTime: "Durchschnittliche Lösungszeit", btnRetry: "CACHE LÖSCHEN", aiSocraticBtn: "KI MASTERCLASS ANFORDERN", socraticModal: "FEHLER ERKANNT IN:", aiPraise: "PERFEKTE LEISTUNG!", aiSelectTopic: "Wählen Sie die Domäne:", aiClose: "KI-SITZUNG SCHLIESSEN", downloadReport: "TAKTIKBERICHT HERUNTERLADEN", loadingData: "AUFBAU DER NEURONALEN VERBINDUNG...", warmupTitle: "⚡ AUFWÄRMHERAUSFORDERUNG", warmupSub: "Während die KI deine Matrix synthetisiert...",
-      
-      pdfTitleTheory: "MATHEMATISCHER KERN",
-      pdfTitleTrap: "ICFES KOGNITIVE FALLE",
-      pdfTitleProtocol: "LÖSUNGSPROTOKOLL",
-      pdfTitleSim: "PRAKTISCHE SIMULATION",
-      pdfTitleAnalysis: "MATHEMATISCHE ANALYSE",
-      downloadMasterclassBtn: "📄 MASTERCLASS ALS PDF HERUNTERLADEN",
-      historyBtn: "📚 KI-VERLAUF",
-      historyTitle: "QUANTENAUFZEICHNUNGEN (VERLAUF)",
-      historyEmpty: "Keine Aufzeichnungen. Fordern Sie zuerst eine Klasse an.",
-      clearHistoryBtn: "🗑️ VERLAUF LÖSCHEN",
-      viewClassBtn: "👁️ AUFZEICHNUNG ANSEHEN",
-      backToHistoryBtn: "ZURÜCK ZUM VERLAUF"
+      start: "SIMULATION STARTEN", title: "ICFES MATHEMATIK LABOR", scan: "LASER-SCANNER", aiBtn: "KI-TUTOR", time: "CHRONOMETER", mastery: "Quantenbeherrschung", btnCheck: "ANTWORT SYNTHETISIEREN", btnNext: "NÄCHSTES MODUL ➔", btnRetrySame: "WIEDERHOLEN ➔", correctTitle: "PERFEKTE ANALYSE!", wrongTitle: "LOGISCHER BRUCH", statsBtn: "TELEMETRIE", theoryText: "KI-SYSTEM AKTIV. Diese unendliche generative Engine erlaubt kein Auswendiglernen.", timeout: "THERMISCHER KOLLAPS!", topic: "AKTIVE DOMÄNE", dashboard: "GLOBALE TELEMETRIE", avgTime: "Durchschnittliche Lösungszeit", btnRetry: "CACHE LÖSCHEN", aiSocraticBtn: "KI MASTERCLASS ANFORDERN", socraticModal: "FEHLER ERKANNT IN:", aiPraise: "PERFEKTE LEISTUNG!", aiSelectTopic: "Wählen Sie die Domäne:", aiClose: "KI-SITZUNG SCHLIESSEN", downloadReport: "TAKTIKBERICHT HERUNTERLADEN", loadingData: "AUFBAU DER NEURONALEN VERBINDUNG...", warmupTitle: "⚡ AUFWÄRMHERAUSFORDERUNG", warmupSub: "Während die KI deine Matrix synthetisiert..."
   }
 };
 
@@ -788,19 +736,85 @@ const QuantumIntermission = ({ lang, loadingText }) => {
 };
 
 /* ============================================================
-   🎥 7. NÚCLEO 3D AVANZADO (LIMPIO Y ESTÁTICO PARA MATEMÁTICAS)
+   🎥 7. NÚCLEO 3D AVANZADO
 ============================================================ */
+const AtomParticles = ({ count, color, speed, radius }) => {
+  const mesh = useRef();
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const particles = useMemo(() => {
+    const temp = [];
+    for (let i = 0; i < count; i++) {
+      const t = Math.random() * 100;
+      const factor = 0.5 + Math.random();
+      const x = (Math.random() - 0.5) * radius;
+      const y = (Math.random() - 0.5) * radius;
+      const z = (Math.random() - 0.5) * radius;
+      temp.push({ t, factor, x, y, z });
+    }
+    return temp;
+  }, [count, radius]);
 
-const Core3D = ({ isExploding, scannerActive, isLoading }) => {
+  useFrame(() => {
+    if (!mesh.current) return;
+    particles.forEach((particle, i) => {
+      let { t, factor, x, y, z } = particle;
+      t = particle.t += speed * factor;
+      const a = Math.cos(t) + Math.sin(t) / 10;
+      const b = Math.sin(t) + Math.cos(t) / 10;
+      dummy.position.set(x + a, y + b, z);
+      dummy.scale.setScalar(0.15);
+      dummy.updateMatrix();
+      mesh.current.setMatrixAt(i, dummy.matrix);
+    });
+    mesh.current.instanceMatrix.needsUpdate = true;
+  });
+
+  return (
+    <instancedMesh ref={mesh} args={[null, null, count]}>
+      <primitive object={SPHERE_GEOM} attach="geometry" />
+      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={3} />
+    </instancedMesh>
+  );
+};
+
+const Core3D = ({ isExploding, scannerActive, timeRatio, isLoading }) => {
+  const torusRef = useRef();
   const scanPlaneRef = useRef();
+  
+  const isDanger = timeRatio > 0.83; 
+  const isCritical = timeRatio > 0.94; 
+  
+  let particleColor = "#00f2ff"; 
+  if (isLoading) particleColor = "#ff00ff";
+  else if (isDanger) particleColor = "#ffaa00"; 
+  else if (isCritical || isExploding) particleColor = "#ff0033"; 
+
+  const particleSpeed = isExploding ? 0.2 : (isLoading ? 0.1 : 0.02 + (timeRatio * 0.08)); 
 
   useFrame((state) => {
-    // Cámara estática para facilitar la concentración en matemáticas
-    state.camera.position.lerp(new THREE.Vector3(0, 2, 28), 0.1);
+    if (isExploding || isCritical) {
+      state.camera.position.x = Math.sin(state.clock.elapsedTime * 80) * (isExploding ? 1.5 : 0.2);
+      state.camera.position.y = 2 + Math.cos(state.clock.elapsedTime * 90) * (isExploding ? 1.5 : 0.2);
+    } else if (isLoading) {
+      state.camera.position.x = Math.sin(state.clock.elapsedTime * 2) * 5;
+      state.camera.position.z = 25 + Math.cos(state.clock.elapsedTime * 2) * 5;
+    } else {
+      state.camera.position.lerp(new THREE.Vector3(0, 2, 28), 0.05);
+    }
     state.camera.lookAt(0, 0, 0);
     
+    if (torusRef.current) {
+        torusRef.current.rotation.y += particleSpeed;
+        torusRef.current.rotation.x += particleSpeed * 0.5;
+        if (isDanger && !isExploding && !isLoading) {
+            const scale = 1 + Math.sin(state.clock.elapsedTime * 25) * (timeRatio * 0.15);
+            torusRef.current.scale.set(scale, scale, scale);
+        } else {
+            torusRef.current.scale.set(1, 1, 1);
+        }
+    }
     if (scannerActive && scanPlaneRef.current) {
-        scanPlaneRef.current.position.y = Math.sin(state.clock.elapsedTime * 2) * 5;
+        scanPlaneRef.current.position.x = Math.sin(state.clock.elapsedTime * 3) * 12;
     }
   });
 
@@ -808,19 +822,24 @@ const Core3D = ({ isExploding, scannerActive, isLoading }) => {
     <>
       <ambientLight intensity={1.5} />
       <directionalLight position={[10, 15, 10]} intensity={3} color="#ffffff" />
-      {/* Estrellas estáticas para no distraer */}
-      <Stars count={2000} factor={4} fade speed={0} />
-      
+      <Stars count={4000} factor={5} fade speed={isExploding ? 6 : (isLoading ? 4 : 2)} />
+      <AtomParticles count={350} color={particleColor} speed={particleSpeed} radius={18} />
       {scannerActive && (
-         <mesh ref={scanPlaneRef} rotation={[-Math.PI/2, 0, 0]}>
-            <planeGeometry args={[50, 50]} />
-            <meshBasicMaterial color="#0f0" transparent opacity={0.05} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
+         <mesh ref={scanPlaneRef} rotation={[0, Math.PI/2, 0]}>
+            <planeGeometry args={[30, 30]} />
+            <meshBasicMaterial color="#0f0" transparent opacity={0.2} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
          </mesh>
       )}
-      
+      <group position={[0, 3, 0]}>
+         <mesh ref={torusRef}>
+            <torusKnotGeometry args={[2.5, 0.5, 120, 20]} />
+            <meshStandardMaterial color={particleColor} wireframe transparent opacity={0.6} />
+         </mesh>
+      </group>
       <EffectComposer>
-        {isExploding && <ChromaticAberration offset={VECTOR_EXP} />}
-        <Scanline opacity={0.15} density={2.5} />
+        <Bloom intensity={isExploding ? 10 : (isLoading ? 8 : (isDanger ? 6 : 3))} luminanceThreshold={0.1} mipmapBlur />
+        <ChromaticAberration offset={isExploding ? VECTOR_EXP : VECTOR_NORM} />
+        <Scanline opacity={0.3} density={2.5} />
       </EffectComposer>
     </>
   );
@@ -845,18 +864,17 @@ const MarkdownParser = ({ text }) => {
     return <div dangerouslySetInnerHTML={htmlContent} style={{ color: '#fff', fontSize: 'clamp(18px, 3.5vw, 22px)', lineHeight: '1.8', fontFamily: 'sans-serif' }} />;
 };
 
-const SocraticMasterclass = ({ topic, lang, onBack, onClose, UI, onSave, preloadedData, customBackText }) => {
-    const [classData, setClassData] = useState(preloadedData || null);
-    const [isGenerating, setIsGenerating] = useState(!preloadedData);
+const SocraticMasterclass = ({ topic, lang, onBack, onClose, UI }) => {
+    const [classData, setClassData] = useState(null);
+    const [isGenerating, setIsGenerating] = useState(true);
     const [loadText, setLoadText] = useState("> ESTABLECIENDO CONEXIÓN CUÁNTICA DEEPSEEK...");
     
     const loadClass = useCallback(async () => {
-        if (preloadedData) return; 
         let isMounted = true;
         setIsGenerating(true);
 
         const t1 = setTimeout(() => { if(isMounted) setLoadText("> ANALIZANDO VULNERABILIDADES DEL ESTUDIANTE EN: " + topic.replace(/_/g, ' ')); }, 3000);
-        const t2 = setTimeout(() => { if(isMounted) setLoadText("> SINTETIZANDO NÚCLEO TEÓRICO MATEMÁTICO..."); }, 6000);
+        const t2 = setTimeout(() => { if(isMounted) setLoadText("> SINTETIZANDO NÚCLEO TEÓRICO AVANZADO..."); }, 6000);
         const t3 = setTimeout(() => { if(isMounted) setLoadText("> GENERANDO MATRIZ DE SIMULACIÓN (ESPERE)..."); }, 10000);
         const t4 = setTimeout(() => { if(isMounted) setLoadText("> COMPILANDO DATOS PEDAGÓGICOS (ÚLTIMA FASE)..."); }, 15000);
 
@@ -866,7 +884,6 @@ const SocraticMasterclass = ({ topic, lang, onBack, onClose, UI, onSave, preload
                 setClassData(content);
                 setIsGenerating(false);
                 sfx.success();
-                if (onSave) onSave(topic, lang, content); 
             }
         } catch (err) {
             console.error("DeepSeek Colapso Total. Activando Defensa Algorítmica.", err);
@@ -875,7 +892,6 @@ const SocraticMasterclass = ({ topic, lang, onBack, onClose, UI, onSave, preload
                 setClassData(fallbackClass);
                 setIsGenerating(false);
                 sfx.success();
-                if (onSave) onSave(topic, lang, fallbackClass);
             }
         }
             
@@ -883,110 +899,12 @@ const SocraticMasterclass = ({ topic, lang, onBack, onClose, UI, onSave, preload
             isMounted = false; 
             clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4);
         };
-    }, [topic, lang, preloadedData, onSave]);
+    }, [topic, lang]);
 
     useEffect(() => {
         const cleanup = loadClass();
         return () => { if (cleanup && cleanup.then) cleanup.then(c => { if (c) c() }); };
     }, [loadClass]);
-
-    // 🔴 FUNCIÓN L8: GENERADOR DE PDF PARA LA MASTERCLASS IA EN MATEMÁTICAS
-    const downloadMasterclassPDF = useCallback(() => {
-        if (!classData) return;
-        sfx.scanSweep();
-        const date = new Date().toLocaleString();
-        
-        const printWindow = window.open('', '', 'height=900,width=850');
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html lang="${lang}">
-                <head>
-                    <title>Learning Labs - Masterclass: ${classData.title}</title>
-                    <style>
-                        @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,700;1,300&family=Inter:wght@400;700;900&display=swap');
-                        body { font-family: 'Merriweather', serif; background-color: #ffffff; color: #1e293b; margin: 0; padding: 0; line-height: 1.6; }
-                        .container { max-width: 800px; margin: 0 auto; padding: 40px; }
-                        .header { display: flex; align-items: center; border-bottom: 4px solid #00f2ff; padding-bottom: 20px; margin-bottom: 30px; font-family: 'Inter', sans-serif; }
-                        .logo { width: 120px; height: auto; margin-right: 20px; }
-                        .title h1 { margin: 0 0 5px 0; color: #0f172a; font-size: 24px; font-weight: 900; text-transform: uppercase; }
-                        .title p { margin: 0; color: #64748b; font-size: 14px; font-weight: 700; }
-                        .timestamp { margin-top: 5px; display: inline-block; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-size: 11px; color: #475569; font-weight: bold; }
-                        
-                        .section-title { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 900; color: #0055ff; text-transform: uppercase; margin-top: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 15px; }
-                        .section-title.trap { color: #ef4444; border-bottom-color: #ef4444; }
-                        .section-title.protocol { color: #d97706; border-bottom-color: #d97706; }
-                        
-                        .content-box { background: #f8fafc; border-left: 4px solid #0055ff; padding: 15px 20px; margin-bottom: 20px; border-radius: 0 8px 8px 0; font-size: 15px; }
-                        .content-box.trap { border-left-color: #ef4444; background: #fef2f2; }
-                        .content-box.protocol { border-left-color: #d97706; background: #fffbeb; }
-                        
-                        .sim-box { border: 2px solid #00f2ff; border-radius: 12px; padding: 25px; margin-top: 40px; page-break-inside: avoid; }
-                        .sim-title { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 900; color: #0f172a; text-align: center; margin-top: 0; }
-                        .sim-text { font-style: italic; color: #334155; margin-bottom: 20px; white-space: pre-wrap; background: #f1f5f9; padding: 15px; border-radius: 6px; }
-                        .options { margin-bottom: 20px; }
-                        .option { padding: 12px 15px; border: 1px solid #cbd5e1; margin-bottom: 10px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 14px; }
-                        .option.correct { border-color: #10b981; background: #ecfdf5; color: #065f46; font-weight: bold; }
-                        
-                        .analysis-box { background: #f0fdfa; border-left: 4px solid #10b981; padding: 15px 20px; margin-top: 20px; font-size: 15px; color: #064e3b; }
-                        
-                        .footer { text-align: center; margin-top: 50px; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 15px; font-family: 'Inter', sans-serif; }
-                        strong { color: #000; }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <div class="header">
-                            <img src="https://res.cloudinary.com/dukiyxfvn/image/upload/v1768668244/WhatsApp_Image_2026-01-11_at_4.25.52_PM_p8aicp.jpg" class="logo" alt="Learning Labs" />
-                            <div class="title">
-                                <h1>IA MASTERCLASS: ${classData.title}</h1>
-                                <p>SISTEMA GENERATIVO DEEPSEEK - LEARNING LABS</p>
-                                <div class="timestamp">Generado: ${date}</div>
-                            </div>
-                        </div>
-
-                        <div class="section-title">${UI.pdfTitleTheory || 'NÚCLEO TEÓRICO MATEMÁTICO'}</div>
-                        <div class="content-box">
-                            ${classData.theory.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
-                        </div>
-
-                        <div class="section-title trap">${UI.pdfTitleTrap || 'TRAMPA COGNITIVA'}</div>
-                        <div class="content-box trap">
-                            ${classData.trap.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
-                        </div>
-
-                        <div class="section-title protocol">${UI.pdfTitleProtocol || 'PROTOCOLO DE RESOLUCIÓN'}</div>
-                        <div class="content-box protocol">
-                            ${classData.protocol.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
-                        </div>
-
-                        ${classData.demoQuestion ? `
-                        <div class="sim-box">
-                            <h3 class="sim-title">${UI.pdfTitleSim || 'SIMULACIÓN PRÁCTICA'}</h3>
-                            <div class="sim-text">${classData.demoQuestion.text}</div>
-                            <div class="options">
-                                ${classData.demoQuestion.options.map((opt, i) => `
-                                    <div class="option ${i === classData.demoQuestion.correctIdx ? 'correct' : ''}">
-                                        ${String.fromCharCode(65 + i)}. ${opt} ${i === classData.demoQuestion.correctIdx ? '✓ (Correcta)' : ''}
-                                    </div>
-                                `).join('')}
-                            </div>
-                            <div class="analysis-box">
-                                <strong>${UI.pdfTitleAnalysis || 'ANÁLISIS MATEMÁTICO'}:</strong><br/><br/>
-                                ${classData.demoQuestion.analysis.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
-                            </div>
-                        </div>
-                        ` : ''}
-
-                        <div class="footer">
-                            LEARNING LABS ENGINE V27.0<br/>El conocimiento es la única ventaja inquebrantable.
-                        </div>
-                    </div>
-                </body>
-            </html>
-        `);
-        printWindow.document.close();
-        setTimeout(() => { printWindow.focus(); printWindow.print(); }, 750);
-    }, [classData, lang, UI]);
 
     if (isGenerating) {
         return (
@@ -1053,9 +971,8 @@ const SocraticMasterclass = ({ topic, lang, onBack, onClose, UI, onSave, preload
            )}
 
            <div style={{display:'flex', gap:'20px', marginTop:'60px', flexWrap: 'wrap'}}>
-               <button className="hud-btn" style={{flex: '1 1 100%', background:'transparent', border:'2px solid #00f2ff', color:'#00f2ff', boxShadow: 'none', fontSize: '18px', padding: '25px'}} onClick={downloadMasterclassPDF}>{UI.downloadMasterclassBtn || '📄 DESCARGAR MASTERCLASS'}</button>
-               <button className="hud-btn" style={{flex: '1 1 100%', background:'#555', color:'#fff', boxShadow: 'none', fontSize: '22px', padding: '25px'}} onClick={onBack}>{customBackText || "VOLVER A TEMAS"}</button>
-               <button className="hud-btn" style={{flex: '1 1 100%', background:'#ff00ff', color:'#fff', boxShadow: '0 0 30px rgba(255,0,255,0.5)', fontSize: '22px', padding: '25px'}} onClick={onClose}>{UI.aiClose}</button>
+               <button className="hud-btn" style={{flex: '1 1 200px', background:'#555', color:'#fff', boxShadow: 'none', fontSize: '22px', padding: '25px'}} onClick={onBack}>VOLVER A TEMAS</button>
+               <button className="hud-btn" style={{flex: '1 1 200px', background:'#ff00ff', color:'#fff', boxShadow: '0 0 30px rgba(255,0,255,0.5)', fontSize: '22px', padding: '25px'}} onClick={onClose}>{UI.aiClose}</button>
            </div>
         </div>
     )
@@ -1116,17 +1033,6 @@ function GameApp() {
   // MODAL IA Y ESTADO DE CLASE
   const [showAiModal, setShowAiModal] = useState(false); 
   const [activeAiTopic, setActiveAiTopic] = useState(null); 
-
-  // 📚 SISTEMA DE HISTORIAL DE CLASES
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
-  const [classHistory, setClassHistory] = useState(() => {
-      if (typeof window !== 'undefined') {
-          const saved = window.localStorage.getItem('icfes_math_history_v1');
-          if (saved) return JSON.parse(saved);
-      }
-      return [];
-  });
 
   const [previousPhase, setPreviousPhase] = useState("BOOT"); 
   const [savedTime, setSavedTime] = useState(MAX_TIME);
@@ -1214,7 +1120,6 @@ function GameApp() {
           setPhase("GAME");
           setTimerActive(true);
           setShowAiModal(false);
-          setShowHistoryModal(false);
           setActiveAiTopic(null);
           setPendingAIQ(null);
           
@@ -1231,7 +1136,6 @@ function GameApp() {
       setPhase("WARMUP");
       setTimerActive(true);
       setShowAiModal(false);
-      setShowHistoryModal(false);
       setActiveAiTopic(null);
       
       fetchAIQuestionBackground(forcedTopic);
@@ -1557,6 +1461,7 @@ function GameApp() {
                               <div class="timestamp">${REPORT_UI.dateLabel}: ${date}</div>
                           </div>
                       </div>
+
                       <div class="section-title">${REPORT_UI.kpiTitle}</div>
                       <div class="kpi-grid">
                           <div class="kpi-card">
@@ -1572,38 +1477,32 @@ function GameApp() {
                               <div class="kpi-label">${REPORT_UI.kpiTotal}</div>
                           </div>
                       </div>
+
                       <div class="section-title">${REPORT_UI.aiTitle}</div>
-                      <div style="margin-bottom: 40px;">${aiVeredict}</div>
+                      <div style="margin-bottom: 40px;">
+                          ${aiVeredict}
+                      </div>
+
                       <div class="section-title">${REPORT_UI.topicTitle}</div>
                       <div class="topics-container">
                           ${topicsHtml || `<p style="color: #64748b; text-align: center; font-style: italic;">${REPORT_UI.topicNoData}</p>`}
                       </div>
+
                       <div class="footer">
-                          ${REPORT_UI.footer}<br/>${REPORT_UI.footerSub}
+                          ${REPORT_UI.footer}<br/>
+                          ${REPORT_UI.footerSub}
                       </div>
                   </div>
               </body>
           </html>
       `);
       printWindow.document.close();
-      setTimeout(() => { printWindow.focus(); printWindow.print(); }, 750);
+      
+      setTimeout(() => {
+          printWindow.focus();
+          printWindow.print();
+      }, 750);
   }, [stats, safeLang, REPORT_UI]);
-
-  // 🟢 FUNCIÓN L8: GUARDAR MASTERCLASS EN EL HISTORIAL DE MATEMÁTICAS
-  const saveToHistory = useCallback((topic, lang, content) => {
-      setClassHistory(prev => {
-          const newRecord = {
-              id: Date.now(),
-              date: new Date().toLocaleString(),
-              topic,
-              lang,
-              classData: content
-          };
-          const updated = [newRecord, ...prev];
-          window.localStorage.setItem('icfes_math_history_v1', JSON.stringify(updated));
-          return updated;
-      });
-  }, []);
 
   return (
     <>
@@ -1643,7 +1542,7 @@ function GameApp() {
           </div>
         )}
 
-        {/* NÚCLEO 3D DE FONDO ESTÁTICO */}
+        {/* NÚCLEO 3D DE FONDO */}
         {phase !== "BOOT" && phase !== "THEORY" && (
           <>
             <div style={{position:'absolute', inset:0, zIndex:1, pointerEvents:'none'}}>
@@ -1740,7 +1639,7 @@ function GameApp() {
             {/* OVERLAY: MICRO-CLASE SOCRÁTICA */}
             {phase === "MICROCLASS" && (
               <div style={{ position:'absolute', inset:0, zIndex:2000, background:'rgba(40,0,0,0.95)', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:'20px', backdropFilter:'blur(10px)' }}>
-                  <div className="glass-panel" style={{borderColor:'#f00', maxWidth:'1000px', width:'100%', textAlign:'left', boxShadow:'0 0 50px rgba(255,0,0,0.3)', maxHeight:'90vh', overflowY:'auto'}}>
+                  <div className="glass-panel" style={{borderColor:'#f00', maxWidth:'1000px', width:'100%', textAlign:'left', boxShadow:'0 0 50px rgba(255,0,255,0.3)', maxHeight:'90vh', overflowY:'auto'}}>
                       <h1 style={{color:'#f00', fontSize:'clamp(28px, 6vw, 50px)', marginBottom:'20px', textAlign:'center', borderBottom:'2px solid #f00', paddingBottom:'10px'}}>
                           ⚠️ {timeLeft === 0 ? UI.timeout : UI.wrongTitle}
                       </h1>
@@ -1762,8 +1661,8 @@ function GameApp() {
               </div>
             )}
 
-            {/* DASHBOARD TELEMETRÍA Y BOTONES DE IA */}
-            {phase === "STATS" && !showAiModal && !showHistoryModal && (
+            {/* DASHBOARD TELEMETRÍA */}
+            {phase === "STATS" && !showAiModal && (
               <div style={{ position:'absolute', inset:0, zIndex:2000, background:'rgba(0,10,30,0.98)', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:'20px' }}>
                   <div className="glass-panel" style={{maxWidth:'1000px', width:'100%', maxHeight:'90vh', overflowY:'auto'}}>
                       <h2 style={{color:'#00f2ff', textAlign:'center', fontSize:'clamp(24px, 5vw, 40px)', borderBottom:'2px solid #00f2ff', paddingBottom:'15px', margin:0}}>{UI.dashboard}</h2>
@@ -1784,21 +1683,14 @@ function GameApp() {
                           </div>
                       </div>
 
-                      {/* BOTONES PRINCIPALES DE IA */}
-                      <div style={{display:'flex', justifyContent:'center', gap:'20px', flexWrap:'wrap', marginBottom:'30px'}}>
+                      {/* BOTÓN IA SOCRÁTICO */}
+                      <div style={{display:'flex', justifyContent:'center', marginBottom:'30px'}}>
                          <button 
                             className="hud-btn" 
-                            style={{background: failedTopics.length > 0 ? '#ff00ff' : '#0f0', color: failedTopics.length > 0 ? '#fff' : '#000', width: '100%', maxWidth: '500px', boxShadow: failedTopics.length > 0 ? '0 0 30px #ff00ff' : '0 0 30px #0f0'}} 
+                            style={{background: failedTopics.length > 0 ? '#ff00ff' : '#0f0', color: failedTopics.length > 0 ? '#fff' : '#000', width: '100%', maxWidth: '600px', boxShadow: failedTopics.length > 0 ? '0 0 30px #ff00ff' : '0 0 30px #0f0'}} 
                             onClick={() => { sfx.aiPop(); setShowAiModal(true); }}
                          >
                             🧠 {UI.aiSocraticBtn}
-                         </button>
-                         <button 
-                            className="hud-btn" 
-                            style={{background: 'rgba(0,242,255,0.1)', color: '#00f2ff', border: '1px solid #00f2ff', flex:'1 1 200px', maxWidth: '400px', boxShadow:'none'}} 
-                            onClick={() => { sfx.click(); setShowHistoryModal(true); }}
-                         >
-                            {UI.historyBtn}
                          </button>
                       </div>
 
@@ -1833,13 +1725,13 @@ function GameApp() {
                       <div style={{display:'flex', justifyContent:'center', marginTop:'50px', gap:'20px', flexWrap:'wrap'}}>
                           <button className="hud-btn" style={{flex:'1 1 250px', background:'transparent', border:'2px solid #00f2ff', color:'#00f2ff'}} onClick={downloadReport}>📄 {UI.downloadReport}</button>
                           <button className="hud-btn" style={{flex:'1 1 250px'}} onClick={closeTelemetry}>VOLVER A LA MISIÓN</button>
-                          <button className="hud-btn" style={{flex:'1 1 250px', background:'transparent', border:'2px solid #f00', color:'#f00'}} onClick={() => { window.localStorage.removeItem('icfes_telemetry_v7'); window.localStorage.removeItem('icfes_math_history_v1'); window.location.reload(); }}>{UI.btnRetry}</button>
+                          <button className="hud-btn" style={{flex:'1 1 250px', background:'transparent', border:'2px solid #f00', color:'#f00'}} onClick={() => { window.localStorage.removeItem('icfes_telemetry_v7'); window.location.reload(); }}>{UI.btnRetry}</button>
                       </div>
                   </div>
               </div>
             )}
 
-            {/* MODAL IA INTERACTIVA (GENERACIÓN DE NUEVAS CLASES) */}
+            {/* MODAL IA INTERACTIVA */}
             {showAiModal && phase === "STATS" && (
                <div style={{ position:'absolute', inset:0, zIndex:3000, background:'rgba(20,0,20,0.98)', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:'clamp(10px, 2vw, 20px)', backdropFilter:'blur(10px)' }}>
                    <div className="glass-panel" style={{borderColor:'#ff00ff', maxWidth:'1200px', width:'100%', textAlign:'left', boxShadow:'0 0 50px rgba(255,0,255,0.3)', maxHeight:'95vh', minHeight:'80vh', overflowY:'auto'}}>
@@ -1865,7 +1757,6 @@ function GameApp() {
                                       onBack={() => { sfx.click(); setActiveAiTopic(null); }} 
                                       onClose={() => { sfx.click(); setShowAiModal(false); }} 
                                       UI={UI} 
-                                      onSave={saveToHistory}
                                    />
                                )}
                            </>
@@ -1877,54 +1768,6 @@ function GameApp() {
                        )}
                    </div>
                </div>
-            )}
-
-            {/* 🔴 NUEVO MODAL: HISTORIAL DE CLASES AKÁSHICAS */}
-            {showHistoryModal && phase === "STATS" && (
-                <div style={{ position:'absolute', inset:0, zIndex:3100, background:'rgba(0,15,30,0.98)', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding:'clamp(10px, 2vw, 20px)', backdropFilter:'blur(10px)' }}>
-                    <div className="glass-panel" style={{borderColor:'#00f2ff', maxWidth:'1200px', width:'100%', textAlign:'left', boxShadow:'0 0 50px rgba(0,242,255,0.3)', maxHeight:'95vh', overflowY:'auto'}}>
-                        {!selectedHistoryItem ? (
-                            <>
-                                <h2 style={{color:'#00f2ff', fontSize:'clamp(24px, 6vw, 40px)', textAlign:'center', marginBottom:'30px'}}>{UI.historyTitle}</h2>
-                                
-                                {classHistory.length === 0 ? (
-                                    <div style={{textAlign:'center', padding: '40px 20px', background:'rgba(0,0,0,0.5)', borderRadius:'15px', border:'1px dashed #555'}}>
-                                        <p style={{color:'#aaa', fontSize:'clamp(16px, 4vw, 24px)'}}>{UI.historyEmpty}</p>
-                                    </div>
-                                ) : (
-                                    <div style={{display:'flex', flexDirection:'column', gap:'15px'}}>
-                                        {classHistory.map((item) => (
-                                            <div key={item.id} style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,242,255,0.05)', border: '1px solid #00f2ff', padding: '20px', borderRadius: '10px' }}>
-                                                <div style={{flex: '1 1 60%'}}>
-                                                    <div style={{ color: '#fff', fontSize: 'clamp(16px, 4vw, 22px)', fontWeight: 'bold', marginBottom: '8px' }}>{item.classData.title || IcfesEngine.getTopicName(item.topic, safeLang)}</div>
-                                                    <div style={{ color: '#00f2ff', fontSize: 'clamp(12px, 3vw, 16px)' }}>🕒 {item.date}</div>
-                                                </div>
-                                                <button className="hud-btn" style={{ flex: '1 1 200px', padding: '15px', fontSize: 'clamp(14px, 3vw, 18px)', margin: 0 }} onClick={() => { sfx.click(); setSelectedHistoryItem(item); }}>{UI.viewClassBtn}</button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                                
-                                <div style={{display:'flex', gap:'20px', marginTop:'40px', flexWrap: 'wrap'}}>
-                                    <button className="hud-btn" style={{flex: '1 1 200px', background:'#555', color:'#fff', boxShadow: 'none', padding: '20px'}} onClick={() => setShowHistoryModal(false)}>{UI.aiClose}</button>
-                                    {classHistory.length > 0 && (
-                                        <button className="hud-btn" style={{flex: '1 1 200px', background:'transparent', border:'2px solid #f00', color:'#f00', boxShadow: 'none', padding: '20px'}} onClick={() => { sfx.error(); setClassHistory([]); window.localStorage.removeItem('icfes_math_history_v1'); }}>{UI.clearHistoryBtn}</button>
-                                    )}
-                                </div>
-                            </>
-                        ) : (
-                            <SocraticMasterclass 
-                                topic={selectedHistoryItem.topic} 
-                                lang={safeLang} 
-                                preloadedData={selectedHistoryItem.classData}
-                                onBack={() => { sfx.click(); setSelectedHistoryItem(null); }} 
-                                onClose={() => { sfx.click(); setShowHistoryModal(false); setSelectedHistoryItem(null); }} 
-                                UI={UI} 
-                                customBackText={UI.backToHistoryBtn}
-                            />
-                        )}
-                    </div>
-                </div>
             )}
 
           </>
