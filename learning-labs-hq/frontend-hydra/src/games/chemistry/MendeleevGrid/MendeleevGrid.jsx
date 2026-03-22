@@ -1,10 +1,22 @@
+
+//import React, { Suspense, useEffect, useRef, useState, useMemo, useCallback } from 'react';
+//import { Canvas, useFrame } from '@react-three/fiber';
+//import { OrbitControls, Stars, Text, Edges, Html, Environment, Sparkles, Float } from '@react-three/drei';
+//import { EffectComposer, Bloom, ChromaticAberration, Scanline, Noise, Glitch, Pixelation } from '@react-three/postprocessing';
+//import * as THREE from 'three';
+//import { useGameStore } from '../../../store/useGameStore';
+//import { GlitchMode, PixelationMode } from 'postprocessing';
+//import { Bloom, Pixelation } from '@react-three/postprocessing'; 
+
+
 import React, { Suspense, useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars, Text, Edges, Html, Environment, Sparkles, Float } from '@react-three/drei';
 import { EffectComposer, Bloom, ChromaticAberration, Scanline, Noise, Glitch, Pixelation } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useGameStore } from '../../../store/useGameStore';
-import { GlitchMode, PixelationMode } from 'postprocessing';
+import { GlitchMode } from 'postprocessing';
+
 
 /* ============================================================
    🛡️ ESCUDO ANTI-CRASH (Ingeniería Inversa + Logging Avanzado)

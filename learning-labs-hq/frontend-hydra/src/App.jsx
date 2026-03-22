@@ -18,8 +18,25 @@ import MathLab from './games/mathematics/MathLab';
 import ScienceLab from './games/science/science_icfes'; 
 import ReadingLab from './games/lectura_critica/lectura'; 
 import SocialesLab from './games/sociales/sociales_icfes'; 
-// 🟢 NUEVO CARTUCHO IMPORTADO: FÍSICA CINEMÁTICA
 import PhysicsLab from './games/physics/physics_1'; 
+import LecturaQuantica from './games/lectura_critica/LecturaQuantica';
+
+/* ============================================================
+   🚀 GOD TIER ARCHITECTURE: REGISTRO DE MÓDULOS O(1)
+   Elimina los ternarios anidados. Escalabilidad infinita.
+============================================================ */
+const GAME_REGISTRY = {
+  'PHYSICS_LAB': PhysicsLab,
+  'SOCIALES_LAB': SocialesLab,
+  'READING_LAB': ReadingLab,
+  'QUANTUM_READER': LecturaQuantica,
+  'SCIENCE_LAB': ScienceLab,
+  'MATH_LAB': MathLab,
+  'MENDELEEV_GRID': MendeleevGrid,
+  'REDOX_LAB': RedoxLab,
+  'REDOX_BALANCER': RedoxBalancer,
+  'GAS_THEORY': GasTheory
+};
 
 /* ============================================================
    📱 HOOK DE RESPONSIVIDAD (MOBILE FIRST)
@@ -30,7 +47,7 @@ function useMobile() {
     if (typeof window === 'undefined') return;
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
     checkMobile();
-    window.addEventListener('resize', checkMobile);
+    window.addEventListener('resize', checkMobile, { passive: true });
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
   return isMobile;
@@ -61,8 +78,8 @@ const CATALOG = {
       mathLab: { t: "📐 MATEMÁTICAS ICFES", d: "Simulación Cuántica: Álgebra, Geometría, Probabilidad con IA." },
       scienceLab: { t: "🧬 CIENCIAS ICFES", d: "Simulador Integral: Biología, Química y Física en entorno real." },
       readingLab: { t: "📖 LECTURA CRÍTICA ICFES", d: "Simulador Cognitivo: Análisis semántico y pragmático con IA." },
+      quantumReader: { t: "⚡ ACELERADOR RSVP", d: "Motor de lectura rápida O.R.P. Supera los 1000+ WPM." },
       socialesLab: { t: "⚖️ SOCIALES ICFES", d: "Simulador Cartográfico: Constitución, Historia y Multiperspectivismo." },
-      // 🟢 NUEVO JUEGO EN EL CATÁLOGO (ESPAÑOL)
       physicsLab: { t: "🚀 THE MOTION LAB", d: "Simulador Cinemático: Vectores, MRU y MRUA con IA." }
     } 
   },
@@ -87,8 +104,8 @@ const CATALOG = {
       mathLab: { t: "📐 ICFES MATH LAB", d: "Quantum Simulation: Algebra, Geometry, Probability with AI." },
       scienceLab: { t: "🧬 ICFES SCIENCE LAB", d: "Integral Simulator: Biology, Chemistry & Physics in real-time." },
       readingLab: { t: "📖 ICFES CRITICAL READING", d: "Cognitive Simulator: Semantic and pragmatic analysis with AI." },
+      quantumReader: { t: "⚡ RSVP ACCELERATOR", d: "Fast reading O.R.P. engine. Exceed 1000+ WPM." },
       socialesLab: { t: "⚖️ ICFES SOCIAL SCIENCES", d: "Cartographic Simulator: Constitution, History, and Multiperspectivism." },
-      // 🟢 NUEVO JUEGO EN EL CATÁLOGO (INGLÉS)
       physicsLab: { t: "🚀 THE MOTION LAB", d: "Kinematic Simulator: Vectors, MRU, and MRUA with AI." }
     } 
   },
@@ -113,8 +130,8 @@ const CATALOG = {
       mathLab: { t: "📐 LABO MATHS ICFES", d: "Simulation Quantique : Algèbre, Géométrie, Probabilités IA." },
       scienceLab: { t: "🧬 LABO SCIENCES ICFES", d: "Simulateur Intégral : Biologie, Chimie et Physique en direct." },
       readingLab: { t: "📖 LECTURE CRITIQUE ICFES", d: "Simulateur Cognitif: Analyse sémantique et pragmatique avec IA." },
+      quantumReader: { t: "⚡ ACCÉLÉRATEUR RSVP", d: "Moteur de lecture rapide O.R.P. Dépassez les 1000+ MPM." },
       socialesLab: { t: "⚖️ SCIENCES SOCIALES ICFES", d: "Simulateur Cartographique : Constitution, Histoire et Multiperspectivisme." },
-      // 🟢 NUEVO JUEGO EN EL CATÁLOGO (FRANCÉS)
       physicsLab: { t: "🚀 THE MOTION LAB", d: "Simulateur Cinématique : Vecteurs, MRU et MRUA avec IA." }
     } 
   },
@@ -139,8 +156,8 @@ const CATALOG = {
       mathLab: { t: "📐 ICFES MATH LABOR", d: "Quantensimulation: Algebra, Geometrie, Wahrscheinlichkeit KI." },
       scienceLab: { t: "🧬 ICFES WISSENSCHAFTEN", d: "Integraler Simulator: Biologie, Chemie und Physik mit KI." },
       readingLab: { t: "📖 ICFES KRITISCHES LESEN", d: "Kognitiver Simulator: Semantische und pragmatische Analyse mit KI." },
-      socialesLab: { t: "⚖️ ICFES SOZIALWISSENSCHAFTEN", d: "Kartographischer Simulator: Verfassung, Geschichte und Multiperspektivismus." },
-      // 🟢 NUEVO JUEGO EN EL CATÁLOGO (ALEMÁN)
+      quantumReader: { t: "⚡ RSVP BESCHLEUNIGER", d: "O.R.P. Schnelllesemaschine. Über 1000+ WPM." },
+      socialesLab: { t: "⚖️ ICFES SOZIALWISSENSCHAFTEN", d: "Kartographischer Simulator: Verfassung, Geschichte und Multiperspectivismus." },
       physicsLab: { t: "🚀 THE MOTION LAB", d: "Kinematischer Simulator: Vektoren, MRU und MRUA mit KI." }
     } 
   }
@@ -149,7 +166,7 @@ const CATALOG = {
 // ============================================================
 // 📐 ECUACIÓN EN VIVO
 // ============================================================
-const LiveEquation = ({ mode, p, v, t }) => {
+const LiveEquation = React.memo(({ mode, p, v, t }) => {
   const cP = "#ff0055"; const cV = "#ffea00"; const cT = "#00f2ff"; 
   const val = (n, c) => <span style={{ color: c, fontWeight: 'bold' }}>{Number(n).toFixed(1)}</span>;
   const Var = ({ char, sub, color }) => (<span style={{ color, margin: '0 5px', textShadow:`0 0 8px ${color}` }}>{char}<sub>{sub}</sub></span>);
@@ -164,7 +181,7 @@ const LiveEquation = ({ mode, p, v, t }) => {
   if (mode === 'CHARLES') return (<div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', fontSize:'clamp(14px, 2vw, 20px)', fontWeight:'bold'}}><div><Fraction top={<Var char="V" sub="1" color={cV}/>} bottom={<Var char="T" sub="1" color={cT}/>} /> = <Fraction top={<Var char="V" sub="2" color={cV}/>} bottom={<Var char="T" sub="2" color={cT}/>} /></div><div style={{fontSize:'clamp(10px, 1.5vw, 16px)', color:'#aaa'}}><Fraction top={val(v, cV)} bottom={val(t, cT)} /> = {(v/t).toFixed(3)} (k)</div></div>);
   if (mode === 'GAY_LUSSAC') return (<div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', fontSize:'clamp(14px, 2vw, 20px)', fontWeight:'bold'}}><div><Fraction top={<Var char="P" sub="1" color={cP}/>} bottom={<Var char="T" sub="1" color={cT}/>} /> = <Fraction top={<Var char="P" sub="2" color={cP}/>} bottom={<Var char="T" sub="2" color={cT}/>} /></div><div style={{fontSize:'clamp(10px, 1.5vw, 16px)', color:'#aaa'}}><Fraction top={val(p, cP)} bottom={val(t, cT)} /> = {(p/t).toFixed(3)} (k)</div></div>);
   return null;
-};
+});
 
 // ============================================================
 // 🧩 SUB-COMPONENTE: TARJETA APP (Manejo Táctil Nivel Dios)
@@ -204,23 +221,38 @@ const GameCard = React.memo(({ uiColor, icon, title, desc, badge, badgeColor, on
 // ============================================================
 export default function App() {
   const isMobile = useMobile();
-  const { appState, activeGame, temp, volume, pressure, phaseID, isCritical, activeMaterial, setMaterial, activeMode, setMode, updatePhysics, language, setLanguage, startGame, resetProgress, activeQuiz, answerQuizQuestion, quizFeedback, clearFeedback, closeQuiz, score, triggerExercise, exampleSession, loadExampleScenario, exitExample, searchTerm, setSearchTerm, filterCategory, setFilterCategory, isGeneratingQuiz } = useGameStore();
+  const { 
+    appState, activeGame, temp, volume, pressure, phaseID, isCritical, 
+    activeMaterial, setMaterial, activeMode, setMode, updatePhysics, 
+    language, setLanguage, startGame, resetProgress, activeQuiz, 
+    answerQuizQuestion, quizFeedback, clearFeedback, closeQuiz, score, 
+    triggerExercise, exampleSession, loadExampleScenario, exitExample, 
+    searchTerm, setSearchTerm, filterCategory, setFilterCategory, isGeneratingQuiz 
+  } = useGameStore();
   
   // 🔴 ESTADO DEL ENRUTADOR NEXUS ('nexus' | 'cat_chem' | 'cat_math' | 'cat_phys' | 'cat_nat' | 'cat_read' | 'cat_soc')
   const [menuView, setMenuView] = useState('nexus');
 
+  // Optimizaciones de referencias constantes
   const mat = MATERIALS[activeMaterial] || MATERIALS['H2O'];
-  const t_i18n = i18n[language] || i18n.es;
-  const cat = CATALOG[language] || CATALOG.es; 
+  const t_i18n = useMemo(() => i18n[language] || i18n.es, [language]);
+  const cat = useMemo(() => CATALOG[language] || CATALOG.es, [language]); 
   const t = t_i18n.ui;
   const lesson = t_i18n.lessons[activeMode];
   const examples = t_i18n.examples[activeMode];
   const droneRef = useRef(null);
 
+  // 🚀 Prevención robusta de errores Autoplay de DOM
   useEffect(() => {
     if (droneRef.current) {
       if (appState === 'PLAYING' && !activeQuiz && (!activeGame || activeGame === 'GAS_LAWS')) {
-        droneRef.current.play().catch(()=>{});
+        const playPromise = droneRef.current.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                // Silencia el error común de navegadores que bloquean Autoplay sin interacción
+                console.warn("Autoplay Audio Blocked by Browser Context", error);
+            });
+        }
         droneRef.current.playbackRate = Math.max(0.5, temp / 5000);
         droneRef.current.volume = isCritical ? 0.8 : 0.2;
       } else {
@@ -229,11 +261,17 @@ export default function App() {
     }
   }, [appState, temp, isCritical, activeQuiz, activeGame]);
 
-  const filteredMaterials = Object.values(MATERIALS).filter(m => {
-    const matchesSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.symbol.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === 'All' || m.category === filterCategory;
-    return matchesSearch && matchesCategory;
-  });
+  // 🚀 Memoización Algorítmica del Filtro de Búsqueda (Evita recalcular 150 items en cada render frame)
+  const filteredMaterials = useMemo(() => {
+    return Object.values(MATERIALS).filter(m => {
+      const matchSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.symbol.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchCategory = filterCategory === 'All' || m.category === filterCategory;
+      return matchSearch && matchCategory;
+    });
+  }, [searchTerm, filterCategory]);
+
+  // Resolución O(1) del Componente Activo
+  const ActiveGameComponent = GAME_REGISTRY[activeGame];
 
   return (
     <>
@@ -331,10 +369,7 @@ export default function App() {
               {/* === VISTA 4: JUEGOS DE FÍSICA === */}
               {menuView === 'cat_phys' && (
                 <>
-                  {/* 🟢 NUEVO CARTUCHO INYECTADO AQUÍ 🟢 */}
                   <GameCard uiColor="#ff00ff" icon="🚀" title={cat.games.physicsLab.t} desc={cat.games.physicsLab.d} badge="NEXUS" badgeColor="#ff00ff" onClick={() => startGame('PHYSICS_LAB')} />
-                  
-                  {/* Mantenemos el de Gases que ya estaba catalogado como física */}
                   <GameCard uiColor="#00f2ff" icon="🌡️" title={cat.games.gasLaws.t} desc={cat.games.gasLaws.d} onClick={() => startGame('GAS_LAWS')} />
                 </>
               )}
@@ -351,6 +386,8 @@ export default function App() {
               {menuView === 'cat_read' && (
                 <>
                   <GameCard uiColor="#00f2ff" icon="📖" title={cat.games.readingLab.t} desc={cat.games.readingLab.d} badge="NEXUS" badgeColor="#00f2ff" onClick={() => startGame('READING_LAB')} />
+                  {/* 🟣 CARTUCHO INYECTADO: ACELERADOR RSVP */}
+                  <GameCard uiColor="#8b5cf6" icon="⚡" title={cat.games.quantumReader.t} desc={cat.games.quantumReader.d} badge="PRO" badgeColor="#ffea00" onClick={() => startGame('QUANTUM_READER')} />
                 </>
               )}
 
@@ -377,8 +414,8 @@ export default function App() {
             <button onClick={resetProgress} style={ui.navBackBtn}>{t.reset}</button>
           </nav>
 
+          {/* QUIZ SYSTEM GENÉRICO */}
           {activeQuiz && (
-            // ... (Overlay de Quiz genérico de GasLaws, no tocar) ...
             <div style={ui.quizOverlay}>
               <div style={ui.quizBox}>
                 <h2 style={{color:'#00f2ff', margin:0, letterSpacing:'1px', fontSize: 'clamp(18px, 5vw, 28px)'}}>{activeQuiz.title}</h2>
@@ -417,36 +454,19 @@ export default function App() {
             </div>
           )}
 
-          {/* 🔥 ENRUTADOR DINÁMICO DE LOS JUEGOS ACTIVOS 🔥 */}
-          {activeGame === 'PHYSICS_LAB' ? (
-             <PhysicsLab />
-          ) : activeGame === 'SOCIALES_LAB' ? (
-             <SocialesLab />
-          ) : activeGame === 'READING_LAB' ? (
-             <ReadingLab />
-          ) : activeGame === 'SCIENCE_LAB' ? (
-             <ScienceLab />
-          ) : activeGame === 'MATH_LAB' ? (
-             <MathLab />
-          ) : activeGame === 'MENDELEEV_GRID' ? (
-             <MendeleevGrid />
-          ) : activeGame === 'REDOX_LAB' ? (
-             <RedoxLab />
-          ) : activeGame === 'REDOX_BALANCER' ? (
-             <RedoxBalancer />
-          ) : activeGame === 'GAS_THEORY' ? (
-             <GasTheory />
+          {/* 🚀 ENRUTADOR DINÁMICO O(1) 🚀 */}
+          {ActiveGameComponent ? (
+             <ActiveGameComponent />
           ) : (
              <>
-                {/* EL MOTOR BASE ORIGINAL (GAS LAWS) SE MANTIENE INTACTO */}
-                {/* ... (Renderizado de GasLaws igual que lo tenías) ... */}
+                {/* EL MOTOR BASE ORIGINAL (GAS LAWS) SE MANTIENE INTACTO COMO FALLBACK */}
                 <div className="game-panel-left" style={ui.leftPanel(isMobile)}>
                   <div className="material-selector-box" style={{...ui.sectionBox, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, pointerEvents: 'auto'}}>
                     <div className="search-filter-wrap" style={{display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '8px', alignItems: 'center'}}>
                       <input type="text" placeholder={t.search} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={ui.searchInput(isMobile)} />
                       <div className="filter-buttons" style={{display:'flex', gap:'5px', flexShrink: 0, overflowX: 'auto', width: isMobile ? 'auto' : '100%', paddingBottom: isMobile ? '5px' : '0'}}>
                         <button onClick={()=>setFilterCategory('All')} style={filterCategory==='All'?ui.pillA:ui.pill}>{t.filterAll}</button>
-                        <button onClick={()=>setFilterCategory('Elemento')} style={filterCategory==='Elemento'?ui.pillA:ui.pill}>{t.filterElem}</button>
+                        <button onClick={()=>setFilterCategory('Elemento')} style={filterCategory==='Elemento'?ui.pillA:ui.pill}>{t.filterComp}</button>
                         <button onClick={()=>setFilterCategory('Compuesto')} style={filterCategory==='Compuesto'?ui.pillA:ui.pill}>{t.filterComp}</button>
                       </div>
                     </div>
@@ -509,7 +529,7 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* VISOR 3D */}
+                {/* VISOR 3D ORIGINAL */}
                 <Canvas style={{position: 'absolute', inset: 0, zIndex: 1}} camera={{ position: [0, 4, isMobile ? 26 : 15], fov: 45 }}>
                   <color attach="background" args={['#010204']} /><Environment preset="night" /><ambientLight intensity={0.2} /><pointLight position={[0, 5, 0]} intensity={phaseID==='plasma'?10:3} color={phaseID==='plasma'?'#ffffff':'#00f2ff'} /><Stars count={6000} factor={5} fade speed={1} />
                   <Suspense fallback={null}>
@@ -565,11 +585,7 @@ export default function App() {
 }
 
 // ============================================================
-// 🎨 DICCIONARIO DE ESTILOS MOBILE-FIRST (GOD TIER)
-// ============================================================
-
-// ============================================================
-// 🎨 DICCIONARIO DE ESTILOS MOBILE-FIRST (GOD TIER)
+// 🎨 DICCIONARIO DE ESTILOS MOBILE-FIRST (INALTERADO)
 // ============================================================
 const ui = {
   screenGame: { 
@@ -635,9 +651,7 @@ const ui = {
   matBtn: (isMobile) => ({ padding:'14px 10px', background:'rgba(0,0,0,0.6)', color:'#00f2ff', border:'1px solid #005577', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(14px, 3vw, 15px)', textAlign:'center', borderRadius: '8px', minWidth: isMobile ? '75px' : '100%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }),
   matBtnActive: (isMobile) => ({ padding:'14px 10px', background:'rgba(0,242,255,0.2)', color:'#fff', border:'2px solid #00f2ff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(14px, 3vw, 15px)', fontWeight:'bold', textAlign:'center', borderRadius: '8px', minWidth: isMobile ? '75px' : '100%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }),
   
-  /* 🔴 LA LÍNEA CORREGIDA ESTÁ AQUÍ ABAJO */
   dataRow: (isMobile) => ({ display:'flex', justifyContent:'space-between', alignItems: 'center', gap: '5px', fontSize:'clamp(11px, 2.5vw, 13px)', marginBottom: isMobile ? '0' : '8px', color:'#fff', borderBottom: isMobile ? 'none' : '1px solid rgba(255,255,255,0.1)', paddingBottom: isMobile ? '0' : '4px', whiteSpace: 'nowrap', padding: isMobile ? '6px 12px' : '0', background: isMobile ? 'rgba(0,0,0,0.5)' : 'transparent', borderRadius: isMobile ? '6px' : '0' }),
-  /* -------------------------------------- */
 
   modeGrid: (isMobile) => ({ display:'grid', gridTemplateColumns: isMobile ? 'repeat(4, 1fr)' : '1fr 1fr', gap:'8px' }),
   modeBtn: { padding:'14px 4px', background:'rgba(0,0,0,0.6)', color:'#888', border:'1px solid #333', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(10px, 2.5vw, 12px)', borderRadius: '8px' },
@@ -659,9 +673,7 @@ const ui = {
   quizGrid: { display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'clamp(12px, 3vw, 20px)', marginBottom:'20px', width: '100%' },
   quizBtn: { padding:'clamp(15px, 4vw, 20px)', background:'rgba(255,255,255,0.05)', border:'1px solid #444', color:'#fff', cursor:'pointer', fontFamily:'Orbitron', fontSize:'clamp(14px, 3.5vw, 16px)', textAlign:'center', borderRadius: '12px', minHeight: '60px', fontWeight: 'bold' }
 };
-// ============================================================
-// 🎨 MEDIA QUERIES GLOBALES (HACK PARA SCROLL Y FLEXBOX MÓVIL)
-// ============================================================
+
 if (typeof document !== 'undefined' && !document.getElementById("app-styles-mobile")) {
   const styleSheet = document.createElement("style");
   styleSheet.id = "app-styles-mobile";
