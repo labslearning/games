@@ -22,8 +22,61 @@ import PhysicsLab from './games/physics/physics_1';
 import LecturaQuantica from './games/lectura_critica/LecturaQuantica';
 
 /* ============================================================
-   🚀 GOD TIER ARCHITECTURE: REGISTRO DE MÓDULOS O(1)
-   Elimina los ternarios anidados. Escalabilidad infinita.
+   🛡️ KERNEL SHIELD: QUANTUM ERROR BOUNDARY (ANTI-CRASH)
+   Aísla fallos de ChunkLoadError o WebGL Context Loss.
+============================================================ */
+class QuantumErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, errorInfo: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("[UNIT 8200] Intercepted Critical Fault:", error, errorInfo);
+    this.setState({ errorInfo });
+  }
+  handleReboot = () => {
+    localStorage.clear(); 
+    sessionStorage.clear();
+    window.location.reload(true); 
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: '#020617', color: '#ff0055', fontFamily: 'Orbitron, sans-serif', zIndex: 99999 }}>
+          <i className="fas fa-skull-crossbones fa-4x mb-4" style={{ textShadow: '0 0 20px #ff0055' }}></i>
+          <h2 style={{ letterSpacing: '3px', margin: '0 0 15px 0', fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', textAlign: 'center' }}>COLAPSO DE ENLACE CUÁNTICO</h2>
+          <p style={{ color: '#cbd5e1', marginBottom: '30px', textAlign: 'center', maxWidth: '600px', fontSize: '1.1rem' }}>El módulo experimentó una desincronización crítica o pérdida de red. La memoria debe ser purgada para proteger el núcleo.</p>
+          <button onClick={this.handleReboot} style={{ padding: '15px 40px', background: 'rgba(255,0,85,0.1)', border: '2px solid #ff0055', color: '#fff', borderRadius: '12px', cursor: 'pointer', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', boxShadow: '0 0 20px rgba(255,0,85,0.4)' }}>
+            <i className="fas fa-redo me-2"></i> REINICIAR SISTEMA MÁSTER
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// 🟢 INYECCIÓN UNIT 8200: LAZY LOADING PARA JUEGOS MENTALES (Protege la RAM)
+const importNexusOS = () => import('./games/juegos_mentales/MenuJuegosMentales');
+const importQuantumNBack = () => import('./games/juegos_mentales/QuantumNBack/QuantumNBack');
+const importRavenLogic = () => import('./games/juegos_mentales/RavenLogic/RavenLogic');
+const importProtocoloBabel = () => import('./games/juegos_mentales/ProtocoloBabel/ProtocoloBabel');
+const importSimuladorCaos = () => import('./games/juegos_mentales/SimuladorCaos');
+const importColisionadorConceptos = () => import('./games/juegos_mentales/ColisionadorConceptos/ColisionadorConceptos');
+
+const NexusOS = React.lazy(importNexusOS);
+const QuantumNBack = React.lazy(importQuantumNBack);
+const RavenLogic = React.lazy(importRavenLogic);
+const ProtocoloBabel = React.lazy(importProtocoloBabel);
+const SimuladorCaos = React.lazy(importSimuladorCaos);
+const ColisionadorConceptos = React.lazy(importColisionadorConceptos);
+
+/* ============================================================
+   🚀 GOD TIER ARCHITECTURE: REGISTRO DE MÓDULOS O(1) MULTI-ALIAS
+   Soluciona la trampa del Fallback para que el NexusOS encuentre los juegos
 ============================================================ */
 const GAME_REGISTRY = {
   'PHYSICS_LAB': PhysicsLab,
@@ -35,7 +88,41 @@ const GAME_REGISTRY = {
   'MENDELEEV_GRID': MendeleevGrid,
   'REDOX_LAB': RedoxLab,
   'REDOX_BALANCER': RedoxBalancer,
-  'GAS_THEORY': GasTheory
+  'GAS_THEORY': GasTheory,
+
+  // 🟢 ALIAS DE JUEGOS MENTALES (Evitan que cargue el gas por error)
+  'NEXUS_OS': NexusOS,
+  
+  'QUANTUM_NBACK': QuantumNBack,
+  'NBACK': QuantumNBack, // Alias enviado por el Nexus
+  
+  'RAVEN_LOGIC': RavenLogic,
+  'RAVEN': RavenLogic, // Alias enviado por el Nexus
+  
+  'PROTOCOLO_BABEL': ProtocoloBabel,
+  'BABEL': ProtocoloBabel, // Alias enviado por el Nexus
+  
+  'SIMULADOR_CAOS': SimuladorCaos,
+  'CHAOS': SimuladorCaos, // Alias enviado por el Nexus
+  'CAOS': SimuladorCaos, // Alias
+  
+  'COLISIONADOR': ColisionadorConceptos,
+  'COLLIDER': ColisionadorConceptos // Alias enviado por el Nexus
+};
+
+// Mapeo para Precarga Táctica en Background
+const PRELOAD_MAP = {
+  'NEXUS_OS': importNexusOS,
+  'QUANTUM_NBACK': importQuantumNBack,
+  'NBACK': importQuantumNBack,
+  'RAVEN_LOGIC': importRavenLogic,
+  'RAVEN': importRavenLogic,
+  'PROTOCOLO_BABEL': importProtocoloBabel,
+  'BABEL': importProtocoloBabel,
+  'SIMULADOR_CAOS': importSimuladorCaos,
+  'CHAOS': importSimuladorCaos,
+  'COLISIONADOR': importColisionadorConceptos,
+  'COLLIDER': importColisionadorConceptos
 };
 
 /* ============================================================
@@ -67,7 +154,8 @@ const CATALOG = {
       phys: { t: "FÍSICA", d: "Mecánica, Fluidos, Ondas y Electromagnetismo." },
       nat:  { t: "CIENCIAS NATURALES", d: "Biología, Entorno Físico, Químico y CTS." },
       read: { t: "LECTURA CRÍTICA", d: "Niveles literal, inferencial y crítico. Análisis de textos." },
-      soc:  { t: "SOCIALES Y CIUDADANAS", d: "Historia, Geografía, Constitución y Competencias Ciudadanas." }
+      soc:  { t: "SOCIALES Y CIUDADANAS", d: "Historia, Geografía, Constitución y Competencias Ciudadanas." },
+      brain: { t: "GIMNASIO COGNITIVO", d: "Unit 8200: Memoria, Lógica, Caos y Pensamiento Divergente." } 
     },
     games: { 
       gasLaws: { t: "🧪 LEYES DE GASES", d: "Termodinámica interactiva: Plasma, Presión y Temperatura." }, 
@@ -80,7 +168,13 @@ const CATALOG = {
       readingLab: { t: "📖 LECTURA CRÍTICA ICFES", d: "Simulador Cognitivo: Análisis semántico y pragmático con IA." },
       quantumReader: { t: "⚡ ACELERADOR RSVP", d: "Motor de lectura rápida O.R.P. Supera los 1000+ WPM." },
       socialesLab: { t: "⚖️ SOCIALES ICFES", d: "Simulador Cartográfico: Constitución, Historia y Multiperspectivismo." },
-      physicsLab: { t: "🚀 THE MOTION LAB", d: "Simulador Cinemático: Vectores, MRU y MRUA con IA." }
+      physicsLab: { t: "🚀 THE MOTION LAB", d: "Simulador Cinemático: Vectores, MRU y MRUA con IA." },
+      nexusOS: { t: "🎛️ NEXUS OS", d: "Centro de Mando Cognitivo. Hub central de estadísticas." },
+      nback: { t: "🧠 QUANTUM N-BACK", d: "Pilar 1: Memoria Visoespacial bajo estrés 3D." },
+      raven: { t: "🧩 RAVEN OS", d: "Pilar 2: Lógica fluida y matrices progresivas." },
+      babel: { t: "👁️ PROTOCOLO BABEL", d: "Pilar 3: Hiper-procesamiento semántico y falacias." },
+      caos: { t: "🔥 SIMULADOR DE CAOS", d: "Pilar 4: Toma de decisiones bajo colapso de red." },
+      collider: { t: "🌌 COLISIONADOR", d: "Pilar 5: Singularidad creativa y síntesis conceptual." }
     } 
   },
   en: { 
@@ -93,7 +187,8 @@ const CATALOG = {
       phys: { t: "PHYSICS", d: "Mechanics, Fluids, Waves, and Electromagnetism." },
       nat:  { t: "NATURAL SCIENCES", d: "Biology, Physical Environment, Chemistry & STS." },
       read: { t: "CRITICAL READING", d: "Literal, inferential, and critical levels. Text analysis." },
-      soc:  { t: "SOCIAL SCIENCES", d: "History, Geography, Constitution, and Citizen Competencies." }
+      soc:  { t: "SOCIAL SCIENCES", d: "History, Geography, Constitution, and Citizen Competencies." },
+      brain: { t: "COGNITIVE GYM", d: "Unit 8200: Memory, Logic, Chaos and Divergent Thinking." } 
     },
     games: { 
       gasLaws: { t: "🧪 GAS LAWS", d: "Interactive thermodynamics: Plasma, Pressure, and Temp." }, 
@@ -106,7 +201,13 @@ const CATALOG = {
       readingLab: { t: "📖 ICFES CRITICAL READING", d: "Cognitive Simulator: Semantic and pragmatic analysis with AI." },
       quantumReader: { t: "⚡ RSVP ACCELERATOR", d: "Fast reading O.R.P. engine. Exceed 1000+ WPM." },
       socialesLab: { t: "⚖️ ICFES SOCIAL SCIENCES", d: "Cartographic Simulator: Constitution, History, and Multiperspectivism." },
-      physicsLab: { t: "🚀 THE MOTION LAB", d: "Kinematic Simulator: Vectors, MRU, and MRUA with AI." }
+      physicsLab: { t: "🚀 THE MOTION LAB", d: "Kinematic Simulator: Vectors, MRU, and MRUA with AI." },
+      nexusOS: { t: "🎛️ NEXUS OS", d: "Cognitive Command Center. Central stats hub." },
+      nback: { t: "🧠 QUANTUM N-BACK", d: "Pillar 1: Visuospatial Memory under 3D stress." },
+      raven: { t: "🧩 RAVEN OS", d: "Pillar 2: Fluid logic and progressive matrices." },
+      babel: { t: "👁️ BABEL PROTOCOL", d: "Pillar 3: Semantic hyper-processing and fallacies." },
+      caos: { t: "🔥 CHAOS SIMULATOR", d: "Pillar 4: Decision making under network collapse." },
+      collider: { t: "🌌 CONCEPT COLLIDER", d: "Pillar 5: Creative singularity and conceptual synthesis." }
     } 
   },
   fr: { 
@@ -119,7 +220,8 @@ const CATALOG = {
       phys: { t: "PHYSIQUE", d: "Mécanique, Fluides, Ondes." },
       nat:  { t: "SCIENCES NATURELLES", d: "Biologie, Chimie, Physique et Environnement." },
       read: { t: "LECTURE CRITIQUE", d: "Niveaux littéral, inférentiel et critique. Analyse de textes." },
-      soc:  { t: "SCIENCES SOCIALES", d: "Histoire, Géographie, Constitution et Compétences Citoyennes." }
+      soc:  { t: "SCIENCES SOCIALES", d: "Histoire, Géographie, Constitution et Compétences Citoyennes." },
+      brain: { t: "GYM COGNITIF", d: "Unité 8200 : Mémoire, Logique, Chaos et Pensée." }
     },
     games: { 
       gasLaws: { t: "🧪 LOIS DES GAZ", d: "Thermodynamique, 150 éléments, Plasma et Pression." }, 
@@ -132,7 +234,13 @@ const CATALOG = {
       readingLab: { t: "📖 LECTURE CRITIQUE ICFES", d: "Simulateur Cognitif: Analyse sémantique et pragmatique avec IA." },
       quantumReader: { t: "⚡ ACCÉLÉRATEUR RSVP", d: "Moteur de lecture rapide O.R.P. Dépassez les 1000+ MPM." },
       socialesLab: { t: "⚖️ SCIENCES SOCIALES ICFES", d: "Simulateur Cartographique : Constitution, Histoire et Multiperspectivisme." },
-      physicsLab: { t: "🚀 THE MOTION LAB", d: "Simulateur Cinématique : Vecteurs, MRU et MRUA avec IA." }
+      physicsLab: { t: "🚀 THE MOTION LAB", d: "Simulateur Cinématique : Vecteurs, MRU et MRUA avec IA." },
+      nexusOS: { t: "🎛️ NEXUS OS", d: "Centre de Commande Cognitif." },
+      nback: { t: "🧠 QUANTUM N-BACK", d: "Mémoire Visuospatiale." },
+      raven: { t: "🧩 RAVEN OS", d: "Logique fluide." },
+      babel: { t: "👁️ PROTOCOLE BABEL", d: "Hyper-traitement." },
+      caos: { t: "🔥 SIMULATEUR DE CHAOS", d: "Décisions sous pression." },
+      collider: { t: "🌌 COLLISIONNEUR", d: "Singularité créative." }
     } 
   },
   de: { 
@@ -145,7 +253,8 @@ const CATALOG = {
       phys: { t: "PHYSIK", d: "Mechanik, Flüssigkeiten, Wellen." },
       nat:  { t: "NATURWISSENSCHAFTEN", d: "Biologie, Physik, Chemie und Umwelt." },
       read: { t: "KRITISCHES LESEN", d: "Wörtliche, schlussfolgernde und kritische Ebenen. Textanalyse." },
-      soc:  { t: "SOZIALWISSENSCHAFTEN", d: "Geschichte, Geographie, Verfassung und Bürgerkompetenzen." }
+      soc:  { t: "SOZIALWISSENSCHAFTEN", d: "Geschichte, Geographie, Verfassung und Bürgerkompetenzen." },
+      brain: { t: "KOGNITIVES GYM", d: "Einheit 8200: Gedächtnis, Logik, Chaos." }
     },
     games: { 
       gasLaws: { t: "🧪 GASGESETZE", d: "Thermodynamik, 150 Elemente, Plasma und Druck." }, 
@@ -158,10 +267,30 @@ const CATALOG = {
       readingLab: { t: "📖 ICFES KRITISCHES LESEN", d: "Kognitiver Simulator: Semantische und pragmatische Analyse mit KI." },
       quantumReader: { t: "⚡ RSVP BESCHLEUNIGER", d: "O.R.P. Schnelllesemaschine. Über 1000+ WPM." },
       socialesLab: { t: "⚖️ ICFES SOZIALWISSENSCHAFTEN", d: "Kartographischer Simulator: Verfassung, Geschichte und Multiperspectivismus." },
-      physicsLab: { t: "🚀 THE MOTION LAB", d: "Kinematischer Simulator: Vektoren, MRU und MRUA mit KI." }
+      physicsLab: { t: "🚀 THE MOTION LAB", d: "Kinematischer Simulator: Vektoren, MRU und MRUA mit KI." },
+      nexusOS: { t: "🎛️ NEXUS OS", d: "Kognitives Kommandozentrum." },
+      nback: { t: "🧠 QUANTUM N-BACK", d: "Räumliches Gedächtnis." },
+      raven: { t: "🧩 RAVEN OS", d: "Fließende Logik." },
+      babel: { t: "👁️ BABEL-PROTOKOLL", d: "Semantische Hyperverarbeitung." },
+      caos: { t: "🔥 CHAOS-SIMULATOR", d: "Entscheidungen unter Druck." },
+      collider: { t: "🌌 KOLLIDIERER", d: "Kreative Singularität." }
     } 
   }
 };
+
+/* ============================================================
+   🔄 CYBER LOADER: PANTALLA DE SUSPENSE HOLOGRÁFICO
+============================================================ */
+const CyberLoader = () => (
+  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: '#010204', color: '#00f2ff', fontFamily: 'Orbitron', zIndex: 9999 }}>
+     <div style={{ width: '60px', height: '60px', border: '4px solid rgba(0,242,255,0.1)', borderTop: '4px solid #00f2ff', borderRight: '4px solid #00f2ff', borderRadius: '50%', animation: 'spin 0.8s linear infinite', marginBottom: '25px', boxShadow: '0 0 20px rgba(0,242,255,0.4)' }}></div>
+     <div style={{ letterSpacing: '4px', fontWeight: '900', animation: 'pulseText 1.5s infinite', textShadow: '0 0 10px #00f2ff' }}>CARGANDO PROTOCOLO</div>
+     <style>{`
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes pulseText { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+     `}</style>
+  </div>
+);
 
 // ============================================================
 // 📐 ECUACIÓN EN VIVO
@@ -186,14 +315,22 @@ const LiveEquation = React.memo(({ mode, p, v, t }) => {
 // ============================================================
 // 🧩 SUB-COMPONENTE: TARJETA APP (Manejo Táctil Nivel Dios)
 // ============================================================
-const GameCard = React.memo(({ uiColor, icon, title, desc, badge, badgeColor, onClick }) => {
+const GameCard = React.memo(({ uiColor, icon, title, desc, badge, badgeColor, gameId, onClick }) => {
   const [isActive, setIsActive] = useState(false);
-  const handleInteractionStart = useCallback(() => setIsActive(true), []);
+  
+  const handleInteractionStart = useCallback(() => {
+    setIsActive(true);
+    if (gameId && PRELOAD_MAP[gameId]) {
+      PRELOAD_MAP[gameId]();
+    }
+  }, [gameId]);
+  
   const handleInteractionEnd = useCallback(() => setIsActive(false), []);
+  const handleKeyDown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); }};
 
   return (
     <article 
-      role="button" tabIndex={0} onClick={onClick}
+      role="button" tabIndex={0} onClick={onClick} onKeyDown={handleKeyDown}
       onMouseEnter={handleInteractionStart} onMouseLeave={handleInteractionEnd}
       onTouchStart={handleInteractionStart} onTouchEnd={handleInteractionEnd}
       style={{
@@ -230,7 +367,7 @@ export default function App() {
     searchTerm, setSearchTerm, filterCategory, setFilterCategory, isGeneratingQuiz 
   } = useGameStore();
   
-  // 🔴 ESTADO DEL ENRUTADOR NEXUS ('nexus' | 'cat_chem' | 'cat_math' | 'cat_phys' | 'cat_nat' | 'cat_read' | 'cat_soc')
+  // 🔴 ESTADO DEL ENRUTADOR NEXUS
   const [menuView, setMenuView] = useState('nexus');
 
   // Optimizaciones de referencias constantes
@@ -244,24 +381,35 @@ export default function App() {
 
   // 🚀 Prevención robusta de errores Autoplay de DOM
   useEffect(() => {
-    if (droneRef.current) {
+    let isMounted = true;
+    if (!droneRef.current) return;
+
+    const playAudioSafely = async () => {
       if (appState === 'PLAYING' && !activeQuiz && (!activeGame || activeGame === 'GAS_LAWS')) {
-        const playPromise = droneRef.current.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                // Silencia el error común de navegadores que bloquean Autoplay sin interacción
-                console.warn("Autoplay Audio Blocked by Browser Context", error);
-            });
+        try {
+          const playPromise = droneRef.current.play();
+          if (playPromise !== undefined) {
+            await playPromise;
+            if (isMounted) {
+              droneRef.current.playbackRate = Math.max(0.5, temp / 5000);
+              droneRef.current.volume = isCritical ? 0.8 : 0.2;
+            }
+          }
+        } catch (error) {
+          if (error.name !== 'NotAllowedError') {
+             console.warn("Autoplay Audio Blocked by Browser Context", error);
+          }
         }
-        droneRef.current.playbackRate = Math.max(0.5, temp / 5000);
-        droneRef.current.volume = isCritical ? 0.8 : 0.2;
       } else {
         droneRef.current.pause();
       }
-    }
+    };
+
+    playAudioSafely();
+    return () => { isMounted = false; };
   }, [appState, temp, isCritical, activeQuiz, activeGame]);
 
-  // 🚀 Memoización Algorítmica del Filtro de Búsqueda (Evita recalcular 150 items en cada render frame)
+  // 🚀 Memoización Algorítmica del Filtro de Búsqueda
   const filteredMaterials = useMemo(() => {
     return Object.values(MATERIALS).filter(m => {
       const matchSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.symbol.toLowerCase().includes(searchTerm.toLowerCase());
@@ -270,11 +418,11 @@ export default function App() {
     });
   }, [searchTerm, filterCategory]);
 
-  // Resolución O(1) del Componente Activo
+  // Resolución O(1) del Componente Activo usando la matriz de Alias
   const ActiveGameComponent = GAME_REGISTRY[activeGame];
 
   return (
-    <>
+    <QuantumErrorBoundary>
       <audio ref={droneRef} src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364035/drone_sound_yyqqnv.wav" loop />
       <audio id="snd-crash" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/crash_ebp5po.wav" />
       <audio id="snd-error" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/error.wav" />
@@ -330,6 +478,7 @@ export default function App() {
                     menuView === 'cat_nat' ? cat.subjects.nat.t : 
                     menuView === 'cat_read' ? cat.subjects.read.t : 
                     menuView === 'cat_soc' ? cat.subjects.soc.t : 
+                    menuView === 'cat_brain' ? cat.subjects.brain.t :
                     cat.subjects.phys.t
                   }
                 </p>
@@ -341,6 +490,7 @@ export default function App() {
               {/* === VISTA 1: EL NEXUS DE MATERIAS === */}
               {menuView === 'nexus' && (
                 <>
+                  <GameCard uiColor="#ffea00" icon="🧠" title={cat.subjects.brain.t} desc={cat.subjects.brain.d} badge="UNIT 8200" badgeColor="#ffea00" onClick={() => setMenuView('cat_brain')} />
                   <GameCard uiColor="#00ff88" icon="⚛️" title={cat.subjects.phys.t} desc={cat.subjects.phys.d} onClick={() => setMenuView('cat_phys')} />
                   <GameCard uiColor="#ff0055" icon="🧪" title={cat.subjects.chem.t} desc={cat.subjects.chem.d} onClick={() => setMenuView('cat_chem')} />
                   <GameCard uiColor="#0f0" icon="🧬" title={cat.subjects.nat.t} desc={cat.subjects.nat.d} onClick={() => setMenuView('cat_nat')} />
@@ -350,51 +500,62 @@ export default function App() {
                 </>
               )}
 
+              {/* 🟢 INYECCIÓN UNIT 8200: VISTA MENTAL (JUEGOS MENTALES) */}
+              {menuView === 'cat_brain' && (
+                <>
+                  <GameCard gameId="NEXUS_OS" uiColor="#00f2ff" icon="🎛️" title={cat.games.nexusOS.t} desc={cat.games.nexusOS.d} badge="HUB" badgeColor="#00f2ff" onClick={() => startGame('NEXUS_OS')} />
+                  <GameCard gameId="QUANTUM_NBACK" uiColor="#00ff88" icon="🧠" title={cat.games.nback.t} desc={cat.games.nback.d} onClick={() => startGame('QUANTUM_NBACK')} />
+                  <GameCard gameId="RAVEN_LOGIC" uiColor="#ffea00" icon="🧩" title={cat.games.raven.t} desc={cat.games.raven.d} onClick={() => startGame('RAVEN_LOGIC')} />
+                  <GameCard gameId="PROTOCOLO_BABEL" uiColor="#00f2ff" icon="👁️" title={cat.games.babel.t} desc={cat.games.babel.d} onClick={() => startGame('PROTOCOLO_BABEL')} />
+                  <GameCard gameId="SIMULADOR_CAOS" uiColor="#ff0055" icon="🔥" title={cat.games.caos.t} desc={cat.games.caos.d} badge="HARD" badgeColor="#ff0055" onClick={() => startGame('SIMULADOR_CAOS')} />
+                  <GameCard gameId="COLISIONADOR" uiColor="#ffea00" icon="🌌" title={cat.games.collider.t} desc={cat.games.collider.d} badge="CREATIVE" badgeColor="#ffea00" onClick={() => startGame('COLISIONADOR')} />
+                </>
+              )}
+
               {/* === VISTA 2: JUEGOS DE QUÍMICA === */}
               {menuView === 'cat_chem' && (
                 <>
-                  <GameCard uiColor="#00f2ff" icon="🌡️" title={cat.games.gasLaws.t} desc={cat.games.gasLaws.d} onClick={() => startGame('GAS_LAWS')} />
-                  <GameCard uiColor="#00ff88" icon="📚" title={cat.games.gasTheory.t} desc={cat.games.gasTheory.d} onClick={() => startGame('GAS_THEORY')} />
-                  <GameCard uiColor="#ff0055" icon="⚡" title={cat.games.redoxLab.t} desc={cat.games.redoxLab.d} onClick={() => startGame('REDOX_LAB')} />
-                  <GameCard uiColor="#ffea00" icon="⚖️" title={cat.games.redoxBalancer.t} desc={cat.games.redoxBalancer.d} onClick={() => startGame('REDOX_BALANCER')} />
-                  <GameCard uiColor="#00ff00" icon="🛰️" title={cat.games.mendeleevGrid.t} desc={cat.games.mendeleevGrid.d} badge={cat.new} badgeColor="#00ff00" onClick={() => startGame('MENDELEEV_GRID')} />
+                  <GameCard gameId="GAS_LAWS" uiColor="#00f2ff" icon="🌡️" title={cat.games.gasLaws.t} desc={cat.games.gasLaws.d} onClick={() => startGame('GAS_LAWS')} />
+                  <GameCard gameId="GAS_THEORY" uiColor="#00ff88" icon="📚" title={cat.games.gasTheory.t} desc={cat.games.gasTheory.d} onClick={() => startGame('GAS_THEORY')} />
+                  <GameCard gameId="REDOX_LAB" uiColor="#ff0055" icon="⚡" title={cat.games.redoxLab.t} desc={cat.games.redoxLab.d} onClick={() => startGame('REDOX_LAB')} />
+                  <GameCard gameId="REDOX_BALANCER" uiColor="#ffea00" icon="⚖️" title={cat.games.redoxBalancer.t} desc={cat.games.redoxBalancer.d} onClick={() => startGame('REDOX_BALANCER')} />
+                  <GameCard gameId="MENDELEEV_GRID" uiColor="#00ff00" icon="🛰️" title={cat.games.mendeleevGrid.t} desc={cat.games.mendeleevGrid.d} badge={cat.new} badgeColor="#00ff00" onClick={() => startGame('MENDELEEV_GRID')} />
                 </>
               )}
 
               {/* === VISTA 3: JUEGOS DE MATEMÁTICAS === */}
               {menuView === 'cat_math' && (
-                <GameCard uiColor="#ffea00" icon="📐" title={cat.games.mathLab.t} desc={cat.games.mathLab.d} badge="NEXUS" badgeColor="#ffea00" onClick={() => startGame('MATH_LAB')} />
+                <GameCard gameId="MATH_LAB" uiColor="#ffea00" icon="📐" title={cat.games.mathLab.t} desc={cat.games.mathLab.d} badge="NEXUS" badgeColor="#ffea00" onClick={() => startGame('MATH_LAB')} />
               )}
 
               {/* === VISTA 4: JUEGOS DE FÍSICA === */}
               {menuView === 'cat_phys' && (
                 <>
-                  <GameCard uiColor="#ff00ff" icon="🚀" title={cat.games.physicsLab.t} desc={cat.games.physicsLab.d} badge="NEXUS" badgeColor="#ff00ff" onClick={() => startGame('PHYSICS_LAB')} />
-                  <GameCard uiColor="#00f2ff" icon="🌡️" title={cat.games.gasLaws.t} desc={cat.games.gasLaws.d} onClick={() => startGame('GAS_LAWS')} />
+                  <GameCard gameId="PHYSICS_LAB" uiColor="#ff00ff" icon="🚀" title={cat.games.physicsLab.t} desc={cat.games.physicsLab.d} badge="NEXUS" badgeColor="#ff00ff" onClick={() => startGame('PHYSICS_LAB')} />
+                  <GameCard gameId="GAS_LAWS" uiColor="#00f2ff" icon="🌡️" title={cat.games.gasLaws.t} desc={cat.games.gasLaws.d} onClick={() => startGame('GAS_LAWS')} />
                 </>
               )}
 
               {/* === VISTA 5: JUEGOS DE CIENCIAS NATURALES === */}
               {menuView === 'cat_nat' && (
                 <>
-                  <GameCard uiColor="#0f0" icon="🧬" title={cat.games.scienceLab.t} desc={cat.games.scienceLab.d} badge="NEXUS" badgeColor="#0f0" onClick={() => startGame('SCIENCE_LAB')} />
-                  <GameCard uiColor="#ff0055" icon="⚖️" title={cat.games.redoxBalancer.t} desc={cat.games.redoxBalancer.d} onClick={() => startGame('REDOX_BALANCER')} />
+                  <GameCard gameId="SCIENCE_LAB" uiColor="#0f0" icon="🧬" title={cat.games.scienceLab.t} desc={cat.games.scienceLab.d} badge="NEXUS" badgeColor="#0f0" onClick={() => startGame('SCIENCE_LAB')} />
+                  <GameCard gameId="REDOX_BALANCER" uiColor="#ff0055" icon="⚖️" title={cat.games.redoxBalancer.t} desc={cat.games.redoxBalancer.d} onClick={() => startGame('REDOX_BALANCER')} />
                 </>
               )}
 
               {/* === VISTA 6: JUEGOS DE LECTURA CRÍTICA === */}
               {menuView === 'cat_read' && (
                 <>
-                  <GameCard uiColor="#00f2ff" icon="📖" title={cat.games.readingLab.t} desc={cat.games.readingLab.d} badge="NEXUS" badgeColor="#00f2ff" onClick={() => startGame('READING_LAB')} />
-                  {/* 🟣 CARTUCHO INYECTADO: ACELERADOR RSVP */}
-                  <GameCard uiColor="#8b5cf6" icon="⚡" title={cat.games.quantumReader.t} desc={cat.games.quantumReader.d} badge="PRO" badgeColor="#ffea00" onClick={() => startGame('QUANTUM_READER')} />
+                  <GameCard gameId="READING_LAB" uiColor="#00f2ff" icon="📖" title={cat.games.readingLab.t} desc={cat.games.readingLab.d} badge="NEXUS" badgeColor="#00f2ff" onClick={() => startGame('READING_LAB')} />
+                  <GameCard gameId="QUANTUM_READER" uiColor="#8b5cf6" icon="⚡" title={cat.games.quantumReader.t} desc={cat.games.quantumReader.d} badge="PRO" badgeColor="#ffea00" onClick={() => startGame('QUANTUM_READER')} />
                 </>
               )}
 
               {/* === VISTA 7: JUEGOS DE SOCIALES === */}
               {menuView === 'cat_soc' && (
                 <>
-                  <GameCard uiColor="#ffaa00" icon="⚖️" title={cat.games.socialesLab.t} desc={cat.games.socialesLab.d} badge="NEXUS" badgeColor="#ffaa00" onClick={() => startGame('SOCIALES_LAB')} />
+                  <GameCard gameId="SOCIALES_LAB" uiColor="#ffaa00" icon="⚖️" title={cat.games.socialesLab.t} desc={cat.games.socialesLab.d} badge="NEXUS" badgeColor="#ffaa00" onClick={() => startGame('SOCIALES_LAB')} />
                 </>
               )}
 
@@ -411,7 +572,7 @@ export default function App() {
           <div style={{...ui.criticalOverlay, opacity: isCritical ? 1 : 0}} />
           
           <nav style={ui.mobileNavPlay}>
-            <button onClick={resetProgress} style={ui.navBackBtn}>{t.reset}</button>
+            <button onClick={resetProgress} style={{...ui.navBackBtn, position: 'relative', zIndex: 9999}}>{t.reset}</button>
           </nav>
 
           {/* QUIZ SYSTEM GENÉRICO */}
@@ -454,133 +615,134 @@ export default function App() {
             </div>
           )}
 
-          {/* 🚀 ENRUTADOR DINÁMICO O(1) 🚀 */}
-          {ActiveGameComponent ? (
-             <ActiveGameComponent />
-          ) : (
-             <>
-                {/* EL MOTOR BASE ORIGINAL (GAS LAWS) SE MANTIENE INTACTO COMO FALLBACK */}
-                <div className="game-panel-left" style={ui.leftPanel(isMobile)}>
-                  <div className="material-selector-box" style={{...ui.sectionBox, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, pointerEvents: 'auto'}}>
-                    <div className="search-filter-wrap" style={{display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '8px', alignItems: 'center'}}>
-                      <input type="text" placeholder={t.search} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={ui.searchInput(isMobile)} />
-                      <div className="filter-buttons" style={{display:'flex', gap:'5px', flexShrink: 0, overflowX: 'auto', width: isMobile ? 'auto' : '100%', paddingBottom: isMobile ? '5px' : '0'}}>
-                        <button onClick={()=>setFilterCategory('All')} style={filterCategory==='All'?ui.pillA:ui.pill}>{t.filterAll}</button>
-                        <button onClick={()=>setFilterCategory('Elemento')} style={filterCategory==='Elemento'?ui.pillA:ui.pill}>{t.filterComp}</button>
-                        <button onClick={()=>setFilterCategory('Compuesto')} style={filterCategory==='Compuesto'?ui.pillA:ui.pill}>{t.filterComp}</button>
+          {/* 🚀 ENRUTADOR DINÁMICO LAZY LOAD CON CYBER LOADER 🚀 */}
+          <Suspense fallback={<CyberLoader />}>
+             {ActiveGameComponent ? (
+                // 🟢 Pasamos onLaunchProtocol para que NexusOS pueda lanzar los juegos mentales
+                <ActiveGameComponent onLaunchProtocol={activeGame === 'NEXUS_OS' ? (id) => startGame(id.toUpperCase()) : undefined} />
+             ) : (
+                /* FALLBACK: LEYES DE LOS GASES (3D SCENE ORIGINAL MANTENIDA INTACTA) */
+                <>
+                  <div className="game-panel-left" style={ui.leftPanel(isMobile)}>
+                    <div className="material-selector-box" style={{...ui.sectionBox, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, pointerEvents: 'auto'}}>
+                      <div className="search-filter-wrap" style={{display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '8px', alignItems: 'center'}}>
+                        <input type="text" placeholder={t.search} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={ui.searchInput(isMobile)} />
+                        <div className="filter-buttons" style={{display:'flex', gap:'5px', flexShrink: 0, overflowX: 'auto', width: isMobile ? 'auto' : '100%', paddingBottom: isMobile ? '5px' : '0'}}>
+                          <button onClick={()=>setFilterCategory('All')} style={filterCategory==='All'?ui.pillA:ui.pill}>{t.filterAll}</button>
+                          <button onClick={()=>setFilterCategory('Elemento')} style={filterCategory==='Elemento'?ui.pillA:ui.pill}>{t.filterComp}</button>
+                          <button onClick={()=>setFilterCategory('Compuesto')} style={filterCategory==='Compuesto'?ui.pillA:ui.pill}>{t.filterComp}</button>
+                        </div>
                       </div>
-                    </div>
-                    <div className="materials-list" style={{flex: 1, overflowY: isMobile ? 'hidden' : 'auto', overflowX: isMobile ? 'auto' : 'hidden', marginTop: '10px', display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '8px', paddingBottom: isMobile ? '10px' : '0'}}>
-                      {filteredMaterials.map(m => (
-                        <button key={m.id} className="mat-btn-item" onClick={() => setMaterial(m.id)} style={activeMaterial === m.id ? ui.matBtnActive(isMobile) : ui.matBtn(isMobile)}>
-                          <span style={{fontWeight:'bold', width: isMobile ? 'auto' : '40px', display:'inline-block', marginRight: isMobile ? '0' : '5px', fontSize: isMobile ? '16px' : 'inherit'}}>{m.symbol}</span> 
-                          {!isMobile && m.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  {!isMobile && (
-                    <div className="element-stats-box" style={{...ui.sectionBox, background:'rgba(0,15,30,0.8)', borderLeft:'3px solid #00f2ff', flexShrink: 0, pointerEvents: 'auto'}}>
-                      <h3 style={ui.panelTitle}>// {mat.symbol} ({t[phaseID]?.toUpperCase() || phaseID.toUpperCase()})</h3>
-                      <div className="stats-row-group" style={{display: 'flex', flexDirection: 'column'}}>
-                          <div style={ui.dataRow(isMobile)}><span>{t.atomicNum}</span><span style={{color:'#ffea00'}}>{mat.atomicNum}</span></div>
-                          <div style={ui.dataRow(isMobile)}><span>{t.mass}</span><span style={{color:'#ffea00'}}>{mat.mass}</span></div>
-                          <div style={ui.dataRow(isMobile)}><span>{t.eConfig}</span><span style={{color:'#00f2ff', fontSize:'9px'}}>{mat.eConfig}</span></div>
-                          <div style={ui.dataRow(isMobile)}><span>{t.density}</span><span style={{color:'#00f2ff'}}>{mat.density}</span></div>
+                      <div className="materials-list" style={{flex: 1, overflowY: isMobile ? 'hidden' : 'auto', overflowX: isMobile ? 'auto' : 'hidden', marginTop: '10px', display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '8px', paddingBottom: isMobile ? '10px' : '0'}}>
+                        {filteredMaterials.map(m => (
+                          <button key={m.id} className="mat-btn-item" onClick={() => setMaterial(m.id)} style={activeMaterial === m.id ? ui.matBtnActive(isMobile) : ui.matBtn(isMobile)}>
+                            <span style={{fontWeight:'bold', width: isMobile ? 'auto' : '40px', display:'inline-block', marginRight: isMobile ? '0' : '5px', fontSize: isMobile ? '16px' : 'inherit'}}>{m.symbol}</span> 
+                            {!isMobile && m.name}
+                          </button>
+                        ))}
                       </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="game-panel-right" style={ui.rightPanel(isMobile)}>
-                  <div className="score-box" style={{...ui.sectionBox, borderLeft:'4px solid #ffea00', background:'rgba(50,40,0,0.8)', flexShrink: 0, pointerEvents: 'auto'}}>
-                    <h3 style={{...ui.panelTitle, color:'#ffea00', fontSize:'clamp(11px, 2.5vw, 14px)', margin:0}}>🏆 SCORE: {score} PTS</h3>
-                  </div>
-                  <div className="mode-selector-box" style={{...ui.sectionBox, flexShrink: 0, pointerEvents: 'auto'}}>
-                    <h3 style={ui.panelTitle}>// {t.classMode || "LEYES"}</h3>
-                    <div style={ui.modeGrid(isMobile)}>
-                      {['FREE', 'BOYLE', 'CHARLES', 'GAY_LUSSAC'].map(m => <button key={m} onClick={()=>setMode(m)} style={activeMode===m ? ui.modeBtnA : ui.modeBtn}>{t[`mode${m.charAt(0)+m.slice(1).toLowerCase().replace('_l','L')}`] || m}</button>)}
                     </div>
                     {!isMobile && (
-                      <div style={{marginTop:'15px', fontSize:'11px', color:'#ccc', lineHeight:'1.5'}}><strong style={{color:'#00f2ff'}}>{lesson.title}</strong><br/><span style={{color:'#ffea00'}}>{t.goal}:</span> {lesson.goal}<br/><span style={{color:'#00f2ff'}}>{t.idea}:</span> {lesson.idea}</div>
+                      <div className="element-stats-box" style={{...ui.sectionBox, background:'rgba(0,15,30,0.8)', borderLeft:'3px solid #00f2ff', flexShrink: 0, pointerEvents: 'auto'}}>
+                        <h3 style={ui.panelTitle}>// {mat.symbol} ({t[phaseID]?.toUpperCase() || phaseID.toUpperCase()})</h3>
+                        <div className="stats-row-group" style={{display: 'flex', flexDirection: 'column'}}>
+                            <div style={ui.dataRow(isMobile)}><span>{t.atomicNum}</span><span style={{color:'#ffea00'}}>{mat.atomicNum}</span></div>
+                            <div style={ui.dataRow(isMobile)}><span>{t.mass}</span><span style={{color:'#ffea00'}}>{mat.mass}</span></div>
+                            <div style={ui.dataRow(isMobile)}><span>{t.eConfig}</span><span style={{color:'#00f2ff', fontSize:'9px'}}>{mat.eConfig}</span></div>
+                            <div style={ui.dataRow(isMobile)}><span>{t.density}</span><span style={{color:'#00f2ff'}}>{mat.density}</span></div>
+                        </div>
+                      </div>
                     )}
                   </div>
-                  {activeMode !== 'FREE' && !isMobile && (
-                    <div style={{...ui.sectionBox, borderLeft:'3px solid #ff0055', background:'rgba(30,0,10,0.8)', flexShrink: 0, maxHeight: '25vh', overflowY: 'auto', pointerEvents: 'auto'}}>
-                      <h3 style={{...ui.panelTitle, color:'#ff0055'}}>{t.labTitle}</h3>
-                      {!exampleSession && examples?.map((ex, idx) => (
-                        <button key={idx} onClick={() => loadExampleScenario(activeMode, idx)} style={{...ui.solidCyberBtn, width:'100%', fontSize:'12px', padding:'10px', marginTop:'5px', background:'linear-gradient(45deg, #ff0055, #880022)'}}>{t.startLab}: {ex.title}</button>
-                      ))}
-                      {exampleSession && (
-                        <div style={{marginTop:'10px', fontSize:'11px', color:'#ccc', lineHeight:'1.5'}}>
-                          <strong style={{color:'#ff0055'}}>{exampleSession.title}</strong><p style={{margin:'5px 0', color:'#fff'}}>{exampleSession.prompt}</p>
-                          <ul style={{paddingLeft:'15px', color:'#ffea00'}}>{exampleSession.steps.map((step, i) => <li key={i}>{step}</li>)}</ul>
-                          {exampleSession.completed ? (<div style={{padding:'10px', background:'rgba(0,255,0,0.2)', color:'#0f0', border:'1px solid #0f0', textAlign:'center', marginTop:'10px'}}>✅ {t.stepDone} (+200 PTS)</div>) : (<div style={{padding:'5px', textAlign:'center', color:'#ff0055'}}>...</div>)}
-                          <button onClick={exitExample} style={{...ui.cyberBtn, padding:'5px', fontSize:'10px', width:'100%', marginTop:'10px'}}>{t.exitLab}</button>
-                        </div>
+
+                  <div className="game-panel-right" style={ui.rightPanel(isMobile)}>
+                    <div className="score-box" style={{...ui.sectionBox, borderLeft:'4px solid #ffea00', background:'rgba(50,40,0,0.8)', flexShrink: 0, pointerEvents: 'auto'}}>
+                      <h3 style={{...ui.panelTitle, color:'#ffea00', fontSize:'clamp(11px, 2.5vw, 14px)', margin:0}}>🏆 SCORE: {score} PTS</h3>
+                    </div>
+                    <div className="mode-selector-box" style={{...ui.sectionBox, flexShrink: 0, pointerEvents: 'auto'}}>
+                      <h3 style={ui.panelTitle}>// {t.classMode || "LEYES"}</h3>
+                      <div style={ui.modeGrid(isMobile)}>
+                        {['FREE', 'BOYLE', 'CHARLES', 'GAY_LUSSAC'].map(m => <button key={m} onClick={()=>setMode(m)} style={activeMode===m ? ui.modeBtnA : ui.modeBtn}>{t[`mode${m.charAt(0)+m.slice(1).toLowerCase().replace('_l','L')}`] || m}</button>)}
+                      </div>
+                      {!isMobile && (
+                        <div style={{marginTop:'15px', fontSize:'11px', color:'#ccc', lineHeight:'1.5'}}><strong style={{color:'#00f2ff'}}>{lesson.title}</strong><br/><span style={{color:'#ffea00'}}>{t.goal}:</span> {lesson.goal}<br/><span style={{color:'#00f2ff'}}>{t.idea}:</span> {lesson.idea}</div>
                       )}
                     </div>
-                  )}
-                  <div className="equation-box" style={{...ui.sectionBox, textAlign:'center', flexShrink: 0, pointerEvents: 'auto'}}>
-                    <LiveEquation mode={activeMode} p={pressure} v={volume} t={temp} />
+                    {activeMode !== 'FREE' && !isMobile && (
+                      <div style={{...ui.sectionBox, borderLeft:'3px solid #ff0055', background:'rgba(30,0,10,0.8)', flexShrink: 0, maxHeight: '25vh', overflowY: 'auto', pointerEvents: 'auto'}}>
+                        <h3 style={{...ui.panelTitle, color:'#ff0055'}}>{t.labTitle}</h3>
+                        {!exampleSession && examples?.map((ex, idx) => (
+                          <button key={idx} onClick={() => loadExampleScenario(activeMode, idx)} style={{...ui.solidCyberBtn, width:'100%', fontSize:'12px', padding:'10px', marginTop:'5px', background:'linear-gradient(45deg, #ff0055, #880022)'}}>{t.startLab}: {ex.title}</button>
+                        ))}
+                        {exampleSession && (
+                          <div style={{marginTop:'10px', fontSize:'11px', color:'#ccc', lineHeight:'1.5'}}>
+                            <strong style={{color:'#ff0055'}}>{exampleSession.title}</strong><p style={{margin:'5px 0', color:'#fff'}}>{exampleSession.prompt}</p>
+                            <ul style={{paddingLeft:'15px', color:'#ffea00'}}>{exampleSession.steps.map((step, i) => <li key={i}>{step}</li>)}</ul>
+                            {exampleSession.completed ? (<div style={{padding:'10px', background:'rgba(0,255,0,0.2)', color:'#0f0', border:'1px solid #0f0', textAlign:'center', marginTop:'10px'}}>✅ {t.stepDone} (+200 PTS)</div>) : (<div style={{padding:'5px', textAlign:'center', color:'#ff0055'}}>...</div>)}
+                            <button onClick={exitExample} style={{...ui.cyberBtn, padding:'5px', fontSize:'10px', width:'100%', marginTop:'10px'}}>{t.exitLab}</button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="equation-box" style={{...ui.sectionBox, textAlign:'center', flexShrink: 0, pointerEvents: 'auto'}}>
+                      <LiveEquation mode={activeMode} p={pressure} v={volume} t={temp} />
+                    </div>
+                    <button className="generate-quiz-btn" onClick={triggerExercise} disabled={isGeneratingQuiz} style={{...ui.iaButton, opacity: isGeneratingQuiz ? 0.5 : 1, flexShrink: 0, pointerEvents: 'auto'}}>
+                      {isGeneratingQuiz ? t.loadingAI : t.generate}
+                    </button>
                   </div>
-                  <button className="generate-quiz-btn" onClick={triggerExercise} disabled={isGeneratingQuiz} style={{...ui.iaButton, opacity: isGeneratingQuiz ? 0.5 : 1, flexShrink: 0, pointerEvents: 'auto'}}>
-                    {isGeneratingQuiz ? t.loadingAI : t.generate}
-                  </button>
-                </div>
 
-                {/* VISOR 3D ORIGINAL */}
-                <Canvas style={{position: 'absolute', inset: 0, zIndex: 1}} camera={{ position: [0, 4, isMobile ? 26 : 15], fov: 45 }}>
-                  <color attach="background" args={['#010204']} /><Environment preset="night" /><ambientLight intensity={0.2} /><pointLight position={[0, 5, 0]} intensity={phaseID==='plasma'?10:3} color={phaseID==='plasma'?'#ffffff':'#00f2ff'} /><Stars count={6000} factor={5} fade speed={1} />
-                  <Suspense fallback={null}>
-                    <group position={[0, isMobile ? 1 : -2, 0]}>
-                      <mesh position={[0, 2, 0]}><cylinderGeometry args={[2.5, 2.5, 4, 64]} /><meshPhysicalMaterial transparent opacity={0.15} color="#00f2ff" metalness={1} roughness={0} side={2}/></mesh>
-                      <mesh position={[0, -0.1, 0]}><cylinderGeometry args={[2.6, 2.8, 0.4, 64]} /><meshStandardMaterial color="#050505" /></mesh>
-                      <MolecularPhysics count={isMobile ? 120 : 250} />
-                    </group>
-                  </Suspense>
-                  <EffectComposer><Bloom luminanceThreshold={phaseID==='plasma'?0.5:1} mipmapBlur intensity={phaseID==='plasma'?3.0:2.0} />{isCritical && <ChromaticAberration offset={[0.01, 0.01]} />}</EffectComposer>
-                  <OrbitControls makeDefault enablePan={false} maxPolarAngle={Math.PI / 1.8} />
-                </Canvas>
+                  <Canvas style={{position: 'absolute', inset: 0, zIndex: 1}} camera={{ position: [0, 4, isMobile ? 26 : 15], fov: 45 }}>
+                    <color attach="background" args={['#010204']} /><Environment preset="night" /><ambientLight intensity={0.2} /><pointLight position={[0, 5, 0]} intensity={phaseID==='plasma'?10:3} color={phaseID==='plasma'?'#ffffff':'#00f2ff'} /><Stars count={6000} factor={5} fade speed={1} />
+                    <Suspense fallback={null}>
+                      <group position={[0, isMobile ? 1 : -2, 0]}>
+                        <mesh position={[0, 2, 0]}><cylinderGeometry args={[2.5, 2.5, 4, 64]} /><meshPhysicalMaterial transparent opacity={0.15} color="#00f2ff" metalness={1} roughness={0} side={2}/></mesh>
+                        <mesh position={[0, -0.1, 0]}><cylinderGeometry args={[2.6, 2.8, 0.4, 64]} /><meshStandardMaterial color="#050505" /></mesh>
+                        <MolecularPhysics count={isMobile ? 120 : 250} />
+                      </group>
+                    </Suspense>
+                    <EffectComposer><Bloom luminanceThreshold={phaseID==='plasma'?0.5:1} mipmapBlur intensity={phaseID==='plasma'?3.0:2.0} />{isCritical && <ChromaticAberration offset={[0.01, 0.01]} />}</EffectComposer>
+                    <OrbitControls makeDefault enablePan={false} maxPolarAngle={Math.PI / 1.8} />
+                  </Canvas>
 
-                {/* PANEL DE CONTROLES INFERIOR */}
-                <div className="main-controls-dock" style={ui.controlPanel(isMobile)}>
-                   <div className="control-column" style={{...ui.controlGroup, opacity: (activeMode==='BOYLE')?0.2:1, pointerEvents: (activeMode==='BOYLE')?'none':'auto'}}>
-                     <div style={ui.controlLabel('#00f2ff')}>{t.temp}</div>
-                     <div style={{display:'flex', gap:'clamp(5px, 1vw, 10px)'}}>
-                       <button onClick={() => updatePhysics('TEMP', 500)} style={ui.actionBtn('#ff0055')}>+500</button>
-                       <button onClick={() => updatePhysics('TEMP', 50)} style={ui.actionBtn('#ff0055')}>+50</button>
-                       <button onClick={() => updatePhysics('TEMP', -500)} style={ui.actionBtn('#00f2ff')}>-500</button>
+                  <div className="main-controls-dock" style={ui.controlPanel(isMobile)}>
+                     <div className="control-column" style={{...ui.controlGroup, opacity: (activeMode==='BOYLE')?0.2:1, pointerEvents: (activeMode==='BOYLE')?'none':'auto'}}>
+                       <div style={ui.controlLabel('#00f2ff')}>{t.temp}</div>
+                       <div style={{display:'flex', gap:'clamp(5px, 1vw, 10px)'}}>
+                         <button onClick={() => updatePhysics('TEMP', 500)} style={ui.actionBtn('#ff0055')}>+500</button>
+                         <button onClick={() => updatePhysics('TEMP', 50)} style={ui.actionBtn('#ff0055')}>+50</button>
+                         <button onClick={() => updatePhysics('TEMP', -500)} style={ui.actionBtn('#00f2ff')}>-500</button>
+                       </div>
                      </div>
-                   </div>
-                   
-                   <div className="hud-readout-center" style={ui.hudControl(isCritical, phaseID, isMobile)}>
-                      <div style={ui.hudVal(false, phaseID==='plasma'?'#fff':'#00f2ff', isMobile)}>{temp}K</div>
-                      <div style={ui.hudVal(isCritical, '#ff0055', isMobile)}>{pressure.toFixed(1)} PSI</div>
-                      <div style={ui.hudVal(false, '#ffea00', isMobile)}>{volume}%</div>
-                   </div>
-                   
-                   <div className="control-column" style={{...ui.controlGroup, opacity: (activeMode==='CHARLES')?0.2:1, pointerEvents: (activeMode==='CHARLES')?'none':'auto'}}>
-                     <div style={ui.controlLabel('#ffea00')}>{t.vol}</div>
-                     <div style={{display:'flex', gap:'clamp(5px, 1vw, 10px)'}}>
-                       <button onClick={() => updatePhysics('VOL', 10)} style={ui.actionBtn('#ffea00')}>+10</button>
-                       <button onClick={() => updatePhysics('VOL', -10)} style={ui.actionBtn('#ffea00')}>-10</button>
+                     
+                     <div className="hud-readout-center" style={ui.hudControl(isCritical, phaseID, isMobile)}>
+                        <div style={ui.hudVal(false, phaseID==='plasma'?'#fff':'#00f2ff', isMobile)}>{temp}K</div>
+                        <div style={ui.hudVal(isCritical, '#ff0055', isMobile)}>{pressure.toFixed(1)} PSI</div>
+                        <div style={ui.hudVal(false, '#ffea00', isMobile)}>{volume}%</div>
                      </div>
-                   </div>
-                   
-                   <div className="control-column" style={{...ui.controlGroup, opacity: (activeMode==='CHARLES'||activeMode==='GAY_LUSSAC')?0.2:1, pointerEvents: (activeMode==='CHARLES'||activeMode==='GAY_LUSSAC')?'none':'auto'}}>
-                     <div style={ui.controlLabel('#ff0055')}>{t.press}</div>
-                     <div style={{display:'flex', gap:'clamp(5px, 1vw, 10px)'}}>
-                       <button onClick={() => updatePhysics('PRESS', 10)} style={ui.actionBtn('#ff0055')}>+10</button>
-                       <button onClick={() => updatePhysics('PRESS', -10)} style={ui.actionBtn('#ff0055')}>-10</button>
+                     
+                     <div className="control-column" style={{...ui.controlGroup, opacity: (activeMode==='CHARLES')?0.2:1, pointerEvents: (activeMode==='CHARLES')?'none':'auto'}}>
+                       <div style={ui.controlLabel('#ffea00')}>{t.vol}</div>
+                       <div style={{display:'flex', gap:'clamp(5px, 1vw, 10px)'}}>
+                         <button onClick={() => updatePhysics('VOL', 10)} style={ui.actionBtn('#ffea00')}>+10</button>
+                         <button onClick={() => updatePhysics('VOL', -10)} style={ui.actionBtn('#ffea00')}>-10</button>
+                       </div>
                      </div>
-                   </div>
-                </div>
-             </>
-          )}
+                     
+                     <div className="control-column" style={{...ui.controlGroup, opacity: (activeMode==='CHARLES'||activeMode==='GAY_LUSSAC')?0.2:1, pointerEvents: (activeMode==='CHARLES'||activeMode==='GAY_LUSSAC')?'none':'auto'}}>
+                       <div style={ui.controlLabel('#ff0055')}>{t.press}</div>
+                       <div style={{display:'flex', gap:'clamp(5px, 1vw, 10px)'}}>
+                         <button onClick={() => updatePhysics('PRESS', 10)} style={ui.actionBtn('#ff0055')}>+10</button>
+                         <button onClick={() => updatePhysics('PRESS', -10)} style={ui.actionBtn('#ff0055')}>-10</button>
+                       </div>
+                     </div>
+                  </div>
+                </>
+             )}
+          </Suspense>
         </div>
       )}
-    </>
+    </QuantumErrorBoundary>
   );
 }
 
