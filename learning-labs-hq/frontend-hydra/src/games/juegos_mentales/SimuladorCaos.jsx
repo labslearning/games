@@ -1,518 +1,696 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react';
 import { create } from 'zustand';
+
+// 🟢 CORRECCIÓN CRÍTICA DE RUTA: 2 niveles hacia atrás para llegar a src/store. (Vite lanza error 500 si usa 3)
 import { useGameStore } from '../../store/useGameStore'; 
 
-/* ============================================================
-   🌌 KERNEL CONFIG: RED TEAMING AI (DEEPSEEK)
-============================================================ */
-const DEEPSEEK_API_KEY = "sk-9c7336f2ef7e4630b2bcef83a6994c57";
-const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
+// 🟢 KERNEL 3D: React Three Fiber & Drei (Mobile Optimized & Battery Safe)
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Float, Sparkles, Grid } from '@react-three/drei';
+
+// 🟢 POSTPROCESADO: Inmersión Visual Ciberpunk de Alto Rendimiento
+import { EffectComposer, Bloom, Vignette, ChromaticAberration, Glitch } from '@react-three/postprocessing';
+import * as THREE from 'three';
 
 /* ============================================================
-   🌍 I18N: MULTILANGUAGE LEXICON (COLLIDER KERNEL)
+   🌍 I18N: MULTILANGUAGE LEXICON (EVOLUCIÓN COGNITIVA)
 ============================================================ */
-const BASE_LEXICON = {
+const LEXICON = {
   es: {
-    title: "COLISIONADOR DE CONCEPTOS", subtitle: "SINGULARIDAD CREATIVA",
-    instructions: "El sistema inyectará dos dominios de conocimiento aislados. Tienes 90 segundos para escribir una teoría, analogía o sistema que conecte ambos de forma lógica e innovadora.",
-    startBtn: "INICIAR COLISIÓN", submitBtn: "SINTETIZAR ENLACE",
-    evaluating: "ANALIZANDO DIVERGENCIA SINÁPTICA...",
-    score: "ÍNDICE DE SINGULARIDAD", coherence: "COHERENCIA", originality: "ORIGINALIDAD",
-    placeholder: "Establece el enlace conceptual aquí. La genialidad fluye en la velocidad...",
-    timeOut: "COLAPSO TEMPORAL. ENVIANDO TELEMETRÍA.",
-    aiFeedback: "ANÁLISIS FORENSE DE CREATIVIDAD", nextBtn: "NUEVA COLISIÓN",
-    cpmLabel: "VELOCIDAD DE IDEACIÓN (CPM)"
+    title: "NEURAL SEQUENCE", subtitle: "Memoria Visoespacial Cinética",
+    level: "FASE", score: "ÍNDICE", streak: "RACHA",
+    start: "INICIAR ENLACE NEURAL",
+    memorize: "CODIFICANDO SECUENCIA",
+    yourTurn: "REPLICA EL PATRÓN",
+    reverseAlert: "¡MODO INVERSO ACTIVADO!",
+    blindAlert: "¡MODO CIEGO ACTIVADO!",
+    rotatedAlert: "¡ROTACIÓN ESPACIAL ACTIVADA!",
+    correct: "SINAPSIS ESTABLE", wrong: "RUPTURA SINÁPTICA",
+    next: "SIGUIENTE FASE", retry: "RECALIBRAR Y REINTENTAR",
+    sysMsg: "Decodifica el patrón direccional. Tu corteza prefrontal se adaptará a las anomalías."
   },
   en: {
-    title: "CONCEPT COLLIDER", subtitle: "CREATIVE SINGULARITY",
-    instructions: "The system will inject two isolated knowledge domains. You have 90 seconds to write a theory, analogy, or system that logically and innovatively connects them.",
-    startBtn: "INITIATE COLLISION", submitBtn: "SYNTHESIZE LINK",
-    evaluating: "ANALYZING SYNAPTIC DIVERGENCE...",
-    score: "SINGULARITY INDEX", coherence: "COHERENCE", originality: "ORIGINALITY",
-    placeholder: "Establish the conceptual link here. Genius flows in velocity...",
-    timeOut: "TEMPORAL COLLAPSE. TRANSMITTING TELEMETRY.",
-    aiFeedback: "FORENSIC CREATIVITY ANALYSIS", nextBtn: "NEW COLLISION",
-    cpmLabel: "IDEATION VELOCITY (CPM)"
+    title: "NEURAL SEQUENCE", subtitle: "Kinetic Visuospatial Memory",
+    level: "PHASE", score: "INDEX", streak: "STREAK",
+    start: "INITIATE NEURAL LINK",
+    memorize: "ENCODING SEQUENCE",
+    yourTurn: "REPLICATE THE PATTERN",
+    reverseAlert: "REVERSE MODE ENGAGED!",
+    blindAlert: "BLIND MODE ENGAGED!",
+    rotatedAlert: "SPATIAL ROTATION ENGAGED!",
+    correct: "SYNAPSE STABLE", wrong: "SYNAPTIC RUPTURE",
+    next: "NEXT PHASE", retry: "RECALIBRATE & RETRY",
+    sysMsg: "Decode the directional pattern. Your prefrontal cortex will adapt to anomalies."
   }
 };
-const getLexicon = (lang) => BASE_LEXICON[lang] || BASE_LEXICON.en;
+const getLexicon = (langCode) => LEXICON[langCode] || LEXICON['es'];
 
 /* ============================================================
-   🔊 AUDIO ENGINE: ZERO-LATENCY HAPTICS & SYNTHS
+   🎹 MOTOR BINAURAL Y HÁPTICO (ZERO DEPENDENCIES)
 ============================================================ */
-const audioCtx = typeof window !== 'undefined' ? new (window.AudioContext || window.webkitAudioContext)() : null;
-
-const playColliderAudio = (type) => {
-  if (!audioCtx) return;
-  try {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    
-    if (type === 'charge') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(50, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 2);
-      gain.gain.setValueAtTime(0, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 1);
-      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2);
-      osc.start(); osc.stop(audioCtx.currentTime + 2);
-    } else if (type === 'success') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.5);
-      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-      osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-    } else if (type === 'tick') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-      osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+const CyberHaptics = {
+  vibrate(pattern) {
+    if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+      try { window.navigator.vibrate(pattern); } catch (e) {}
     }
-  } catch (e) {}
+  }
 };
 
-const playKeystrokeAudio = () => {
-  if (!audioCtx) return;
-  try {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(150 + Math.random() * 50, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.015, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.02);
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.02);
-  } catch (e) {}
-};
+const CyberAudio = {
+  ctx: null,
+  droneBase: null,
+  droneHarmonic: null,
+  gainNode: null,
+  isInitialized: false,
 
-/* ============================================================
-   🗄️ BASE DE DATOS DE CONCEPTOS DISTANTES (UNIT 8200)
-============================================================ */
-const CONCEPT_PAIRS = [
-  { es: ["Termodinámica", "Marketing Digital"], en: ["Thermodynamics", "Digital Marketing"] },
-  { es: ["Microbiología Celular", "Criptografía RSA"], en: ["Cellular Microbiology", "RSA Cryptography"] },
-  { es: ["Arquitectura Gótica", "Redes Neuronales"], en: ["Gothic Architecture", "Neural Networks"] },
-  { es: ["Jazz Improvisado", "Mecánica Cuántica"], en: ["Improvised Jazz", "Quantum Mechanics"] },
-  { es: ["Agricultura Sintrópica", "Ingeniería Aeroespacial"], en: ["Syntropic Agriculture", "Aerospace Engineering"] },
-  { es: ["Estoicismo", "Sistemas Distribuidos"], en: ["Stoicism", "Distributed Systems"] },
-  { es: ["Poesía Haiku", "Programación Orientada a Objetos"], en: ["Haiku Poetry", "Object-Oriented Programming"] },
-  { es: ["Placas Tectónicas", "Economía del Comportamiento"], en: ["Tectonic Plates", "Behavioral Economics"] }
-];
+  unlock() {
+    if (!this.ctx && typeof window !== 'undefined') {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioContext();
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+    this.isInitialized = true;
+  },
 
-/* ============================================================
-   🧠 ZUSTAND STORE: MOTOR DE ESTADO CREATIVO (O(1))
-============================================================ */
-const useColliderStore = create((set, get) => ({
-  gameState: 'IDLE', // IDLE, COLLIDING, WRITING, EVALUATING, RESULT
-  concepts: { a: '', b: '' },
-  userInput: '',
-  timeLeft: 90,
-  evaluation: null, 
-  cpm: 0, 
+  _playOscillator(type, startFreq, endFreq, duration, vol) {
+    if (!this.isInitialized || !this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(startFreq, this.ctx.currentTime);
+      if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, this.ctx.currentTime + duration);
+      gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+      osc.connect(gain); gain.connect(this.ctx.destination);
+      osc.start(); osc.stop(this.ctx.currentTime + duration);
+    } catch(e) {}
+  },
 
-  initiateCollision: (lang) => {
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-    playColliderAudio('charge');
-    
-    const pairIndex = Math.floor(Math.random() * CONCEPT_PAIRS.length);
-    const langKey = lang === 'es' ? 'es' : 'en';
-    const pair = CONCEPT_PAIRS[pairIndex][langKey];
-    
-    set({ gameState: 'COLLIDING', concepts: { a: pair[0], b: pair[1] }, userInput: '', evaluation: null, timeLeft: 90, cpm: 0 });
-    
+  playHover() { this._playOscillator('sine', 800, 600, 0.05, 0.02); },
+  playClick() { 
+    this._playOscillator('square', 1200, 400, 0.1, 0.05); 
+    CyberHaptics.vibrate(15); 
+  },
+  playTargetHit() {
+    this._playOscillator('sine', 880, 1760, 0.15, 0.05); 
+    CyberHaptics.vibrate(10);
+  },
+  playSuccess() {
+    this._playOscillator('triangle', 523.25, null, 0.3, 0.05); 
+    setTimeout(() => this._playOscillator('triangle', 659.25, null, 0.3, 0.05), 50); 
     setTimeout(() => {
-      set({ gameState: 'WRITING' });
-    }, 2500); 
+      this._playOscillator('triangle', 1046.50, null, 0.5, 0.08); 
+      CyberHaptics.vibrate([20, 50, 40]); 
+    }, 150); 
+  },
+  playError() { 
+    this._playOscillator('sawtooth', 150, 80, 0.6, 0.1); 
+    CyberHaptics.vibrate([50, 50, 100]); 
   },
 
-  updateInput: (text) => {
-    playKeystrokeAudio();
-    set({ userInput: text });
+  startBinaural(type = 'THETA') {
+    if (!this.isInitialized || !this.ctx || this.droneBase) return;
+    try {
+      this.droneBase = this.ctx.createOscillator();
+      this.droneHarmonic = this.ctx.createOscillator();
+      this.droneBase.type = 'sine';
+      this.droneHarmonic.type = 'sine';
+
+      const baseFreq = 200;
+      const beatFreq = type === 'THETA' ? 6 : 15; 
+
+      this.droneBase.frequency.setValueAtTime(baseFreq, this.ctx.currentTime); 
+      this.droneHarmonic.frequency.setValueAtTime(baseFreq + beatFreq, this.ctx.currentTime);
+
+      this.gainNode = this.ctx.createGain();
+      this.gainNode.gain.setValueAtTime(0, this.ctx.currentTime);
+      this.gainNode.gain.linearRampToValueAtTime(0.04, this.ctx.currentTime + 1);
+
+      this.droneBase.connect(this.gainNode);
+      this.droneHarmonic.connect(this.gainNode);
+      this.gainNode.connect(this.ctx.destination);
+      
+      this.droneBase.start();
+      this.droneHarmonic.start();
+    } catch(e) {}
   },
+
+  stopBinaural() {
+    if (this.droneBase && this.ctx && this.gainNode) {
+      try {
+        this.gainNode.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
+        this.droneBase.stop(this.ctx.currentTime + 0.5);
+        this.droneHarmonic.stop(this.ctx.currentTime + 0.5);
+      } catch(e) {}
+      this.droneBase = null;
+      this.droneHarmonic = null;
+    }
+  }
+};
+
+/* ============================================================
+   🎯 VECTORES DIRECCIONALES Y D-PAD GEOMETRY
+============================================================ */
+const DIRS = {
+  UP: { id: 'UP', icon: 'M12 4l-8 8h6v8h4v-8h6z', color: '#00f2ff' },
+  DOWN: { id: 'DOWN', icon: 'M12 20l8-8h-6V4h-4v8H4z', color: '#ff0055' },
+  LEFT: { id: 'LEFT', icon: 'M4 12l8 8v-6h8v-4h-8V4z', color: '#ffea00' },
+  RIGHT: { id: 'RIGHT', icon: 'M20 12l-8-8v6H4v4h8v6z', color: '#00ff88' },
+  NW: { id: 'NW', icon: 'M4 4v10.5l4-4 6 6 3-3-6-6 4-4z', color: '#8b5cf6' },
+  NE: { id: 'NE', icon: 'M20 4H9.5l4 4-6 6 3 3 6-6 4 4z', color: '#ff00ff' },
+  SW: { id: 'SW', icon: 'M4 20h10.5l-4-4 6-6-3-3-6 6-4-4z', color: '#ff8800' },
+  SE: { id: 'SE', icon: 'M20 20v-10.5l-4 4-6-6-3 3 6 6-4 4z', color: '#00ccff' }
+};
+
+const BASIC_DIRS = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+const ALL_DIRS = ['UP', 'DOWN', 'LEFT', 'RIGHT', 'NW', 'NE', 'SW', 'SE'];
+
+/* ============================================================
+   🧠 ZUSTAND STORE: MOTOR COGNITIVO
+============================================================ */
+const useSequenceStore = create((set, get) => ({
+  level: 1,
+  score: 0,
+  streak: 0,
+  combo: 1.0,
+  gameState: 'BOOT', 
+  sequence: [],
+  userSequence: [],
+  activeNode: null, 
+  feedbackState: null, 
+  modifier: 'NORMAL', 
+  activeModifiers: [], 
+  rotationAngle: 0, 
+  hasFailedCurrent: false,
+
+  setGameState: (state) => set({ gameState: state }),
+  setActiveNode: (nodeId) => set({ activeNode: nodeId }),
   
-  tickTimer: () => set(state => {
-    if (state.gameState !== 'WRITING') return state;
+  generateNextSequence: () => {
+    const { level, hasFailedCurrent } = get();
+    // Progresión logarítmica de la longitud para aprendizaje fluido
+    const seqLength = Math.floor(3 + (level * 0.6)); 
+    const availableDirs = level >= 5 ? ALL_DIRS : BASIC_DIRS;
     
-    if (state.timeLeft <= 15 && state.timeLeft > 0) playColliderAudio('tick');
+    let newSequence = [];
+    let lastDir = null;
 
-    if (state.timeLeft <= 1) {
-      setTimeout(() => get().submitSynthesis(state.concepts, state.userInput, 'es'), 100);
-      return { timeLeft: 0 };
+    // Generar patrón estocástico evitando monotonía extrema
+    for(let i = 0; i < seqLength; i++) {
+      let nextDir;
+      do {
+        nextDir = availableDirs[Math.floor(Math.random() * availableDirs.length)];
+      } while (nextDir === lastDir && Math.random() > 0.15); 
+      newSequence.push(nextDir);
+      lastDir = nextDir;
+    }
+
+    // 🧠 MUTACIONES COGNITIVAS (Sobrecarga Escalonada)
+    let newModifiers = [];
+    let newRotation = 0;
+
+    // Solo aplicamos modificadores si el usuario no falló el nivel anterior (Andamiaje Positivo)
+    if (!hasFailedCurrent) {
+      if (level >= 4 && Math.random() > 0.5) newModifiers.push('REVERSE');
+      if (level >= 8 && Math.random() > 0.6) newModifiers.push('BLIND');
+      if (level >= 12 && Math.random() > 0.7) {
+        newModifiers.push('ROTATED');
+        newRotation = [90, 180, 270][Math.floor(Math.random() * 3)];
+      }
+      // Forzar al menos un modificador en niveles muy altos
+      if (level > 20 && newModifiers.length === 0) {
+         newModifiers.push('ROTATED');
+         newRotation = 180;
+      }
+    }
+
+    const primaryModifier = newModifiers.length > 0 ? newModifiers[newModifiers.length -1] : 'NORMAL';
+
+    set({ 
+      sequence: newSequence, 
+      userSequence: [], 
+      gameState: 'SHOWING', 
+      modifier: primaryModifier,
+      activeModifiers: newModifiers,
+      rotationAngle: newRotation,
+      hasFailedCurrent: false,
+      feedbackState: null
+    });
+  },
+
+  handleInput: (nodeId) => {
+    const state = get();
+    if (state.gameState !== 'PLAYING') return;
+
+    CyberAudio.playTargetHit(); 
+
+    const newUserSeq = [...state.userSequence, nodeId];
+    const currentIndex = newUserSeq.length - 1;
+    
+    // Lógica de Validación $O(1)$ aplicando modificador REVERSE
+    let expectedNode = state.sequence[currentIndex];
+    if (state.activeModifiers.includes('REVERSE')) {
+      expectedNode = state.sequence[state.sequence.length - 1 - currentIndex];
     }
     
-    const timeElapsed = 90 - state.timeLeft;
-    const currentCpm = timeElapsed > 0 ? Math.round((state.userInput.length / timeElapsed) * 60) : 0;
+    set({ userSequence: newUserSeq, activeNode: nodeId });
+    
+    // Feedback visual táctil efímero
+    setTimeout(() => {
+        if(get().gameState === 'PLAYING') set({ activeNode: null });
+    }, 120); 
 
-    return { timeLeft: state.timeLeft - 1, cpm: currentCpm };
+    // Validación Instantánea $O(1)$
+    if (nodeId !== expectedNode) {
+      get().resolveRound(false);
+      return;
+    }
+
+    // Comprobación de Victoria
+    if (newUserSeq.length === state.sequence.length) {
+      setTimeout(() => get().resolveRound(true), 250);
+    }
+  },
+
+  resolveRound: (isCorrect) => set((state) => {
+    let newScore = state.score;
+    let newLevel = state.level;
+    let newStreak = state.streak;
+    let newCombo = state.combo;
+    let failedCurrent = state.hasFailedCurrent;
+
+    CyberAudio.stopBinaural();
+
+    if (isCorrect) {
+      const modifierBonus = 1.0 + (state.activeModifiers.length * 0.8);
+      if (!failedCurrent) {
+        newScore += Math.floor(100 * state.level * state.combo * modifierBonus);
+        newStreak += 1;
+        newCombo = Math.min(6.0, newCombo + 0.2); // Cap de Combo subido a 6x para God Tier
+      } else {
+        newScore += Math.floor(30 * state.level); // Puntos de consolación (Andamiaje positivo)
+      }
+      newLevel++;
+      CyberAudio.playSuccess();
+    } else {
+      newStreak = 0;
+      newCombo = 1.0;
+      failedCurrent = true;
+      CyberAudio.playError();
+    }
+
+    return {
+      score: newScore,
+      level: newLevel,
+      streak: newStreak,
+      combo: newCombo,
+      hasFailedCurrent: failedCurrent,
+      feedbackState: isCorrect ? 'CORRECT' : 'WRONG',
+      gameState: 'FEEDBACK',
+      activeNode: null
+    };
   }),
 
-  submitSynthesis: async (concepts, text, lang) => {
-    if (get().gameState === 'EVALUATING') return;
-    set({ gameState: 'EVALUATING' });
-    const result = await evaluateCreativity(concepts, text, lang);
-    playColliderAudio('success');
-    set({ gameState: 'RESULT', evaluation: result });
-  },
-
-  reset: () => set({ gameState: 'IDLE', userInput: '', evaluation: null, cpm: 0 })
+  retrySequence: () => set({ gameState: 'SHOWING', userSequence: [], feedbackState: null, activeNode: null }),
+  startGame: () => { 
+    CyberAudio.unlock(); // Desbloqueo forzado del AudioContext en el primer click real del usuario
+    set({ level: 1, score: 0, streak: 0, combo: 1.0, hasFailedCurrent: false }); 
+    get().generateNextSequence(); 
+  }
 }));
 
 /* ============================================================
-   🤖 KERNEL AI: EVALUADOR DE DIVERGENCIA CON ABORT CONTROLLER
+   🧊 KERNEL 3D: FONDO ESTÁTICO DE CONCENTRACIÓN
 ============================================================ */
-const evaluateCreativity = async (concepts, userText, langCode) => {
-  if (userText.trim().length < 40) {
-    return { 
-      score: 15, coherence: 10, originality: 20, 
-      feedback: langCode === 'es' ? "Fallo catastrófico de enlace. No hay suficiente densidad semántica para establecer un modelo lógico. El concepto requiere mayor profundidad exploratoria." : "Catastrophic link failure. Not enough semantic density to establish a logical model." 
-    };
-  }
+const StaticNeuralCore = ({ gameState }) => {
+  const isError = gameState === 'FEEDBACK' && useSequenceStore.getState().feedbackState === 'WRONG';
+  const coreColor = isError ? '#ff0055' : '#005577';
 
-  const sysPrompt = `
-    Eres 'Singularity', un Evaluador de Pensamiento Divergente de nivel Unit 8200.
-    El usuario debe conectar dos conceptos inconexos de forma lógica e innovadora.
-    Concepto A: "${concepts.a}"
-    Concepto B: "${concepts.b}"
-    Texto del usuario: "${userText}"
-    Idioma: ${langCode}.
+  // Geometría y materiales ultra optimizados, cero dependencias dinámicas
+  return (
+    <group>
+      <Grid 
+        position={[0, -5, -20]} 
+        args={[50, 50]} 
+        cellSize={2} 
+        cellThickness={1} 
+        cellColor="#00f2ff" 
+        sectionSize={10} 
+        sectionThickness={1.5} 
+        sectionColor="#8b5cf6" 
+        fadeDistance={40} 
+        fadeStrength={2} 
+      />
+      <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.5}>
+        <mesh position={[0, 2, -15]}>
+          <octahedronGeometry args={[5, 0]} />
+          <meshBasicMaterial color={coreColor} wireframe transparent opacity={0.15} />
+        </mesh>
+      </Float>
+      <Sparkles count={100} scale={30} size={3} speed={0.2} opacity={0.2} color={coreColor} />
+    </group>
+  );
+};
 
-    Evalúa rigurosamente (escala 0-100):
-    1. coherence: ¿Tiene sentido lógico la analogía o el sistema propuesto?
-    2. originality: ¿Es una idea brillante, lateral e inesperada?
-    3. score: Promedio ponderado (Originalidad 60%, Coherencia 40%).
+const BackgroundEngine = ({ gameState }) => {
+  const isError = gameState === 'FEEDBACK' && useSequenceStore.getState().feedbackState === 'WRONG';
+  
+  return (
+    <div style={{ position: 'absolute', inset: 0, zIndex: -1, pointerEvents: 'none' }}>
+      {/* 🟢 Mobile Optimization: frameloop 'demand' extremo para cero lag y cero consumo de batería */}
+      <Canvas 
+        dpr={[1, 1.5]} 
+        gl={{ powerPreference: "high-performance", antialias: false, depth: false, stencil: false, alpha: false }} 
+        camera={{ position: [0, 0, 5] }} 
+        frameloop="demand"
+      >
+        <color attach="background" args={['#010205']} />
+        <ambientLight intensity={0.5} />
+        
+        <Suspense fallback={null}>
+           <StaticNeuralCore gameState={gameState} />
+        </Suspense>
 
-    RESPONDE ESTRICTAMENTE EN ESTE FORMATO JSON (SIN ETIQUETAS MD):
-    {
-      "score": 85,
-      "coherence": 80,
-      "originality": 90,
-      "feedback": "Análisis cibernético forense de la conexión. Sé directo, académico y constructivo. Máximo 3 oraciones."
-    }
-  `;
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s Timeout (God Tier Reliability)
-
-  try {
-    const res = await fetch(DEEPSEEK_URL, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DEEPSEEK_API_KEY}` },
-      body: JSON.stringify({ model: "deepseek-chat", messages: [{ role: "system", content: sysPrompt }], temperature: 0.7 })
-    });
-    clearTimeout(timeoutId);
-    
-    const data = await res.json();
-    const jsonMatch = data.choices[0].message.content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Parse Fail");
-    return JSON.parse(jsonMatch[0]);
-  } catch (error) {
-    clearTimeout(timeoutId);
-    // 🛡️ FALLBACK DETERMINISTA HEURÍSTICO SI LA RED FALLA
-    const charCount = userText.length;
-    const baseScore = Math.min(Math.floor(charCount / 5), 85); // 425 chars = max score approx
-    return { 
-      score: baseScore, coherence: baseScore - 5, originality: baseScore + 5, 
-      feedback: langCode === 'es' ? "Enlace cuántico inestable. Evaluación basada en heurística de densidad local. El patrón semántico indica un esfuerzo sustancial, pero la auditoría completa requería servidor en línea." : "Quantum link unstable. Heuristic evaluation applied based on local text density." 
-    };
-  }
+        <EffectComposer disableNormalPass>
+          <Bloom luminanceThreshold={0.3} luminanceSmoothing={0.9} height={300} intensity={isError ? 2.5 : 1.0} />
+          <Vignette eskil={false} offset={0.1} darkness={1.1} />
+          {/* Alertas visuales estroboscópicas solo al fallar */}
+          {isError && <ChromaticAberration offset={[0.08, 0.08]} />}
+          {isError && <Glitch delay={[0, 0]} duration={[0.2, 0.4]} strength={[0.8, 1.2]} active />}
+        </EffectComposer>
+      </Canvas>
+    </div>
+  );
 };
 
 /* ============================================================
-   ✨ MOTOR FÍSICO 4K: GRAVEDAD, PARTÍCULAS Y METABALLS (CANVAS)
+   🎯 COMPONENTE D-PAD: MOBILE FIRST PERFECTO
 ============================================================ */
-const ParticleAccelerator = ({ gameState, concepts, timeLeft }) => {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d', { alpha: false });
-    let animId;
-    let particles = [];
-
-    // GOD TIER: Retina Display Scaling
-    const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.parentElement.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
-    };
-    window.addEventListener('resize', resize);
-    resize();
-
-    class Dust {
-      constructor(x, y, color) {
-        this.x = x; this.y = y; this.color = color;
-        this.vx = (Math.random() - 0.5) * 2; this.vy = (Math.random() - 0.5) * 2;
-        this.life = 1; this.decay = Math.random() * 0.02 + 0.01;
-      }
-      update() { this.x += this.vx; this.y += this.vy; this.life -= this.decay; }
-      draw(ctx) {
-        ctx.globalAlpha = Math.max(0, this.life);
-        ctx.fillStyle = this.color;
-        ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI*2); ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-    }
-
-    const logicalWidth = canvas.width / (window.devicePixelRatio || 1);
-    const logicalHeight = canvas.height / (window.devicePixelRatio || 1);
-    let cx = logicalWidth / 2;
-    let cy = logicalHeight / 2;
-    let angle = 0;
-    let distance = gameState === 'IDLE' ? 120 : (gameState === 'COLLIDING' ? 120 : 0);
-    let pulsePhase = 0;
-
-    const animate = () => {
-      // Blur trail effect para simular velocidad
-      ctx.fillStyle = 'rgba(2, 6, 23, 0.3)';
-      ctx.fillRect(0, 0, logicalWidth, logicalHeight);
-
-      if (gameState === 'COLLIDING') {
-        distance = Math.max(0, distance - 0.8);
-        angle += 0.15;
-      } else if (gameState === 'WRITING' || gameState === 'EVALUATING') {
-        distance = 0;
-        angle += 0.05; 
-        pulsePhase += (timeLeft < 15 ? 0.2 : 0.05);
-      } else {
-        angle += 0.015; 
-      }
-
-      const pulseScale = gameState === 'WRITING' ? 1 + Math.sin(pulsePhase) * 0.1 : 1;
-      const x1 = cx + Math.cos(angle) * distance;
-      const y1 = cy + Math.sin(angle) * distance;
-      const x2 = cx + Math.cos(angle + Math.PI) * distance;
-      const y2 = cy + Math.sin(angle + Math.PI) * distance;
-
-      // Generar Polvo Orbital
-      if (gameState !== 'WRITING' && gameState !== 'EVALUATING') {
-        if (Math.random() > 0.5) particles.push(new Dust(x1, y1, '#00f2ff'));
-        if (Math.random() > 0.5) particles.push(new Dust(x2, y2, '#ff0055'));
-      }
-      
-      particles = particles.filter(p => p.life > 0);
-      particles.forEach(p => { p.update(); p.draw(ctx); });
-
-      // Efecto Metaball (Screen Blending)
-      ctx.globalCompositeOperation = 'screen';
-
-      const drawNode = (x, y, r, rG, colorCenter, colorEdge) => {
-        const grad = ctx.createRadialGradient(x, y, 0, x, y, rG * pulseScale);
-        grad.addColorStop(0, colorCenter); grad.addColorStop(0.4, colorEdge); grad.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath(); ctx.arc(x, y, rG * pulseScale, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-      };
-
-      drawNode(x1, y1, gameState==='WRITING'?4:3, gameState==='WRITING'?100:60, 'rgba(0, 242, 255, 1)', 'rgba(0, 242, 255, 0.4)');
-      drawNode(x2, y2, gameState==='WRITING'?4:3, gameState==='WRITING'?100:60, 'rgba(255, 0, 85, 1)', 'rgba(255, 0, 85, 0.4)');
-
-      ctx.globalCompositeOperation = 'source-over';
-
-      if (gameState === 'IDLE' || gameState === 'COLLIDING') {
-        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
-        ctx.strokeStyle = `rgba(255, 255, 255, ${distance / 120 * 0.3})`;
-        ctx.lineWidth = 1; ctx.stroke();
-      }
-
-      if (gameState !== 'WRITING' && gameState !== 'EVALUATING' && concepts.a) {
-        ctx.font = "800 12px 'Orbitron', sans-serif"; ctx.fillStyle = "#fff"; ctx.textAlign = "center";
-        ctx.fillText(concepts.a.toUpperCase(), x1, y1 - 35);
-        ctx.fillText(concepts.b.toUpperCase(), x2, y2 + 45);
-      }
-
-      animId = requestAnimationFrame(animate);
-    };
-
-    animate();
-    return () => { window.removeEventListener('resize', resize); cancelAnimationFrame(animId); };
-  }, [gameState, concepts, timeLeft]);
-
-  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }} />;
-};
-
-/* ============================================================
-   🎮 MAIN INTERFACE: COLISIONADOR OS
-============================================================ */
-export default function ColisionadorConceptos() {
-  const { language } = useGameStore() || { language: "es" };
-  const safeLang = BASE_LEXICON[language] ? language : 'es';
-  const UI = getLexicon(safeLang);
-
-  const { gameState, concepts, userInput, timeLeft, evaluation, cpm, initiateCollision, updateInput, tickTimer, submitSynthesis, reset } = useColliderStore();
-  const timerRef = useRef(null);
-
-  // ⏱️ TIMER LOOP SEGURO
-  useEffect(() => {
-    if (gameState === 'WRITING') {
-      timerRef.current = setInterval(() => tickTimer(), 1000);
-    } else {
-      clearInterval(timerRef.current);
-    }
-    return () => clearInterval(timerRef.current);
-  }, [gameState, tickTimer]);
-
-  const handleStart = () => initiateCollision(safeLang);
-  const handleSubmit = () => submitSynthesis(concepts, userInput, safeLang);
+const DirectionalPad = ({ availableDirs, onInput, activeNode, disabled, blindMode, rotationAngle }) => {
+  const gridCells = [
+    { id: 'NW' }, { id: 'UP' }, { id: 'NE' },
+    { id: 'LEFT' }, { id: 'CENTER' }, { id: 'RIGHT' },
+    { id: 'SW' }, { id: 'DOWN' }, { id: 'SE' }
+  ];
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#020617', fontFamily: "'Orbitron', system-ui, sans-serif", color: '#fff', overflow: 'hidden', display: 'flex', flexDirection: 'column', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      <style>{`
-        .glass-panel { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
-        .cyber-button { background: #00f2ff; color: #000; font-weight: 900; border: none; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-transform: uppercase; font-size: clamp(1rem, 3vw, 1.2rem); padding: 20px; border-radius: 12px; cursor: pointer; width: 100%; touch-action: manipulation;}
-        .cyber-button:hover:not(:disabled), .cyber-button:active:not(:disabled) { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,242,255,0.6); }
-        .cyber-button:disabled { background: rgba(255,255,255,0.05); color: #64748b; cursor: not-allowed; border: 1px solid rgba(255,255,255,0.1); }
-        
-        .concept-tag { padding: 10px 20px; border-radius: 8px; font-weight: 900; font-size: clamp(0.85rem, 2.5vw, 1.1rem); letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 0 10px currentColor;}
-        .tag-a { background: rgba(0,242,255,0.08); border: 1px solid rgba(0,242,255,0.6); color: #00f2ff; box-shadow: 0 0 20px rgba(0,242,255,0.15); }
-        .tag-b { background: rgba(255,0,85,0.08); border: 1px solid rgba(255,0,85,0.6); color: #ff0055; box-shadow: 0 0 20px rgba(255,0,85,0.15); }
-
-        .neon-input { width: 100%; height: 100%; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 20px; color: #e2e8f0; font-family: 'Lora', Georgia, serif; font-size: clamp(1.1rem, 4vw, 1.4rem); line-height: 1.7; resize: none; outline: none; transition: all 0.3s ease; box-shadow: inset 0 0 25px rgba(0,0,0,0.8); }
-        .neon-input:focus { border-color: rgba(255,234,0,0.6); box-shadow: inset 0 0 25px rgba(0,0,0,0.8), 0 0 20px rgba(255,234,0,0.15); }
-        
-        .glitch-anim { animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite; }
-        @keyframes glitch { 0% { transform: translate(0) } 20% { transform: translate(-3px, 3px) } 40% { transform: translate(-3px, -3px) } 60% { transform: translate(3px, 3px) } 80% { transform: translate(3px, -3px) } 100% { transform: translate(0) } }
-        
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: rgba(0,242,255,0.3); border-radius: 10px; }
-      `}</style>
-      
-      {/* 🚀 HEADER GLOBAL */}
-      <div className="glass-panel" style={{ padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 20, borderBottom: '1px solid rgba(0,242,255,0.2)' }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 'clamp(1.2rem, 4vw, 1.8rem)', color: '#00f2ff', fontWeight: '900', letterSpacing: '2px', textShadow: '0 0 15px rgba(0,242,255,0.5)' }}>
-            <i className="fas fa-atom me-2"></i>{UI.title}
-          </h1>
-          <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginTop: '5px', letterSpacing: '1px', fontWeight: 'bold' }}>{UI.subtitle}</div>
-        </div>
-        {(gameState === 'WRITING' || gameState === 'EVALUATING') && (
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 'clamp(1.8rem, 6vw, 2.5rem)', fontWeight: '900', color: timeLeft < 15 ? '#ff0055' : '#fff', animation: timeLeft < 15 ? 'pulse 1s infinite' : 'none', textShadow: timeLeft < 15 ? '0 0 20px #ff0055' : '0 0 10px rgba(255,255,255,0.3)' }}>
-              00:{timeLeft.toString().padStart(2, '0')}
+    <div style={{ 
+      display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(3, 1fr)',
+      gap: 'clamp(8px, 2vw, 15px)', width: '100%', maxWidth: '420px', aspectRatio: '1', margin: '0 auto',
+      padding: '10px',
+      // 🧠 Rotación Mental Forzada: Gira físicamente todo el grid en CSS
+      transform: `rotate(${rotationAngle}deg)`,
+      transition: 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+    }}>
+      {gridCells.map((cell) => {
+        if (cell.id === 'CENTER') {
+          return (
+            <div key="center" style={{ 
+               background: 'radial-gradient(circle, rgba(0,242,255,0.15) 0%, transparent 70%)', 
+               borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+               // Contrarrotar para que el icono central mantenga el norte visual
+               transform: `rotate(-${rotationAngle}deg)`
+            }}>
+              {rotationAngle > 0 && <i className="fas fa-sync-alt pulse-alert" style={{ color: '#ffea00', fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', opacity: 0.6 }}></i>}
             </div>
-            <div style={{ color: '#ffea00', fontSize: '0.65rem', letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 'bold' }}>TIMELINE</div>
-          </div>
-        )}
-      </div>
-
-      {/* 🚀 ACELERADOR DE PARTÍCULAS (BACKGROUND VISUALIZER) */}
-      <div style={{ position: 'relative', width: '100%', height: gameState === 'IDLE' ? '100%' : '25vh', transition: 'height 1s cubic-bezier(0.175, 0.885, 0.32, 1.275)', borderBottom: gameState !== 'IDLE' ? '1px solid rgba(255,255,255,0.08)' : 'none', boxShadow: gameState !== 'IDLE' ? '0 10px 30px rgba(0,0,0,0.5)' : 'none' }}>
-        <ParticleAccelerator gameState={gameState} concepts={concepts} timeLeft={timeLeft} />
+          );
+        }
         
-        {/* ESTADO IDLE: PANTALLA DE INICIO */}
-        {gameState === 'IDLE' && (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 10, padding: '20px' }}>
-            <div className="glass-panel" style={{ padding: 'clamp(30px, 5vw, 50px)', borderRadius: '24px', maxWidth: '600px', width: '100%', textAlign: 'center', boxShadow: '0 0 50px rgba(0,242,255,0.1)' }}>
-              <i className="fas fa-brain fa-4x mb-4" style={{ color: '#ffea00', textShadow: '0 0 30px rgba(255,234,0,0.5)' }}></i>
-              <h2 style={{ color: '#ffea00', marginBottom: '20px', letterSpacing: '2px', fontWeight: '900', fontSize: 'clamp(1.5rem, 4vw, 2rem)' }}>PENSAMIENTO DIVERGENTE</h2>
-              <p style={{ color: '#cbd5e1', fontSize: '1.1rem', lineHeight: '1.7', marginBottom: '40px' }}>{UI.instructions}</p>
-              <button onClick={handleStart} className="cyber-button">{UI.startBtn} <i className="fas fa-bolt ms-2"></i></button>
-            </div>
-          </div>
-        )}
+        const dirData = DIRS[cell.id];
+        const isAvailable = availableDirs.includes(cell.id);
+        const isActive = activeNode === cell.id;
+        
+        if (!isAvailable) return <div key={cell.id} />; 
 
-        {/* METRICS HUD EN MODO WRITING */}
-        {gameState === 'WRITING' && (
-           <div style={{ position: 'absolute', bottom: '15px', right: '20px', textAlign: 'right', zIndex: 20 }}>
-              <div style={{ fontSize: '0.65rem', color: '#94a3b8', letterSpacing: '1.5px', fontWeight: 'bold' }}>{UI.cpmLabel}</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: '900', color: cpm > 200 ? '#00f2ff' : (cpm > 100 ? '#ffea00' : '#ff0055'), textShadow: `0 0 15px ${cpm > 200 ? '#00f2ff' : (cpm > 100 ? '#ffea00' : '#ff0055')}`, transition: 'color 0.3s' }}>{cpm}</div>
-           </div>
-        )}
-      </div>
-
-      {/* 🚀 ÁREA DE ESCRITURA Y FUSIÓN */}
-      {(gameState === 'WRITING' || gameState === 'EVALUATING') && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 'clamp(15px, 4vw, 30px)', zIndex: 10, animation: 'fadeIn 1s', background: 'radial-gradient(circle at center, transparent 0%, rgba(2,6,23,0.9) 100%)' }}>
-          
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginBottom: '25px', flexWrap: 'wrap' }}>
-            <div className="concept-tag tag-a">{concepts.a}</div>
-            <i className="fas fa-link" style={{ color: '#ffea00', fontSize: '1.2rem', opacity: 0.8, textShadow: '0 0 10px #ffea00' }}></i>
-            <div className="concept-tag tag-b">{concepts.b}</div>
-          </div>
-
-          <div style={{ flex: 1, position: 'relative' }}>
-            {gameState === 'EVALUATING' ? (
-               <div className="glass-panel" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', borderRadius: '16px', border: '2px solid rgba(0,242,255,0.4)', boxShadow: 'inset 0 0 50px rgba(0,242,255,0.1)' }}>
-                 <i className="fas fa-network-wired fa-4x mb-4 glitch-anim" style={{ color: '#00f2ff', textShadow: '0 0 20px #00f2ff' }}></i>
-                 <h2 className="glitch-anim" style={{ color: '#00f2ff', letterSpacing: '4px', fontSize: 'clamp(1.2rem, 3vw, 1.8rem)', textAlign: 'center', padding: '0 20px', fontWeight: '900' }}>{UI.evaluating}</h2>
-               </div>
-            ) : (
-               <textarea 
-                 className="neon-input" 
-                 placeholder={UI.placeholder}
-                 value={userInput}
-                 onChange={(e) => updateInput(e.target.value)}
-                 autoFocus
-                 disabled={gameState !== 'WRITING'}
-               />
+        return (
+          <button
+            key={cell.id}
+            onPointerDown={(e) => { 
+              e.preventDefault(); 
+              if(!disabled) {
+                // Leyes de Fitts: Transformación visual instantánea antes del renderizado del estado
+                e.currentTarget.style.transform = 'scale(0.85)';
+                onInput(cell.id);
+              }
+            }}
+            onPointerUp={(e) => { if(!disabled) e.currentTarget.style.transform = 'scale(1)'; }}
+            onPointerLeave={(e) => { if(!disabled) e.currentTarget.style.transform = 'scale(1)'; }}
+            disabled={disabled}
+            style={{
+              background: isActive ? dirData.color : 'rgba(15, 23, 42, 0.85)',
+              border: `2px solid ${isActive ? '#fff' : 'rgba(255,255,255,0.08)'}`,
+              borderRadius: '24px',
+              display: 'flex', justifyContent: 'center', alignItems: 'center',
+              boxShadow: isActive ? `0 0 35px ${dirData.color}, inset 0 0 15px rgba(255,255,255,0.5)` : 'inset 0 0 25px rgba(0,0,0,0.9), 0 6px 15px rgba(0,0,0,0.6)',
+              transform: isActive ? 'scale(0.9)' : 'scale(1)',
+              transition: 'transform 0.1s, background 0.15s, box-shadow 0.15s',
+              cursor: disabled ? 'default' : 'pointer',
+              outline: 'none', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+              userSelect: 'none'
+            }}
+          >
+            {/* Modo Ciego: Oculta el SVG a menos que la IA lo encienda (isActive) */}
+            {(!blindMode || isActive) && (
+              <svg viewBox="0 0 24 24" width="clamp(35px, 8vw, 55px)" height="clamp(35px, 8vw, 55px)" fill={isActive ? '#000' : dirData.color} style={{ 
+                filter: isActive ? 'none' : `drop-shadow(0 0 12px ${dirData.color})`,
+                // Contrarrotar el icono para que SIEMPRE apunte a su dirección visual local
+                transform: `rotate(-${rotationAngle}deg)`,
+                transition: 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+              }}>
+                <path d={dirData.icon} />
+              </svg>
             )}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ============================================================
+   🎮 MAIN INTERFACE: NEURAL SEQUENCE (APEX MOBILE FIRST)
+============================================================ */
+export default function NeuralSequence() {
+  const gameStore = useGameStore();
+  const language = gameStore?.language || 'es';
+  const UI = getLexicon(language);
+
+  const { 
+    level, score, streak, combo, gameState, sequence, userSequence, activeNode, activeModifiers, rotationAngle, hasFailedCurrent,
+    feedbackState, setGameState, setActiveNode, handleInput, generateNextSequence, retrySequence, startGame 
+  } = useSequenceStore();
+
+  const [progress, setProgress] = useState(0);
+
+  // 🤖 REPRODUCTOR DE LA SECUENCIA TÁCTICA (CON ANDAMIAJE ZDP)
+  useEffect(() => {
+    let timeouts = [];
+    if (gameState === 'SHOWING') {
+      setProgress(0);
+      CyberAudio.startBinaural('THETA'); 
+      
+      let delay = 800; // Respiro inicial mayor
+      
+      // 🧠 Scaffolding Pedagógico: Si el jugador falló, ralentizamos el patrón para que lo asimile (+25% tiempo)
+      let speedMultiplier = hasFailedCurrent ? 1.25 : Math.max(0.35, 1 - (level * 0.05));
+      const flashDuration = 450 * speedMultiplier; 
+      const gapDuration = 200 * speedMultiplier;
+
+      sequence.forEach((nodeId, index) => {
+        timeouts.push(setTimeout(() => {
+          setActiveNode(nodeId);
+          CyberAudio.playHover(); 
+          setProgress(((index + 1) / sequence.length) * 100);
+        }, delay));
+        
+        delay += flashDuration;
+        
+        timeouts.push(setTimeout(() => {
+          setActiveNode(null);
+        }, delay));
+
+        delay += gapDuration;
+      });
+
+      // Transición de Ondas Cerebrales: De Memorización (Theta) a Acción (Beta)
+      timeouts.push(setTimeout(() => {
+        CyberAudio.stopBinaural();
+        CyberAudio.startBinaural('BETA'); 
+        setGameState('PLAYING');
+      }, delay + 250));
+    }
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      if (gameState !== 'PLAYING' && gameState !== 'SHOWING') {
+         CyberAudio.stopBinaural();
+      }
+    };
+  }, [gameState, sequence, level, hasFailedCurrent, setActiveNode, setGameState]);
+
+  const activeDirs = level >= 5 ? ALL_DIRS : BASIC_DIRS;
+  
+  // UI Booleans
+  const isReverse = activeModifiers.includes('REVERSE');
+  const isBlind = activeModifiers.includes('BLIND');
+  const isRotated = activeModifiers.includes('ROTATED');
+
+  // Prevenir zoom y scrolling en móviles (Rubber-banding en iOS)
+  useEffect(() => {
+    const preventBehavior = (e) => { e.preventDefault(); };
+    document.addEventListener('touchmove', preventBehavior, { passive: false });
+    return () => { document.removeEventListener('touchmove', preventBehavior); };
+  }, []);
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: '#010205', color: '#fff', fontFamily: "'Orbitron', sans-serif", display: 'flex', flexDirection: 'column', touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}>
+      
+      <style>{`
+        .glass-panel { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
+        .cyber-btn { background: rgba(0,242,255,0.1); color: #00f2ff; border: 2px solid #00f2ff; padding: 25px; border-radius: 16px; cursor: pointer; transition: all 0.15s; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: clamp(1.1rem, 3.5vw, 1.5rem); box-shadow: 0 6px 0 rgba(0,0,0,0.6); touch-action: manipulation; -webkit-tap-highlight-color: transparent;}
+        .cyber-btn:active { transform: translateY(6px); box-shadow: 0 0 0 rgba(0,0,0,0); filter: brightness(1.3); background: #00f2ff; color: #000; }
+        
+        .pulse-alert { animation: alertPulse 1s infinite alternate; }
+        @keyframes alertPulse { from { opacity: 0.5; transform: scale(0.98); } to { opacity: 1; transform: scale(1.02); } }
+        
+        .fade-in { animation: fi 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes fi { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .progress-bar-container { width: 100%; height: 6px; background: rgba(255,255,255,0.05); position: absolute; top: 0; left: 0; z-index: 100; }
+        .progress-bar { height: 100%; transition: width 0.1s linear; background: #00f2ff; box-shadow: 0 0 15px #00f2ff; }
+      `}</style>
+
+      {/* 🚀 KERNEL 3D BACKGROUND (SILENCIOSO) */}
+      <BackgroundEngine gameState={gameState} />
+
+      {/* 🚀 PROGRESS BAR DE MEMORIZACIÓN */}
+      {gameState === 'SHOWING' && (
+         <div className="progress-bar-container">
+            <div className="progress-bar" style={{ width: `${progress}%` }}></div>
+         </div>
+      )}
+
+      {/* 🚀 HEADER TÁCTICO (DATA HUD) */}
+      <div className="glass-panel" style={{ padding: 'clamp(12px, 2vh, 20px) clamp(15px, 4vw, 30px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(0,242,255,0.15)', zIndex: 10, paddingTop: 'calc(12px + env(safe-area-inset-top))', background: 'linear-gradient(to bottom, rgba(2,6,23,0.95), transparent)' }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 'clamp(1.1rem, 4vw, 1.6rem)', color: '#00f2ff', fontWeight: '900', letterSpacing: '2px', textShadow: '0 0 15px rgba(0,242,255,0.5)' }}>
+            <i className="fas fa-sitemap me-2"></i>{UI.title}
+          </h1>
+          <div style={{ color: '#94a3b8', fontSize: 'clamp(0.75rem, 2.5vw, 0.9rem)', marginTop: '6px', display: 'flex', gap: '10px', fontWeight: 'bold' }}>
+            <span style={{background: 'rgba(0,0,0,0.6)', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)'}}>{UI.level}: <span style={{color:'#fff'}}>{level}</span></span>
+            <span style={{background: 'rgba(0,0,0,0.6)', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)'}}>{UI.streak}: <span style={{color:'#ffea00'}}>{streak}</span></span>
+            {combo > 1.0 && <span style={{color:'#00ff88', textShadow:'0 0 10px #00ff88', alignSelf: 'center'}}>x{combo.toFixed(1)}</span>}
           </div>
-          
-          {gameState === 'WRITING' && (
-            <div style={{ marginTop: '25px', display: 'flex', alignItems: 'center', gap: '20px' }}>
-              <div style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-                 <div style={{ height: '100%', width: `${Math.min((userInput.length / 80) * 100, 100)}%`, background: userInput.length < 80 ? '#ff0055' : '#00f2ff', transition: 'width 0.2s linear', boxShadow: `0 0 15px ${userInput.length < 80 ? '#ff0055' : '#00f2ff'}` }}></div>
-              </div>
-              <button 
-                onClick={handleSubmit} 
-                className="cyber-button" 
-                disabled={userInput.length < 80} 
-                style={{ width: 'auto', background: userInput.length < 80 ? 'rgba(255,255,255,0.05)' : '#ffea00', color: userInput.length < 80 ? '#64748b' : '#000', boxShadow: userInput.length >= 80 ? '0 0 30px rgba(255,234,0,0.5)' : 'none', padding: '18px 40px' }}
-              >
-                {UI.submitBtn} <i className="fas fa-paper-plane ms-2"></i>
-              </button>
+        </div>
+        <div style={{ textAlign: 'right', background: 'rgba(0,0,0,0.7)', padding: '8px 15px', borderRadius: '12px', border: '1px solid rgba(0,242,255,0.2)' }}>
+          <div style={{ fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', fontWeight: '900', color: '#fff', textShadow: '0 0 20px rgba(255,255,255,0.5)', lineHeight: '1' }}>{score}</div>
+          <div style={{ color: '#00f2ff', fontSize: '0.7rem', letterSpacing: '1px', marginTop: '3px' }}>{UI.score}</div>
+        </div>
+      </div>
+
+      {/* 🚀 HUD CENTRAL (ESTADO COGNITIVO) */}
+      <div style={{ padding: 'clamp(10px, 2vh, 20px)', textAlign: 'center', zIndex: 10, minHeight: '90px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        
+        {gameState === 'SHOWING' && (
+          <div className="fade-in">
+            <h2 style={{ color: '#00f2ff', letterSpacing: '3px', fontWeight: '900', fontSize: 'clamp(1.3rem, 4vw, 2rem)', textShadow: '0 0 20px #00f2ff', margin: 0 }}>
+              <i className="fas fa-eye me-2"></i> {UI.memorize}
+            </h2>
+          </div>
+        )}
+        
+        {gameState === 'PLAYING' && (
+          <div className="fade-in">
+            <h2 style={{ color: '#ffea00', letterSpacing: '3px', fontWeight: '900', fontSize: 'clamp(1.3rem, 4vw, 2rem)', textShadow: '0 0 20px #ffea00', margin: 0 }}>
+              <i className="fas fa-keyboard me-2"></i> {UI.yourTurn}
+            </h2>
+            
+            {/* Visualizador Paginado del Input del Usuario */}
+            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginTop: '12px' }}>
+              {sequence.map((_, i) => (
+                <div key={i} style={{ 
+                  width: 'clamp(15px, 4vw, 30px)', height: '8px', borderRadius: '4px',
+                  background: i < userSequence.length ? '#ffea00' : 'rgba(255,255,255,0.1)',
+                  boxShadow: i < userSequence.length ? '0 0 15px #ffea00' : 'none',
+                  transition: 'background 0.2s, box-shadow 0.2s'
+                }} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 🚀 MÚLTIPLES ALERTAS DE SOBRECARGA COGNITIVA */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px', marginTop: '15px' }}>
+          {isReverse && (gameState === 'SHOWING' || gameState === 'PLAYING') && (
+            <div className="pulse-alert" style={{ color: '#ff0055', fontWeight: '900', fontSize: 'clamp(0.9rem, 3vw, 1.2rem)', background: 'rgba(255,0,85,0.2)', padding: '6px 15px', borderRadius: '8px', border: '1px solid #ff0055' }}>
+               <i className="fas fa-backward me-2"></i> {UI.reverseAlert}
+            </div>
+          )}
+          {isBlind && (gameState === 'SHOWING' || gameState === 'PLAYING') && (
+            <div className="pulse-alert" style={{ color: '#8b5cf6', fontWeight: '900', fontSize: 'clamp(0.9rem, 3vw, 1.2rem)', background: 'rgba(139,92,246,0.2)', padding: '6px 15px', borderRadius: '8px', border: '1px solid #8b5cf6' }}>
+               <i className="fas fa-eye-slash me-2"></i> {UI.blindAlert}
+            </div>
+          )}
+          {isRotated && (gameState === 'SHOWING' || gameState === 'PLAYING') && (
+            <div className="pulse-alert" style={{ color: '#ffea00', fontWeight: '900', fontSize: 'clamp(0.9rem, 3vw, 1.2rem)', background: 'rgba(255,234,0,0.2)', padding: '6px 15px', borderRadius: '8px', border: '1px solid #ffea00' }}>
+               <i className="fas fa-sync me-2"></i> {UI.rotatedAlert}
             </div>
           )}
         </div>
-      )}
+      </div>
 
-      {/* 🚀 FEEDBACK POST-MORTEM (EVALUACIÓN IA) */}
-      {gameState === 'RESULT' && evaluation && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 'clamp(15px, 4vw, 30px)', zIndex: 10, overflowY: 'auto' }}>
-          <div className="glass-panel" style={{ padding: 'clamp(20px, 5vw, 50px)', borderRadius: '24px', maxWidth: '800px', margin: '0 auto', width: '100%', borderTop: '4px solid #00f2ff', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-            
-            <h2 style={{ color: '#ffea00', textAlign: 'center', marginBottom: '35px', letterSpacing: '3px', fontWeight: '900', textShadow: '0 0 15px rgba(255,234,0,0.3)' }}>
-              <i className="fas fa-poll me-3"></i>{UI.aiFeedback}
+      {/* 🚀 ZONA TÁCTIL PRINCIPAL (D-PAD Y PANELES) */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '10px', zIndex: 10 }}>
+        
+        {gameState === 'BOOT' && (
+          <div className="glass-panel fade-in" style={{ padding: 'clamp(30px, 6vw, 50px)', borderRadius: '28px', textAlign: 'center', maxWidth: '550px', width: '100%', borderTop: '5px solid #00f2ff', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}>
+            <i className="fas fa-project-diagram fa-5x mb-4" style={{ color: '#00f2ff', filter: 'drop-shadow(0 0 30px #00f2ff)' }}></i>
+            <h2 style={{ color: '#fff', margin: '0 0 20px 0', letterSpacing: '4px', fontSize: 'clamp(1.8rem, 5vw, 2.8rem)', fontWeight: '900', textShadow: '0 0 20px rgba(255,255,255,0.4)' }}>
+              {UI.title}
             </h2>
-
-            {/* METRICS DASHBOARD */}
-            <div style={{ display: 'flex', gap: '25px', marginBottom: '40px', flexWrap: 'wrap' }}>
-               <div style={{ flex: 1, background: 'rgba(0,0,0,0.7)', padding: '25px', borderRadius: '16px', textAlign: 'center', border: '1px solid rgba(0,242,255,0.3)', boxShadow: 'inset 0 0 30px rgba(0,242,255,0.1)' }}>
-                 <div style={{ color: '#00f2ff', fontSize: '0.85rem', letterSpacing: '2px', marginBottom: '15px', fontWeight: 'bold' }}>{UI.score}</div>
-                 <div style={{ fontSize: '4rem', fontWeight: '900', color: '#fff', textShadow: '0 0 25px #00f2ff' }}>{evaluation.score}</div>
-               </div>
-               
-               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', background: 'rgba(255,255,255,0.03)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                 <div>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#cbd5e1', marginBottom: '8px', fontWeight: 'bold', letterSpacing: '1px' }}><span><i className="fas fa-link me-2" style={{color:'#00f2ff'}}></i>{UI.coherence}</span> <span>{evaluation.coherence}%</span></div>
-                   <div style={{ width: '100%', height: '8px', background: 'rgba(0,0,0,0.5)', borderRadius: '4px', overflow: 'hidden' }}><div style={{ width: `${evaluation.coherence}%`, height: '100%', background: '#00f2ff', boxShadow: '0 0 15px #00f2ff' }}></div></div>
-                 </div>
-                 <div>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#cbd5e1', marginBottom: '8px', fontWeight: 'bold', letterSpacing: '1px' }}><span><i className="fas fa-lightbulb me-2" style={{color:'#ff0055'}}></i>{UI.originality}</span> <span>{evaluation.originality}%</span></div>
-                   <div style={{ width: '100%', height: '8px', background: 'rgba(0,0,0,0.5)', borderRadius: '4px', overflow: 'hidden' }}><div style={{ width: `${evaluation.originality}%`, height: '100%', background: '#ff0055', boxShadow: '0 0 15px #ff0055' }}></div></div>
-                 </div>
-               </div>
-            </div>
-
-            {/* IA FEEDBACK TEXT */}
-            <div style={{ background: 'rgba(0,242,255,0.05)', padding: '30px', borderRadius: '16px', borderLeft: '6px solid #00f2ff', color: '#e2e8f0', fontSize: 'clamp(1rem, 3vw, 1.2rem)', lineHeight: '1.8', marginBottom: '40px', boxShadow: 'inset 0 0 20px rgba(0,242,255,0.05)' }}>
-               {evaluation.feedback}
-            </div>
-
-            <button onClick={reset} className="cyber-button" style={{ background: 'transparent', border: '2px solid #00f2ff', color: '#00f2ff' }}>
-               {UI.nextBtn} <i className="fas fa-redo ms-2"></i>
+            <p style={{color: '#cbd5e1', marginBottom: '40px', fontSize: 'clamp(1rem, 3.5vw, 1.2rem)', lineHeight: '1.7'}}>{UI.sysMsg}</p>
+            
+            <button className="cyber-btn" onClick={() => { CyberAudio.playClick(); startGame(); }} style={{ width: '100%', padding: '25px', borderRadius: '20px' }}>
+              {UI.start} <i className="fas fa-bolt ms-3"></i>
             </button>
-
           </div>
-        </div>
-      )}
+        )}
+
+        {(gameState === 'SHOWING' || gameState === 'PLAYING') && (
+          <div className="fade-in" style={{ width: '100%', maxWidth: '600px', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+             <DirectionalPad 
+                availableDirs={activeDirs} 
+                activeNode={activeNode} 
+                onInput={handleInput} 
+                disabled={gameState === 'SHOWING'}
+                blindMode={isBlind && gameState === 'PLAYING'} 
+                rotationAngle={gameState === 'PLAYING' ? rotationAngle : 0} 
+             />
+          </div>
+        )}
+
+        {/* 🚀 FEEDBACK / REINTENTO (SCAFFOLDING PEDAGÓGICO) */}
+        {gameState === 'FEEDBACK' && (
+          <div className="glass-panel fade-in" style={{ padding: 'clamp(30px, 6vw, 45px)', borderRadius: '28px', borderTop: `5px solid ${feedbackState === 'CORRECT' ? '#00ff88' : '#ff0055'}`, width: '100%', maxWidth: '550px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.9)' }}>
+             <i className={`fas ${feedbackState === 'CORRECT' ? 'fa-check-circle' : 'fa-times-circle'} fa-5x mb-4`} style={{ color: feedbackState === 'CORRECT' ? '#00ff88' : '#ff0055', filter: 'drop-shadow(0 0 25px currentColor)' }}></i>
+             
+             <h2 style={{ color: feedbackState === 'CORRECT' ? '#00ff88' : '#ff0055', margin: '0 0 35px 0', fontSize: 'clamp(2rem, 6vw, 3rem)', fontWeight: '900', letterSpacing: '2px', textShadow: '0 0 20px currentColor' }}>
+                {feedbackState === 'CORRECT' ? UI.correct : UI.wrong}
+             </h2>
+             
+             <button 
+               className="cyber-btn" 
+               onClick={() => { CyberAudio.playClick(); feedbackState === 'CORRECT' ? generateNextSequence() : retrySequence(); }} 
+               style={{ width: '100%', borderColor: feedbackState === 'CORRECT' ? '#00ff88' : '#ffea00', color: feedbackState === 'CORRECT' ? '#00ff88' : '#ffea00', padding: '25px', borderRadius: '20px' }}
+             >
+                {feedbackState === 'CORRECT' ? UI.next : UI.retry} <i className={`fas ${feedbackState === 'CORRECT' ? 'fa-forward' : 'fa-redo'} ms-3`}></i>
+             </button>
+          </div>
+        )}
+      </div>
 
     </div>
   );
