@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import React, { Suspense, useEffect, useRef, useState, useMemo, useCallback, lazy } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, Environment } from '@react-three/drei';
 import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing';
@@ -23,7 +23,6 @@ import LecturaQuantica from './games/lectura_critica/LecturaQuantica';
 
 /* ============================================================
    🛡️ KERNEL SHIELD: QUANTUM ERROR BOUNDARY (ANTI-CRASH)
-   Aísla fallos de ChunkLoadError o WebGL Context Loss.
 ============================================================ */
 class QuantumErrorBoundary extends React.Component {
   constructor(props) {
@@ -59,24 +58,46 @@ class QuantumErrorBoundary extends React.Component {
   }
 }
 
-// 🟢 INYECCIÓN UNIT 8200: LAZY LOADING PARA JUEGOS MENTALES (Protege la RAM)
-const importNexusOS = () => import('./games/juegos_mentales/MenuJuegosMentales');
-const importQuantumNBack = () => import('./games/juegos_mentales/QuantumNBack/QuantumNBack');
-const importRavenLogic = () => import('./games/juegos_mentales/RavenLogic/RavenLogic');
-const importProtocoloBabel = () => import('./games/juegos_mentales/ProtocoloBabel/ProtocoloBabel');
-const importSimuladorCaos = () => import('./games/juegos_mentales/SimuladorCaos');
-const importColisionadorConceptos = () => import('./games/juegos_mentales/ColisionadorConceptos/ColisionadorConceptos');
+/* ============================================================
+   🛡️ LAZY LOAD CON REINTENTO AUTOMÁTICO (Evita el Error 500 de Vite)
+============================================================ */
+const lazyWithRetry = (componentImport) =>
+  lazy(async () => {
+    const pageHasAlreadyBeenForceRefreshed = JSON.parse(
+      window.sessionStorage.getItem('page-has-been-force-refreshed') || 'false'
+    );
+    try {
+      const component = await componentImport();
+      window.sessionStorage.setItem('page-has-been-force-refreshed', 'false');
+      return component;
+    } catch (error) {
+      if (!pageHasAlreadyBeenForceRefreshed) {
+        window.sessionStorage.setItem('page-has-been-force-refreshed', 'true');
+        return window.location.reload();
+      }
+      throw error;
+    }
+  });
 
-const NexusOS = React.lazy(importNexusOS);
-const QuantumNBack = React.lazy(importQuantumNBack);
-const RavenLogic = React.lazy(importRavenLogic);
-const ProtocoloBabel = React.lazy(importProtocoloBabel);
-const SimuladorCaos = React.lazy(importSimuladorCaos);
-const ColisionadorConceptos = React.lazy(importColisionadorConceptos);
+// 🟢 INYECCIÓN UNIT 8200: RUTAS ABSOLUTAS CON .JSX PARA EVITAR ERROR 500 EN VITE
+const importNexusOS = () => import('./games/juegos_mentales/MenuJuegosMentales.jsx');
+const importQuantumNBack = () => import('./games/juegos_mentales/QuantumNBack/QuantumNBack.jsx');
+const importRavenLogic = () => import('./games/juegos_mentales/RavenLogic/RavenLogic.jsx');
+const importProtocoloBabel = () => import('./games/juegos_mentales/ProtocoloBabel/ProtocoloBabel.jsx');
+const importSimuladorCaos = () => import('./games/juegos_mentales/SimuladorCaos.jsx');
+const importColisionadorConceptos = () => import('./games/juegos_mentales/ColisionadorConceptos/ColisionadorConceptos.jsx');
+const importCinematicaViz = () => import('./games/physics/CinematicaViz.jsx');
+
+const NexusOS = lazyWithRetry(importNexusOS);
+const QuantumNBack = lazyWithRetry(importQuantumNBack);
+const RavenLogic = lazyWithRetry(importRavenLogic);
+const ProtocoloBabel = lazyWithRetry(importProtocoloBabel);
+const SimuladorCaos = lazyWithRetry(importSimuladorCaos);
+const ColisionadorConceptos = lazyWithRetry(importColisionadorConceptos);
+const CinematicaViz = lazyWithRetry(importCinematicaViz);
 
 /* ============================================================
    🚀 GOD TIER ARCHITECTURE: REGISTRO DE MÓDULOS O(1) MULTI-ALIAS
-   Soluciona la trampa del Fallback para que el NexusOS encuentre los juegos
 ============================================================ */
 const GAME_REGISTRY = {
   'PHYSICS_LAB': PhysicsLab,
@@ -90,24 +111,22 @@ const GAME_REGISTRY = {
   'REDOX_BALANCER': RedoxBalancer,
   'GAS_THEORY': GasTheory,
 
-  // 🟢 ALIAS DE JUEGOS MENTALES (Evitan que cargue el gas por error)
+  // 🟢 ALIAS DE JUEGOS MENTALES Y NUEVOS MÓDULOS
   'NEXUS_OS': NexusOS,
-  
   'QUANTUM_NBACK': QuantumNBack,
-  'NBACK': QuantumNBack, // Alias enviado por el Nexus
-  
+  'NBACK': QuantumNBack, 
   'RAVEN_LOGIC': RavenLogic,
-  'RAVEN': RavenLogic, // Alias enviado por el Nexus
-  
+  'RAVEN': RavenLogic, 
   'PROTOCOLO_BABEL': ProtocoloBabel,
-  'BABEL': ProtocoloBabel, // Alias enviado por el Nexus
-  
+  'BABEL': ProtocoloBabel, 
   'SIMULADOR_CAOS': SimuladorCaos,
-  'CHAOS': SimuladorCaos, // Alias enviado por el Nexus
-  'CAOS': SimuladorCaos, // Alias
-  
+  'CHAOS': SimuladorCaos, 
+  'CAOS': SimuladorCaos, 
   'COLISIONADOR': ColisionadorConceptos,
-  'COLLIDER': ColisionadorConceptos // Alias enviado por el Nexus
+  'COLLIDER': ColisionadorConceptos,
+  
+  // 🟢 INYECCIÓN DEL NUEVO SIMULADOR DE FÍSICA
+  'CINEMATICA_VIZ': CinematicaViz
 };
 
 // Mapeo para Precarga Táctica en Background
@@ -122,7 +141,8 @@ const PRELOAD_MAP = {
   'SIMULADOR_CAOS': importSimuladorCaos,
   'CHAOS': importSimuladorCaos,
   'COLISIONADOR': importColisionadorConceptos,
-  'COLLIDER': importColisionadorConceptos
+  'COLLIDER': importColisionadorConceptos,
+  'CINEMATICA_VIZ': importCinematicaViz
 };
 
 /* ============================================================
@@ -168,7 +188,8 @@ const CATALOG = {
       readingLab: { t: "📖 LECTURA CRÍTICA ICFES", d: "Simulador Cognitivo: Análisis semántico y pragmático con IA." },
       quantumReader: { t: "⚡ ACELERADOR RSVP", d: "Motor de lectura rápida O.R.P. Supera los 1000+ WPM." },
       socialesLab: { t: "⚖️ SOCIALES ICFES", d: "Simulador Cartográfico: Constitución, Historia y Multiperspectivismo." },
-      physicsLab: { t: "🚀 THE MOTION LAB", d: "Simulador Cinemático: Vectores, MRU y MRUA con IA." },
+      physicsLab: { t: "🚀 THE MOTION LAB", d: "Simulador Cinemático Clásico: Vectores y Caída Libre." },
+      cinematicaViz: { t: "🏎️ ACELERACIÓN APEX", d: "MRUA Avanzado: Telemetría, Inercia y Tutor Socrático IA." }, // 🟢 NUEVO JUEGO
       nexusOS: { t: "🎛️ NEXUS OS", d: "Centro de Mando Cognitivo. Hub central de estadísticas." },
       nback: { t: "🧠 QUANTUM N-BACK", d: "Pilar 1: Memoria Visoespacial bajo estrés 3D." },
       raven: { t: "🧩 RAVEN OS", d: "Pilar 2: Lógica fluida y matrices progresivas." },
@@ -201,7 +222,8 @@ const CATALOG = {
       readingLab: { t: "📖 ICFES CRITICAL READING", d: "Cognitive Simulator: Semantic and pragmatic analysis with AI." },
       quantumReader: { t: "⚡ RSVP ACCELERATOR", d: "Fast reading O.R.P. engine. Exceed 1000+ WPM." },
       socialesLab: { t: "⚖️ ICFES SOCIAL SCIENCES", d: "Cartographic Simulator: Constitution, History, and Multiperspectivism." },
-      physicsLab: { t: "🚀 THE MOTION LAB", d: "Kinematic Simulator: Vectors, MRU, and MRUA with AI." },
+      physicsLab: { t: "🚀 THE MOTION LAB", d: "Classic Kinematic Simulator: Vectors and Free Fall." },
+      cinematicaViz: { t: "🏎️ APEX ACCELERATION", d: "Advanced MRUA: Telemetry, Inertia and AI Socratic Tutor." },
       nexusOS: { t: "🎛️ NEXUS OS", d: "Cognitive Command Center. Central stats hub." },
       nback: { t: "🧠 QUANTUM N-BACK", d: "Pillar 1: Visuospatial Memory under 3D stress." },
       raven: { t: "🧩 RAVEN OS", d: "Pillar 2: Fluid logic and progressive matrices." },
@@ -234,7 +256,8 @@ const CATALOG = {
       readingLab: { t: "📖 LECTURE CRITIQUE ICFES", d: "Simulateur Cognitif: Analyse sémantique et pragmatique avec IA." },
       quantumReader: { t: "⚡ ACCÉLÉRATEUR RSVP", d: "Moteur de lecture rapide O.R.P. Dépassez les 1000+ MPM." },
       socialesLab: { t: "⚖️ SCIENCES SOCIALES ICFES", d: "Simulateur Cartographique : Constitution, Histoire et Multiperspectivisme." },
-      physicsLab: { t: "🚀 THE MOTION LAB", d: "Simulateur Cinématique : Vecteurs, MRU et MRUA avec IA." },
+      physicsLab: { t: "🚀 THE MOTION LAB", d: "Simulateur Cinématique : Vecteurs et Chute Libre." },
+      cinematicaViz: { t: "🏎️ ACCÉLÉRATION APEX", d: "MRUA Avancé : Télémétrie, Inertie et Tuteur IA." },
       nexusOS: { t: "🎛️ NEXUS OS", d: "Centre de Commande Cognitif." },
       nback: { t: "🧠 QUANTUM N-BACK", d: "Mémoire Visuospatiale." },
       raven: { t: "🧩 RAVEN OS", d: "Logique fluide." },
@@ -267,7 +290,8 @@ const CATALOG = {
       readingLab: { t: "📖 ICFES KRITISCHES LESEN", d: "Kognitiver Simulator: Semantische und pragmatische Analyse mit KI." },
       quantumReader: { t: "⚡ RSVP BESCHLEUNIGER", d: "O.R.P. Schnelllesemaschine. Über 1000+ WPM." },
       socialesLab: { t: "⚖️ ICFES SOZIALWISSENSCHAFTEN", d: "Kartographischer Simulator: Verfassung, Geschichte und Multiperspectivismus." },
-      physicsLab: { t: "🚀 THE MOTION LAB", d: "Kinematischer Simulator: Vektoren, MRU und MRUA mit KI." },
+      physicsLab: { t: "🚀 THE MOTION LAB", d: "Kinematischer Simulator: Vektoren und Freier Fall." },
+      cinematicaViz: { t: "🏎️ APEX BESCHLEUNIGUNG", d: "Erweitertes MRUA: Telemetrie, Trägheit und KI-Tutor." },
       nexusOS: { t: "🎛️ NEXUS OS", d: "Kognitives Kommandozentrum." },
       nback: { t: "🧠 QUANTUM N-BACK", d: "Räumliches Gedächtnis." },
       raven: { t: "🧩 RAVEN OS", d: "Fließende Logik." },
@@ -424,10 +448,12 @@ export default function App() {
   return (
     <QuantumErrorBoundary>
       <audio ref={droneRef} src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364035/drone_sound_yyqqnv.wav" loop />
-      <audio id="snd-crash" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/crash_ebp5po.wav" />
-      <audio id="snd-error" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/error.wav" />
-      <audio id="snd-success" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/success.wav" />
-      <audio id="snd-quiz" src="https://res.cloudinary.com/dukiyxfvn/video/upload/v1771364121/quiz.wav" />
+      
+      {/* 🔴 ENLACES MUERTOS DE CLOUDINARY NEUTRALIZADOS PARA EVITAR ERROR 404 EN RED */}
+      <audio id="snd-crash" preload="none" />
+      <audio id="snd-error" preload="none" />
+      <audio id="snd-success" preload="none" />
+      <audio id="snd-quiz" preload="none" />
 
       {/* ==============================================
           PANTALLA 1: SELECCIÓN DE IDIOMA
@@ -531,7 +557,8 @@ export default function App() {
               {/* === VISTA 4: JUEGOS DE FÍSICA === */}
               {menuView === 'cat_phys' && (
                 <>
-                  <GameCard gameId="PHYSICS_LAB" uiColor="#ff00ff" icon="🚀" title={cat.games.physicsLab.t} desc={cat.games.physicsLab.d} badge="NEXUS" badgeColor="#ff00ff" onClick={() => startGame('PHYSICS_LAB')} />
+                  <GameCard gameId="CINEMATICA_VIZ" uiColor="#00ff88" icon="🏎️" title={cat.games.cinematicaViz.t} desc={cat.games.cinematicaViz.d} badge="GOD TIER" badgeColor="#00ff88" onClick={() => startGame('CINEMATICA_VIZ')} />
+                  <GameCard gameId="PHYSICS_LAB" uiColor="#ff00ff" icon="🚀" title={cat.games.physicsLab.t} desc={cat.games.physicsLab.d} onClick={() => startGame('PHYSICS_LAB')} />
                   <GameCard gameId="GAS_LAWS" uiColor="#00f2ff" icon="🌡️" title={cat.games.gasLaws.t} desc={cat.games.gasLaws.d} onClick={() => startGame('GAS_LAWS')} />
                 </>
               )}
@@ -618,7 +645,6 @@ export default function App() {
           {/* 🚀 ENRUTADOR DINÁMICO LAZY LOAD CON CYBER LOADER 🚀 */}
           <Suspense fallback={<CyberLoader />}>
              {ActiveGameComponent ? (
-                // 🟢 Pasamos onLaunchProtocol para que NexusOS pueda lanzar los juegos mentales
                 <ActiveGameComponent onLaunchProtocol={activeGame === 'NEXUS_OS' ? (id) => startGame(id.toUpperCase()) : undefined} />
              ) : (
                 /* FALLBACK: LEYES DE LOS GASES (3D SCENE ORIGINAL MANTENIDA INTACTA) */
