@@ -13,7 +13,7 @@ const VECTOR_NORM = new THREE.Vector2(0.002, 0.002);
 const SPHERE_GEOM = new THREE.SphereGeometry(0.6, 32, 32);
 
 // API KEY DEEPSEEK (GOD TIER INTEGRATION)
-const DEEPSEEK_API_KEY = "sk-2a7f2964d1e34ebe90f176a986367360";
+const DEEPSEEK_API_KEY = "sk-00d037be16824fbb8bf780bb635c3370";
 const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
 
 /* ============================================================
