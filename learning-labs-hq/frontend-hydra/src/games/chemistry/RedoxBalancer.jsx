@@ -1,19 +1,9 @@
-import React, { Suspense, useEffect, useRef, useState, useCallback, useMemo, createContext, useContext } from 'react';
-import { create } from 'zustand';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stars, Sparkles, Html, Line, Sphere, Float, Edges, Text } from '@react-three/drei';
-import { EffectComposer, Bloom, ChromaticAberration, Scanline } from '@react-three/postprocessing';
-import * as THREE from 'three';
-import { useGameStore } from '../../store/useGameStore';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useGameStore } from '../../store/useGameStore'; // HUB Integration
 
 /* ============================================================
-   🌌 CONSTANTES GLOBALES BLINDADAS
+   🌌 CONSTANTES Y CREDENCIALES DEEPSEEK (GOD TIER)
 ============================================================ */
-const VECTOR_EXP = new THREE.Vector2(0.02, 0.02);
-const VECTOR_NORM = new THREE.Vector2(0.002, 0.002);
-const SPHERE_GEOM = new THREE.SphereGeometry(0.6, 32, 32);
-
-// API KEY DEEPSEEK (GOD TIER INTEGRATION)
 const DEEPSEEK_API_KEY = "sk-00d037be16824fbb8bf780bb635c3370";
 const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
 
@@ -30,7 +20,7 @@ class GameErrorBoundary extends React.Component {
         <div style={{ width: '100vw', height: '100vh', background: '#050000', color: '#00f2ff', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', fontFamily: 'monospace', padding: '40px', textAlign:'center', zIndex: 9999 }}>
           <h1 style={{ fontSize: 'clamp(30px, 8vw, 60px)', textShadow: '0 0 30px #f00', color: '#ff0033' }}>⚠️ FATAL QUANTUM ERROR</h1>
           <p style={{ background: 'rgba(255,0,0,0.1)', padding: '20px', borderRadius: '10px', border:'1px solid #f00', maxWidth:'800px', fontSize: '18px', color: '#fff' }}>{this.state.errorMsg}</p>
-          <button onClick={() => { window.localStorage.removeItem('icfes_telemetry_v7'); window.location.reload(); }} style={{ marginTop: '30px', padding: '15px 30px', fontSize: '18px', cursor: 'pointer', background: '#ff0033', color: '#fff', border: 'none', borderRadius: '5px', fontWeight:'bold', textTransform: 'uppercase' }}>Reignite Core (Clear Cache)</button>
+          <button onClick={() => { window.localStorage.removeItem('icfes_telemetry_quimica_v9'); window.location.reload(); }} style={{ marginTop: '30px', padding: '15px 30px', fontSize: '18px', cursor: 'pointer', background: '#ff0033', color: '#fff', border: 'none', borderRadius: '5px', fontWeight:'bold', textTransform: 'uppercase' }}>Reignite Core (Clear Cache)</button>
         </div>
       );
     }
@@ -39,348 +29,188 @@ class GameErrorBoundary extends React.Component {
 }
 
 /* ============================================================
-   🧠 2. MOTOR GENERATIVO ALGORÍTMICO (ESCUDO DE LATENCIA GOD TIER)
-   Genera preguntas nivel ICFES instantáneas mientras DeepSeek procesa
+   📚 TOPOLOGÍA DE DOMINIOS ICFES QUÍMICA
 ============================================================ */
-class IcfesEngine {
-  static get ELECTRONEGATIVITIES() { return { F: 4.0, O: 3.5, Cl: 3.1, N: 3.0, C: 2.5, H: 2.1, Na: 0.9, K: 0.8, Mg: 1.2, Ca: 1.0 }; }
-  
-  // Memoria estática para evitar que el estudiante repita temas seguidos
-  static lastTopics = [];
+const ICFES_TOPICS = {
+    'ESTEQUIOMETRIA': 'Estequiometría y Conservación de Masa',
+    'GASES': 'Termodinámica y Gases Ideales',
+    'MEZCLAS': 'Separación de Mezclas y Propiedades',
+    'PH': 'Equilibrio Ácido-Base y pH',
+    'ENLACES': 'Enlaces Químicos y Propiedades Intermoleculares',
+    'ORGANICA': 'Química Orgánica y Grupos Funcionales',
+    'SOLUCIONES': 'Soluciones y Concentración',
+    'CINETICA': 'Cinética Química y Catalizadores',
+    'REDOX': 'Oxidación-Reducción y Electroquímica'
+};
 
-  static getTopicName(topicId, lang) {
-      const mockQ = this.generateQuestion(lang, topicId);
-      return mockQ.topic || topicId.replace(/_/g, ' ');
-  }
+const getTopicName = (key) => ICFES_TOPICS[key] || key;
 
-  static generateQuestion(lang, forcedTopic = null) {
-    const allTopics = [
-      'GASES_IDEALES', 'ESTEQUIOMETRIA', 'DENSIDAD', 'PH', 
-      'ENLACES_QUIMICOS', 'CONFIGURACION_ELECTRONICA', 
-      'SOLUCIONES', 'BALANCEO_ECUACIONES', 'ISOTOPOS_Y_ESTRUCTURA', 'CINETICA_QUIMICA'
-    ];
+/* ============================================================
+   🧠 2. MOTOR DEEPSEEK (GENERACIÓN 100% ICFES SIN HARDCODEO)
+============================================================ */
+const LANG_MAP = { es: "SPANISH", en: "ENGLISH", fr: "FRENCH", de: "GERMAN" };
 
-    // Algoritmo de Criba: Filtramos los temas que salieron en las últimas 6 preguntas
-    let availableTopics = allTopics.filter(t => !this.lastTopics.includes(t));
-    if (availableTopics.length === 0) {
-        this.lastTopics = []; // Reiniciamos el ciclo si ya vio todos
-        availableTopics = allTopics;
-    }
-
-    const selectedTopic = forcedTopic || availableTopics[Math.floor(Math.random() * availableTopics.length)];
-
-    // Registrar en memoria solo si es aleatorio
-    if (!forcedTopic) {
-        this.lastTopics.push(selectedTopic);
-        if (this.lastTopics.length > 6) this.lastTopics.shift();
-    }
-
-    switch (selectedTopic) {
-      case 'GASES_IDEALES': return this.genGasQuestion(lang);
-      case 'ESTEQUIOMETRIA': return this.genStoichQuestion(lang);
-      case 'DENSIDAD': return this.genDensityQuestion(lang);
-      case 'PH': return this.genPhQuestion(lang);
-      case 'ENLACES_QUIMICOS': return this.genBondQuestion(lang);
-      case 'CONFIGURACION_ELECTRONICA': return this.genElectronConfigQuestion(lang);
-      case 'SOLUCIONES': return this.genSolutionsQuestion(lang);
-      case 'BALANCEO_ECUACIONES': return this.genBalanceQuestion(lang);
-      case 'ISOTOPOS_Y_ESTRUCTURA': return this.genIsotopeQuestion(lang);
-      case 'CINETICA_QUIMICA': return this.genKineticsQuestion(lang);
-      default: return this.genStoichQuestion(lang);
-    }
-  }
-
-  static generateLocalMasterclass(topic, lang) {
-      const q = this.generateQuestion(lang, topic);
-      return {
-          title: `ENTRENAMIENTO TÁCTICO: ${q.topic}`,
-          theory: `[SISTEMA AISLADO DE DEEPSEEK]\n\nEl núcleo teórico de ${q.topic} se basa en las relaciones fisicoquímicas que el ICFES evalúa para medir tu capacidad analítica. No requieres memoria fotográfica, sino entendimiento lógico del fenómeno.\n\nLa clave está en comprender cómo interactúan las variables sin memorizar ciegamente la fórmula.`,
-          trap: "El ICFES suele emplear distractores matemáticos: conversiones de unidades faltantes (ej. Celsius a Kelvin, mL a L) o proporciones inversas. Revisa siempre la magnitud esperada y sus unidades.",
-          protocol: "1. Lee la matriz de datos e identifica la variable incógnita.\n2. Ejecuta la conversión de unidades ANTES de operar.\n3. Aplica la relación matemática con cuidado.\n4. Verifica que la respuesta final tenga sentido físico.",
-          demoQuestion: {
-              text: q.text,
-              options: q.options,
-              correctIdx: q.correctIdx,
-              analysis: q.microclass
-          }
-      };
-  }
-
-  // --- MÓDULOS DE PREGUNTAS MEJORADOS ---
-
-  static genGasQuestion(lang) {
-    const isIsochoric = Math.random() > 0.5; // True = Boyle/Gay-Lussac, False = Charles
-    const T1_C = Math.floor(Math.random() * 40) + 10;
-    const T1_K = T1_C + 273.15;
-    const var1 = Math.floor(Math.random() * 5) + 2; // Presión o Volumen
-    const T2_C = T1_C + Math.floor(Math.random() * 80) + 40;
-    const T2_K = T2_C + 273.15;
-    
-    // Ley combinada / Gay-Lussac / Charles: P1/T1 = P2/T2 o V1/T1 = V2/T2
-    const correctVal = Number(((var1 * T2_K) / T1_K).toFixed(2));
-    const errorCelsius = Number(((var1 * T2_C) / T1_C).toFixed(2)); 
-    const errorInverted = Number(((var1 * T1_K) / T2_K).toFixed(2)); 
-    const errorLinear = Number((var1 + (T2_C - T1_C) * 0.1).toFixed(2)); 
-
-    const optionsRaw = [correctVal, errorCelsius, errorInverted, errorLinear];
-    const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
-    while(uniqueOptions.length < 4) uniqueOptions.push(Number((Math.random() * 10 + 1).toFixed(2)));
-    
-    const options = uniqueOptions.sort(() => Math.random() - 0.5);
-    const correctIndex = options.indexOf(correctVal);
-    const unit = isIsochoric ? 'atm' : 'L';
-    const varNameES = isIsochoric ? 'presión' : 'volumen';
-    const varNameEN = isIsochoric ? 'pressure' : 'volume';
-
-    const texts = {
-      es: { topic: 'TERMODINÁMICA DE GASES', text: `Un investigador introduce un gas ideal en un recipiente de paredes rígidas indeformables. La presión inicial es de ${var1} atm a ${T1_C}°C. Si el reactor falla y se sobrecalienta hasta ${T2_C}°C, ¿qué presión soportará el contenedor?`, hint: "El recipiente rígido implica volumen constante. Aplica Ley de Gay-Lussac en Kelvin.", micro: `[EXPLICACIÓN DE FENÓMENOS - GASES]\n1. Al ser un recipiente rígido, el volumen es constante.\n2. Conversión obligatoria:\n   T₁ = ${T1_C} + 273.15 = ${T1_K}K\n   T₂ = ${T2_C} + 273.15 = ${T2_K}K.\n3. Mayor temperatura = mayor energía cinética = mayor presión (P1/T1 = P2/T2).\n4. (${var1} × ${T2_K}) / ${T1_K} = ${correctVal} atm.`, traps: [null, `Trampa Cognitiva: Operaste con grados Celsius directos.`, `Trampa Cognitiva: Invertiste la relación matemática.`, `Trampa Cognitiva: Sumaste en lugar de usar proporciones.`] },
-      en: { topic: 'GAS THERMODYNAMICS', text: `An ideal gas is confined at ${var1} ${unit} and ${T1_C}°C. If heated to ${T2_C}°C keeping ${isIsochoric ? 'volume' : 'pressure'} constant, what is the new ${varNameEN} in ${unit}?`, hint: "GOLDEN RULE: Use Kelvin.", micro: `Convert: T₁=${T1_K}K, T₂=${T2_K}K. Math: (${var1} × ${T2_K}) / ${T1_K} = ${correctVal} ${unit}.`, traps: [null, "Used Celsius directly.", "Inverted ratio.", "Linear addition used."] },
-    };
-    const langData = texts[lang] || texts['es'];
-    return { id: 'GASES_IDEALES', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} ${unit}`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
-  }
-
-  static genStoichQuestion(lang) {
-    const reactions = [
-      { name: {es: "Metano", en: "Methane"}, f: "CH₄", c: 1, h: 4, mass: 16, prod: "CO₂", prodMass: 44, mRatio: 1 },
-      { name: {es: "Etano", en: "Ethane"}, f: "C₂H₆", c: 2, h: 6, mass: 30, prod: "CO₂", prodMass: 44, mRatio: 2 },
-      { name: {es: "Propano", en: "Propane"}, f: "C₃H₈", c: 3, h: 8, mass: 44, prod: "CO₂", prodMass: 44, mRatio: 3 },
-      { name: {es: "Glucosa", en: "Glucose"}, f: "C₆H₁₂O₆", c: 6, h: 12, mass: 180, prod: "CO₂", prodMass: 44, mRatio: 6 }
-    ];
-    const react = reactions[Math.floor(Math.random() * reactions.length)];
-    const inputMoles = Math.floor(Math.random() * 3) + 1; 
-    const inputGrams = inputMoles * react.mass;
-    
-    // Gramos reales de producto
-    const correctGrams = inputMoles * react.mRatio * react.prodMass; 
-    const errorNoRatio = inputMoles * react.prodMass; 
-    const errorInverted = Number(((inputMoles / react.mRatio) * react.prodMass).toFixed(1)); 
-    const errorNoMass = inputMoles * react.mRatio; 
-
-    const optionsRaw = [correctGrams, errorNoRatio, errorNoMass, errorInverted];
-    const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n) && n > 0);
-    while(uniqueOptions.length < 4) uniqueOptions.push(Math.floor(Math.random() * 300) + 50);
-    const options = uniqueOptions.sort(() => Math.random() - 0.5);
-    const correctIndex = options.indexOf(correctGrams);
-
-    const texts = {
-      es: { topic: 'ESTEQUIOMETRÍA AVANZADA', text: `Durante el análisis de emisiones de un motor, se queman exactamente ${inputGrams}g de ${react.name.es} (${react.f}) con oxígeno ilimitado. La ecuación sin balancear es: ${react.f} + O₂ ➔ CO₂ + H₂O. ¿Cuántos gramos exactos de dióxido de carbono (CO₂) se emitirán a la atmósfera? (Masas Molares: ${react.f}=${react.mass}g/mol, CO₂=${react.prodMass}g/mol).`, hint: "¡Cuidado! El ICFES a menudo te da la ecuación desbalanceada. 1. Balancea los Carbonos. 2. Pasa gramos a moles. 3. Aplica la relación molar. 4. Pasa a gramos de CO2.", micro: `1. Ecuación balanceada en Carbonos: 1 mol de ${react.f} produce ${react.mRatio} moles de CO₂.\n2. Moles iniciales: ${inputGrams}g / ${react.mass}g/mol = ${inputMoles} moles de ${react.f}.\n3. Relación estequiométrica: ${inputMoles} × ${react.mRatio} = ${inputMoles * react.mRatio} moles de CO₂.\n4. Conversión final: ${inputMoles * react.mRatio} moles × ${react.prodMass}g/mol = ${correctGrams}g.`, traps: [null, `Trampa Clásica ICFES: Operaste directamente 1 a 1 sin balancear la ecuación química (${errorNoRatio}g).`, `Trampa: El resultado quedó expresado en moles, no en gramos.`, `Trampa: Invertiste la relación estequiométrica al dividir en lugar de multiplicar.`] },
-      en: { topic: 'ADVANCED STOICHIOMETRY', text: `In the combustion of ${react.name.en} (${react.f}), if ${inputGrams}g react with excess oxygen, how many grams of ${react.prod} are emitted? (Molar Mass: ${react.f}=${react.mass}g/mol, ${react.prod}=${react.prodMass}g/mol).`, hint: "Grams -> Moles -> Ratio -> Grams.", micro: `Balanced reaction: 1 mol ${react.f} yields ${react.mRatio} mol ${react.prod}.\n1. ${inputGrams}g / ${react.mass}g/mol = ${inputMoles} moles.\n2. Ratio: ${inputMoles * react.mRatio} moles ${react.prod}.\n3. To grams: ${inputMoles * react.mRatio} × ${react.prodMass} = ${correctGrams}g.`, traps: [null, "Trap: Forgot stoichiometric coefficient.", "Trap: Stopped at moles.", "Trap: Inverted the ratio."] },
-    };
-    const langData = texts[lang] || texts['es'];
-    return { id: 'ESTEQUIOMETRIA', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} g`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
-  }
-
-  static genDensityQuestion(lang) {
-    const types = ['archimedes', 'alloy'];
-    const type = types[Math.floor(Math.random() * types.length)];
-
-    if (type === 'archimedes') {
-        const volume = Math.floor(Math.random() * 40) + 15; 
-        const mass = Math.floor(Math.random() * 150) + 80; 
-        const correctDensity = Number((mass / volume).toFixed(2));
-        const initialVol = Math.floor(Math.random() * 30) + 30; 
-        const finalVol = initialVol + volume;
-        const errorFinalVol = Number((mass / finalVol).toFixed(2)); 
-        const errorInverted = Number((volume / mass).toFixed(2)); 
-        const errorRest = Number((mass / (finalVol + initialVol)).toFixed(2)); 
-
-        const optionsRaw = [correctDensity, errorFinalVol, errorInverted, errorRest];
-        const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
-        while(uniqueOptions.length < 4) uniqueOptions.push(Number((Math.random() * 8 + 1).toFixed(2)));
-        const options = uniqueOptions.sort(() => Math.random() - 0.5);
-        const correctIndex = options.indexOf(correctDensity);
-
-        const texts = {
-          es: { topic: 'PROPIEDADES INTENSIVAS', text: `Un mineral desconocido de forma irregular pesa ${mass} g. Un geólogo lo sumerge en una probeta con ${initialVol} mL de agua. El volumen se desplaza hasta los ${finalVol} mL. Sabiendo que la densidad es una propiedad intensiva, ¿cuál es su valor exacto?`, hint: "Arquímedes: El volumen del sólido es exactamente igual al volumen de agua desplazada (Volumen Final - Volumen Inicial).", micro: `1. Volumen desplazado por el mineral: ${finalVol}mL - ${initialVol}mL = ${volume}mL.\n2. Ecuación de densidad: d = m/V = ${mass}g / ${volume}mL = ${correctDensity} g/mL.\nEl ICFES busca que identifiques el principio de desplazamiento de líquidos.`, traps: [null, `Trampa ICFES: Usaste el volumen total de la probeta (${finalVol}mL) ignorando que ahí también hay agua.`, `Trampa: Usaste la fórmula al revés (Volumen / Masa). Eso es volumen específico, no densidad.`, `Trampa sin sentido físico: Sumaste el volumen inicial con el final.`] },
-          en: { topic: 'INTENSIVE PROPERTIES', text: `A cylinder has ${initialVol} mL of water. A metal piece of ${mass} g is added, raising water to ${finalVol} mL. Exact density?`, hint: "Object volume = displaced water volume.", micro: `Displaced volume: ${finalVol}mL - ${initialVol}mL = ${volume}mL.\nDensity: ${mass}g / ${volume}mL = ${correctDensity} g/mL.`, traps: [null, "Trap: Used total final volume.", "Trap: Inverted formula (v/m).", "Trap: Added volumes improperly."] },
-        };
-        const langData = texts[lang] || texts['es'];
-        return { id: 'DENSIDAD', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} g/mL`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
-    } else {
-        const mass1 = Math.floor(Math.random() * 50) + 50; const vol1 = 10;
-        const mass2 = Math.floor(Math.random() * 50) + 50; const vol2 = 20;
-        const d1 = mass1/vol1; const d2 = mass2/vol2;
-        const correctDensity = Number(((mass1+mass2)/(vol1+vol2)).toFixed(2));
-        const errorAvg = Number(((d1+d2)/2).toFixed(2)); 
-        const errorSum = Number((d1+d2).toFixed(2));
-
-        const optionsRaw = [correctDensity, errorAvg, errorSum, Number((correctDensity*1.5).toFixed(2))];
-        const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
-        while(uniqueOptions.length < 4) uniqueOptions.push(Number((Math.random() * 8 + 1).toFixed(2)));
-        const options = uniqueOptions.sort(() => Math.random() - 0.5);
-        const correctIndex = options.indexOf(correctDensity);
-
-        const texts = {
-          es: { topic: 'DENSIDAD DE ALEACIONES', text: `Para fabricar el blindaje de un dron, se funden ${mass1}g del Metal A (volumen = ${vol1}mL) con ${mass2}g del Metal B (volumen = ${vol2}mL). Asumiendo que los volúmenes son aditivos y la temperatura es constante, ¿cuál será la densidad teórica de la nueva aleación?`, hint: "¡ATENCIÓN! La densidad NO se puede promediar ni sumar. Debes sumar las masas totales y dividirlas entre el volumen total.", micro: `La densidad es una propiedad intensiva (no depende de la cantidad de materia), por ende no se promedia linealmente.\n1. Masa Total = ${mass1} + ${mass2} = ${mass1+mass2}g.\n2. Volumen Total = ${vol1} + ${vol2} = ${vol1+vol2}mL.\n3. Densidad Final = ${mass1+mass2} / ${vol1+vol2} = ${correctDensity} g/mL.`, traps: [null, `Trampa ICFES típica: Promediaste las densidades de cada metal. La densidad no es aditiva ni promediable así.`, `Trampa: Sumaste las densidades de manera directa.`, `Error matemático en el cociente.`] },
-          en: { topic: 'MIXTURES & DENSITY', text: `Two metals are melted together: Metal A (${mass1}g, ${vol1}mL) and Metal B (${mass2}g, ${vol2}mL). Assuming additive volumes, what is the density of the alloy?`, hint: "Density is NOT the average. Use Total Mass / Total Volume.", micro: `Total Mass = ${mass1+mass2}g.\nTotal Vol = ${vol1+vol2}mL.\nAlloy Density = ${mass1+mass2} / ${vol1+vol2} = ${correctDensity} g/mL.`, traps: [null, "ICFES Trap: Averaged the densities.", "Trap: Summed densities.", "Math error."] },
-        };
-        const langData = texts[lang] || texts['es'];
-        return { id: 'DENSIDAD', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} g/mL`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
-    }
-  }
-
-  static genPhQuestion(lang) {
-    const isOH = Math.random() > 0.5; 
-    const concExponent = Math.floor(Math.random() * 10) + 2; 
-    const coef = Math.floor(Math.random() * 8) + 1; 
-    
-    const pIon = Number((concExponent - Math.log10(coef)).toFixed(2)); 
-    const pH = isOH ? Number((14 - pIon).toFixed(2)) : pIon;
-    const pOH = isOH ? pIon : Number((14 - pH).toFixed(2));
-
-    const optionsRaw = [pH, pOH, concExponent, Number((14 - concExponent).toFixed(2))];
-    const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
-    while(uniqueOptions.length < 4) uniqueOptions.push(Number((Math.random() * 14).toFixed(2)));
-    const options = uniqueOptions.sort(() => Math.random() - 0.5);
-    const correctIndex = options.indexOf(pH);
-
-    const ionStr = isOH ? "iones hidroxilo [OH⁻]" : "iones hidronio [H⁺]";
-    const bodyFluid = isOH ? "fluidos intestinales" : "jugos gástricos";
-    const ionStrEn = isOH ? "Hydroxide [OH⁻]" : "Hydronium [H⁺]";
-
-    const texts = {
-      es: { topic: 'EQUILIBRIO ÁCIDO-BASE', text: `Un gastroenterólogo analiza una muestra de ${bodyFluid} de un paciente a 25°C. Determina que la concentración de ${ionStr} es de ${coef}.0 × 10⁻${concExponent} M. Según las propiedades logarítmicas de las disoluciones acuosas, ¿cuál es el pH de la muestra del paciente?`, hint: isOH ? "¡ALERTA ICFES! La concentración dada es de OH⁻. Si sacas el logaritmo negativo obtendrás el pOH. Para el pH, recuerda que pH + pOH = 14." : "Aplica la propiedad rápida de logaritmos: -log(A × 10⁻ᴮ) = B - log(A).", micro: isOH ? `1. Como te dieron concentración básica, calculamos pOH: -log(${coef} × 10⁻${concExponent}) = ${pOH}.\n2. La constante disociación del agua a 25°C dicta que pH + pOH = 14.\n3. Por lo tanto, pH = 14 - ${pOH} = ${pH}.` : `Cálculo analítico directo: pH = -log([H⁺]) = -log(${coef} × 10⁻${concExponent}) = ${concExponent} - log(${coef}) = ${pH}.`, traps: [null, isOH ? `Trampa ICFES Clásica: Calculaste el pOH y marcaste ese número, olvidando restarlo de 14 para hallar el pH solicitado.` : `Trampa: Marcaste el pOH asumiendo que la ecuación da el pH inverso.`, `Trampa: Tomaste solo el exponente, ignorando el peso del coeficiente numérico.`, `Trampa: Restaste el exponente de 14 directamente sin aplicar el logaritmo.`] },
-      en: { topic: 'ACID-BASE EQUILIBRIUM', text: `In a 25°C solution, the ${ionStrEn} concentration is ${coef}.0 × 10⁻${concExponent} M. What is the pH?`, hint: isOH ? "Careful: You have OH⁻. Find pOH first, then pH = 14 - pOH." : "-log(A × 10⁻ᴮ) = B - log(A).", micro: isOH ? `1. pOH = ${pOH}.\n2. pH = 14 - ${pOH} = ${pH}.` : `pH = -log(${coef} × 10⁻${concExponent}) = ${pH}.`, traps: [null, isOH ? "Calculated pOH instead of pH." : "Answered pOH.", "Ignored coefficient.", "Math error."] },
-    };
-    const langData = texts[lang] || texts['es'];
-    return { id: 'PH', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `pH ${o}`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
-  }
-
-  static genBondQuestion(lang) {
-    const metals = ['Na', 'K', 'Mg', 'Ca', 'Li']; const nonMetals = ['F', 'O', 'Cl', 'N', 'Br'];
-    const el1 = Math.random() > 0.5 ? metals[Math.floor(Math.random()*metals.length)] : nonMetals[Math.floor(Math.random()*nonMetals.length)]; 
-    const el2 = nonMetals[Math.floor(Math.random()*nonMetals.length)];
-    const en1 = this.ELECTRONEGATIVITIES[el1] || 1.0; const en2 = this.ELECTRONEGATIVITIES[el2] || 3.0;
-    const diff = Number(Math.abs(en1 - en2).toFixed(1));
-    
-    let bondTypeES = diff > 1.7 ? "Iónico" : (diff > 0.4 ? "Covalente Polar" : "Covalente Apolar");
-    let explES = diff > 1.7 ? "transferencia total de electrones" : (diff > 0.4 ? "compartición desigual de electrones formando polos" : "compartición equitativa de electrones");
-
-    const optionsKeys = ['ionic', 'polar', 'apolar', 'metal'].sort(() => Math.random() - 0.5);
-    const correctType = diff > 1.7 ? 'ionic' : (diff > 0.4 ? 'polar' : 'apolar');
-    const correctIndex = optionsKeys.indexOf(correctType);
-
-    const texts = {
-      es: { topic: 'ENLACES QUÍMICOS Y POLARIDAD', text: `Un equipo de químicos sintetiza un nuevo compuesto diatómico. Los análisis espectroscópicos muestran que el Átomo A tiene una electronegatividad de ${en1} y el Átomo B de ${en2}. ¿Qué tipo de enlace rige la molécula y qué fenómeno electrónico ocurre en ella?`, hint: "Aplica la Escala de Pauling (ΔEN): > 1.7 (Iónico), entre 0.4 y 1.7 (Covalente Polar), < 0.4 (Apolar).", micro: `La diferencia matemática de electronegatividades es: |${en1} - ${en2}| = ${diff}.\nSegún Pauling, un diferencial de ${diff} indica un enlace ${bondTypeES}, lo que se traduce físicamente en una ${explES}.`, opts: { ionic: "Enlace Iónico (Transferencia electrónica)", polar: "Covalente Polar (Dipolos parciales)", apolar: "Covalente Apolar (Nube electrónica simétrica)", metal: "Enlace Metálico (Mar de electrones)" }, traps: [null, null, null, null] },
-      en: { topic: 'CHEMICAL BONDS', text: `Molecule formed by Atom A (EN=${en1}) and Atom B (EN=${en2}). Based on electronegativity, what is the bond type?`, hint: "> 1.7 (Ionic), 0.4 - 1.7 (Polar), < 0.4 (Apolar).", micro: `Diff: |${en1} - ${en2}| = ${diff}.`, opts: { ionic: "Ionic Bond", polar: "Polar Covalent", apolar: "Non-polar Covalent", metal: "Metallic Bond" }, traps: [null, null, null, null] },
-    };
-    const langData = texts[lang] || texts['es'];
-    return { id: 'ENLACES_QUIMICOS', isAi: false, topic: langData.topic, text: langData.text, options: optionsKeys.map(k => langData.opts[k]), optionsKeys: optionsKeys, correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
-  }
-
-  static genElectronConfigQuestion(lang) {
-    const atoms = [
-      { name: {es:"Fósforo", en:"Phosphorus"}, z: 15, config: "[Ne] 3s² 3p³", period: 3, group: "VA", type: "No metal" },
-      { name: {es:"Potasio", en:"Potassium"}, z: 19, config: "[Ar] 4s¹", period: 4, group: "IA", type: "Metal Alcalino" },
-      { name: {es:"Azufre", en:"Sulfur"}, z: 16, config: "[Ne] 3s² 3p⁴", period: 3, group: "VIA", type: "No metal" }
-    ];
-    const atom = atoms[Math.floor(Math.random() * atoms.length)];
-    const correctAns = `Periodo ${atom.period}, Grupo ${atom.group} (${atom.type})`; 
-    const error1 = `Periodo ${atom.period - 1}, Grupo ${atom.group}`; 
-    const error2 = `Periodo ${atom.period}, Grupo ${atom.group.replace('A', 'B')} (Transición)`; 
-    const error3 = `Periodo 2, Grupo VIIIA (Gas Noble)`;
-    
-    const optionsRaw = [correctAns, error1, error2, error3]; 
-    const options = optionsRaw.sort(() => Math.random() - 0.5);
-    const correctIndex = options.indexOf(correctAns);
-
-    const texts = {
-      es: { topic: 'ESTRUCTURA Y TABLA PERIÓDICA', text: `Durante una prueba de espectrometría, se descubre que la configuración electrónica de valencia de un átomo neutro de ${atom.name.es} termina en ${atom.config}. Basándose en esta información microscópica, ¿cuál es su ubicación macroscópica y clasificación en la tabla periódica?`, hint: "El número cuántico principal mayor (el número grande antes de la letra) define el Periodo. Los electrones de valencia (superíndices en ese nivel) definen el Grupo.", micro: `Configuración: ${atom.config}.\n1. El coeficiente más alto es ${atom.period}, lo que define sus capas de energía (Periodo ${atom.period}).\n2. Al sumar los electrones de ese nivel de valencia obtenemos el Grupo ${atom.group}.\n3. Por su ubicación a la derecha/izquierda de la escalera periódica, es un ${atom.type}.`, traps: [null, "Trampa: Tomaste el número cuántico interior en lugar de la capa de valencia externa.", "Trampa ICFES: Confundiste los grupos representativos (A) con los metales de transición (B).", "Respuesta aleatoria para evaluar descarte."] },
-      en: { topic: 'PERIODIC TABLE', text: `Neutral ${atom.name.en} atom config ends in ${atom.config}. Period and group?`, hint: "Highest level = period. Valence e- = group.", micro: `Config: ${atom.config}.\nHighest n=${atom.period} (Period). Valence e- give Group ${atom.group}.`, traps: [null, "Wrong period.", "Transition metal group (B).", "Random trap."] },
-    };
-    const langData = texts[lang] || texts['es'];
-    return { id: 'CONFIGURACION_ELECTRONICA', isAi: false, topic: langData.topic, text: langData.text, options: options, correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
-  }
-
-  static genSolutionsQuestion(lang) {
-    const massSolute = Math.floor(Math.random() * 80) + 20; 
-    const mmSolute = Math.floor(Math.random() * 60) + 40; 
-    const volumeLiters = (Math.floor(Math.random() * 4) + 1) * 0.5; 
-    
-    const moles = massSolute / mmSolute; 
-    const molarity = Number((moles / volumeLiters).toFixed(2));
-    const error1 = Number((massSolute / volumeLiters).toFixed(2)); // Trampa g/L
-    const error2 = Number(((moles / (volumeLiters * 1000))).toFixed(4)); // Trampa mL
-    const error3 = Number((volumeLiters / moles).toFixed(2)); 
-    
-    const optionsRaw = [molarity, error1, error2, error3]; 
-    const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
-    while(uniqueOptions.length < 4) uniqueOptions.push(Number((Math.random() * 5).toFixed(2)));
-    const options = uniqueOptions.sort(() => Math.random() - 0.5); 
-    const correctIndex = options.indexOf(molarity);
-
-    const texts = {
-      es: { topic: 'SOLUCIONES QUÍMICAS Y CONCENTRACIÓN', text: `Un analista de calidad debe preparar suero fisiológico simulado. Disuelve ${massSolute} g de una sal clorurada (cuya masa molar es ${mmSolute} g/mol) en un aforo exacto hasta completar ${volumeLiters} Litros de solución. ¿Qué concentración molar (M) reportará en su bitácora?`, hint: "La Molaridad requiere estandarización a la cantidad de partículas. M = Moles / Litros. Nunca operes con gramos directamente.", micro: `El ICFES penaliza a quienes confunden gramos por litro (g/L) con Molaridad (mol/L).\nPaso 1: Convertir masa a moles para saber la cantidad de partículas reales. ${massSolute}g / ${mmSolute}g/mol = ${moles.toFixed(3)} moles.\nPaso 2: Relacionar con el volumen. M = ${moles.toFixed(3)} mol / ${volumeLiters} L = ${molarity} M.`, traps: [null, "Trampa Mortal ICFES: Dividiste los gramos directamente por los litros. Esa es la concentración másica, no la Molaridad.", "Trampa: Multiplicaste o dividiste mal los mililitros creyendo que el dato estaba en otra unidad.", "Trampa: Invertiste la fórmula (Litros sobre moles)."] },
-      en: { topic: 'CHEMICAL SOLUTIONS', text: `A solution is prepared by dissolving ${massSolute} g of solute (Molar Mass = ${mmSolute} g/mol) to a volume of ${volumeLiters} Liters. What is the Molarity (M)?`, hint: "M = Moles / Liters.", micro: `Moles = ${massSolute}g / ${mmSolute}g/mol = ${moles.toFixed(3)} moles. M = ${moles.toFixed(3)} / ${volumeLiters} L = ${molarity} M.`, traps: [null, "Trap: Grams / Liters calculated.", "Trap: Unit conversion error.", "Trap: Inverted formula."] },
-    };
-    const langData = texts[lang] || texts['es'];
-    return { id: 'SOLUCIONES', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} M`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
-  }
-
-  static genBalanceQuestion(lang) {
-      const eqTypes = [
-          { eq: "C₃H₈ + X O₂ ➔ 3CO₂ + 4H₂O", x: 5, es:"Oxígeno", en:"Oxygen" },
-          { eq: "2Al + X HCl ➔ 2AlCl₃ + 3H₂", x: 6, es:"Cloro", en:"Chlorine" }
-      ];
-      const selected = eqTypes[Math.floor(Math.random() * eqTypes.length)]; 
-      const correctAns = selected.x;
-      const optionsRaw = [correctAns, correctAns + 1, correctAns - 1, correctAns * 2].filter(n => n > 0);
-      const uniqueOptions = [...new Set(optionsRaw)]; while(uniqueOptions.length < 4) uniqueOptions.push(Math.floor(Math.random() * 5) + 5);
-      const options = uniqueOptions.sort(() => Math.random() - 0.5); const correctIndex = options.indexOf(correctAns);
-
-      const texts = {
-        es: { topic: 'CONSERVACIÓN DE LA MASA', text: `Antoine Lavoisier estableció que la materia no se crea ni se destruye. En el pizarrón del laboratorio está escrita la siguiente reacción incompleta: \n\n${selected.eq} \n\n¿Qué valor exacto debe tomar el coeficiente X para que la ecuación no viole el principio de conservación de la masa?`, hint: `El átomo de ${selected.es} está desbalanceado. Cuenta cuántos hay en los productos y asegúrate de que entren los mismos en los reactivos.`, micro: `Las leyes termodinámicas exigen simetría atómica.\nEn los productos hay una cantidad determinada de átomos de ${selected.es}. Para que la balanza estequiométrica se cierre a la izquierda, el coeficiente multiplicador del reactivo (X) debe ser obligatoriamente ${correctAns}.`, traps: [null, "Contaste mal los subíndices de los productos.", "No multiplicaste el coeficiente de los productos por el subíndice atómico.", "Duplicaste el requerimiento estequiométrico innecesariamente."] },
-        en: { topic: 'EQUATION BALANCING', text: `Equation: \n${selected.eq} \nFor Mass Conservation, what is the exact value of X?`, hint: `Count ${selected.en} atoms.`, micro: `Atoms must balance. X = ${correctAns}.`, traps: [null, null, null, null] },
-      };
-      const langData = texts[lang] || texts['es'];
-      return { id: 'BALANCEO_ECUACIONES', isAi: false, topic: langData.topic, text: langData.text, options: options.map(String), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
-  }
-
-  static genIsotopeQuestion(lang) {
-      const isos = [
-          { name: "Cobalto-60", z: 27, a: 60, desc: "usado en radioterapia oncológica" },
-          { name: "Yodo-131", z: 53, a: 131, desc: "usado como trazador de la glándula tiroides" }
-      ];
-      const iso = isos[Math.floor(Math.random() * isos.length)];
-      const neutrons = iso.a - iso.z;
-      const correctAns = neutrons; 
-      const error1 = iso.a; const error2 = iso.z; const error3 = iso.a + iso.z;
-      const optionsRaw = [correctAns, error1, error2, error3]; const options = optionsRaw.sort(() => Math.random() - 0.5); const correctIndex = options.indexOf(correctAns);
-
-      const texts = {
-        es: { topic: 'ESTRUCTURA NUCLEAR E ISÓTOPOS', text: `En un hospital de alta complejidad se administra el isótopo ${iso.name} (${iso.desc}). La ficha técnica indica un número atómico (Z) de ${iso.z} y un número másico (A) de ${iso.a}. Para comprender su nivel de radiación intrínseca, el radiólogo necesita saber: ¿Cuántos neutrones alberga exactamente su núcleo atómico?`, hint: "El núcleo alberga protones (Z) y neutrones. Juntos suman el número másico (A). Despeja los neutrones.", micro: `Un isótopo difiere en sus neutrones.\nSabemos que la Masa atómica (A) es la sumatoria de partículas del núcleo: Protones (Z) + Neutrones.\nPara despejar Neutrones: N = A - Z.\nCálculo: N = ${iso.a} - ${iso.z} = ${correctAns} neutrones pesados en el núcleo.`, traps: [null, "Trampa Visual: Elegiste la Masa Atómica (A) entera. Ahí estás sumando también los protones.", "Elegiste el número atómico (Z), que representa exclusivamente la nube de protones.", "Anotación matemática absurda: Sumaste protones y masa general."] },
-        en: { topic: 'ATOMIC STRUCTURE', text: `The isotope ${iso.name} has atomic number Z=${iso.z} and mass number A=${iso.a}. How many neutrons in the nucleus?`, hint: "Mass number (A) = protons + neutrons.", micro: `N = A - Z = ${iso.a} - ${iso.z} = ${correctAns} neutrons.`, traps: [null, "Chose mass number.", "Chose atomic number.", "Added values illogically."] },
-      };
-      const langData = texts[lang] || texts['es'];
-      return { id: 'ISOTOPOS_Y_ESTRUCTURA', isAi: false, topic: langData.topic, text: langData.text, options: options.map(String), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
-  }
-
-  static genKineticsQuestion(lang) {
-      const type = Math.random() > 0.5 ? 'temp' : 'catalyst';
-      let correctType, text, hint, micro, opts, traps;
-
-      if (type === 'temp') {
-          correctType = 'ans';
-          opts = { ans: "Incrementa la energía cinética de las moléculas, aumentando los choques efectivos", err1: "Disminuye la presión de activación del recipiente", err2: "Altera la estequiometría de los productos generados", err3: "Reduce la energía intrínseca de los enlaces covalentes" };
-          text = `En la síntesis industrial del amoníaco, los ingenieros químicos elevan drásticamente la temperatura del reactor. ¿Cuál es el fenómeno microscópico que justifica por qué este aumento térmico acelera la velocidad de la reacción?`;
-          hint = "Piensa en el Teoría de Colisiones. El calor es movimiento (energía cinética).";
-          micro = "El calor es transferencia de energía térmica. Al aumentar la temperatura, las moléculas absorben esa energía como Energía Cinética, moviéndose caóticamente más rápido. Esto incrementa la frecuencia y la violencia de las colisiones moleculares, superando con mayor facilidad la barrera de activación.";
-          traps = [null, "Trampa Conceptual: La temperatura no afecta la 'presión de activación', ese término no rige la cinética así.", "Trampa ICFES Clásica: La termodinámica cinética acelera el proceso, pero NUNCA cambia la estequiometría ni la naturaleza de los productos.", "Trampa Absurda: Calentar un sistema le inyecta energía, no la reduce."];
-      } else {
-          correctType = 'ans';
-          opts = { ans: "Genera una ruta alterna que requiere una menor Energía de Activación", err1: "Inyecta calor directo a las moléculas reactivas", err2: "Se consume lentamente para potenciar los reactivos", err3: "Aumenta el rendimiento teórico máximo de producto" };
-          text = `Al intentar descomponer peróxido de hidrógeno (agua oxigenada), la reacción es demasiado lenta. Sin embargo, al añadir unas gotas de yoduro de potasio (actuando como catalizador), la mezcla ebulle y genera oxígeno rápidamente. ¿Qué mecanismo alteró el catalizador para lograr esto?`;
-          hint = "Los catalizadores NO inyectan energía ni cambian los reactivos. Ellos abren un 'atajo' en la barrera termodinámica.";
-          micro = "Un catalizador funciona como un atajo topográfico. No inyecta energía ni se consume; simplemente provee una ruta molecular alterna que posee una colina termodinámica más baja (menor Energía de Activación). Así, a temperatura ambiente, más moléculas logran cruzar la barrera.";
-          traps = [null, "Trampa Térmica: Los catalizadores no calientan el reactor, alteran los requerimientos del umbral.", "Trampa ICFES Tramposa: POR DEFINICIÓN, un verdadero catalizador NO se consume en la reacción. Entra y sale intacto.", "Trampa Termodinámica: Un catalizador hace que llegues al final más rápido, pero NUNCA altera la cantidad final de producto (rendimiento teórico)."];
+class DeepSeekEngine {
+  static cleanJSON(raw) {
+    try {
+      let cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const start = cleaned.indexOf('{');
+      const end = cleaned.lastIndexOf('}');
+      if (start !== -1 && end !== -1) {
+        cleaned = cleaned.substring(start, end + 1);
       }
+      try { return JSON.parse(cleaned); } catch (parseError) {
+          cleaned = cleaned.replace(/(?<!\\)\n/g, '\\n').replace(/(?<!\\)\r/g, '');
+          return JSON.parse(cleaned);
+      }
+    } catch (error) {
+      console.error("DeepSeek Critical Parse Error:", error);
+      throw new Error("JSON_PARSE_ERROR");
+    }
+  }
 
-      const optionsKeys = ['ans', 'err1', 'err2', 'err3'].sort(() => Math.random() - 0.5);
-      const correctIndex = optionsKeys.indexOf(correctType);
+  static async fetchWithTimeout(url, options, timeout = 35000) {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      try {
+          const response = await fetch(url, { ...options, signal: controller.signal });
+          clearTimeout(id);
+          return response;
+      } catch (e) {
+          clearTimeout(id);
+          throw e;
+      }
+  }
+
+  // ALGORITMO ANTI-REPETICIÓN MEMORIZADO
+  static lastTopics = [];
+  
+  static getNextTopic(forcedTopic) {
+      if (forcedTopic) return forcedTopic;
+      const allKeys = Object.keys(ICFES_TOPICS);
+      let available = allKeys.filter(t => !this.lastTopics.includes(t));
+      if (available.length === 0) {
+          this.lastTopics = [];
+          available = allKeys;
+      }
+      const selected = available[Math.floor(Math.random() * available.length)];
+      this.lastTopics.push(selected);
+      if (this.lastTopics.length > 5) this.lastTopics.shift();
+      return selected;
+  }
+
+  static async generateQuestion(lang, forcedTopic = null, retries = 3) {
+    const selectedTopicKey = this.getNextTopic(forcedTopic);
+    const topicRealName = ICFES_TOPICS[selectedTopicKey];
+    const targetLang = LANG_MAP[lang] || "SPANISH";
+
+    // PROMPT GOD TIER: Configurado EXCLUSIVAMENTE para metodología ICFES (SABER 11)
+    const sysPrompt = `
+      Eres un experto evaluador del examen de Estado ICFES (Colombia) en el área de Ciencias Naturales: Química.
+      Genera una pregunta COMPLETAMENTE NUEVA, analítica y de alto nivel cognitivo sobre el tema: "${topicRealName}".
+      Language for the output MUST strictly be: ${targetLang}.
       
-      const langData = { topic: 'CINÉTICA QUÍMICA', text, opts, hint, micro, traps };
-      return { id: 'CINETICA_QUIMICA', isAi: false, topic: langData.topic, text: langData.text, optionsKeys: optionsKeys, correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: {es: langData} };
+      ESTILO DE LA PREGUNTA ICFES (CRÍTICO):
+      - NO pidas cálculos matemáticos simples o de memoria (ej. calcular densidad con m/v directamente).
+      - DEBES plantear un CONTEXTO: un experimento, una hipótesis de un estudiante, una situación de laboratorio o un fenómeno natural.
+      - Las opciones de respuesta deben ser analíticas, explicativas o justificativas (ej. "Porque el aumento de temperatura expande el gas al incrementar los choques...", "Ya que el reactivo limitante se consumió por completo...").
+      - Evalúa competencias de: Uso de Conceptos, Explicación de Fenómenos o Indagación.
+      - Provee 4 opciones de respuesta, solo 1 correcta. Las otras 3 deben representar errores conceptuales MUY comunes que cometen los estudiantes (distractores fuertes).
+      
+      REGLA ABSOLUTA: RESPONDE SOLO CON UN JSON VÁLIDO. NO USES MARKDOWN ALREDEDOR. Usa comillas simples ('') dentro de los textos si es necesario.
+      ESTRUCTURA DEL JSON:
+      {
+        "id": "${selectedTopicKey}",
+        "topic": "${topicRealName}",
+        "text": "[Contexto del experimento o fenómeno] + [Pregunta analítica]",
+        "options": ["Opción A (Analítica)", "Opción B", "Opción C", "Opción D"],
+        "correctIdx": 0,
+        "hint": "Pista conceptual sin dar la respuesta directamente",
+        "microclass": "Explicación forense y detallada del fenómeno químico de por qué la respuesta es la correcta",
+        "trapExplanations": ["", "Explicación del error conceptual B", "Por qué la C es una trampa", "Error D"]
+      }
+    `;
+
+    try {
+      const response = await this.fetchWithTimeout(DEEPSEEK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DEEPSEEK_API_KEY}` },
+        body: JSON.stringify({ model: "deepseek-chat", messages: [{ role: "system", content: sysPrompt }], temperature: 0.8, max_tokens: 1200, response_format: { type: "json_object" } })
+      }, 30000);
+      
+      if(!response.ok) throw new Error("HTTP_ERROR");
+      const data = await response.json();
+      const parsed = this.cleanJSON(data.choices[0].message.content);
+      
+      // Shuffle options to ensure correct is not always 0
+      const opts = [...parsed.options];
+      const traps = [...parsed.trapExplanations];
+      const correctText = opts[parsed.correctIdx];
+      const correctTrap = traps[parsed.correctIdx];
+      
+      const indices = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+      parsed.options = indices.map(i => opts[i]);
+      parsed.trapExplanations = indices.map(i => traps[i]);
+      parsed.correctIdx = parsed.options.indexOf(correctText);
+      parsed.isAi = true; 
+      
+      return parsed;
+    } catch (error) {
+      if (retries > 0) {
+          console.warn(`[DEEPSEEK] Reintentando conexión... Intentos restantes: ${retries}`);
+          await new Promise(res => setTimeout(res, 1500));
+          return this.generateQuestion(lang, forcedTopic, retries - 1);
+      }
+      throw new Error("NETWORK_FAILURE"); // Forzamos el error para que la UI lo maneje
+    }
+  }
+
+  static async generateMasterclass(topic, lang, retries = 2) {
+    const topicRealName = ICFES_TOPICS[topic] || topic;
+    const targetLang = LANG_MAP[lang] || "SPANISH";
+    
+    const sysPrompt = `
+      Eres un Profesor Top de Química preparando a un estudiante para el examen ICFES SABER 11.
+      Genera una CLASE MAGISTRAL SIGNIFICATIVA Y DIRECTA sobre el tema: "${topicRealName}".
+      Language for the output MUST STRICTLY BE: ${targetLang}.
+      Debe enfocarse en cómo el ICFES evalúa este tema (Competencias de Indagación y Explicación de Fenómenos). Máximo 400 palabras en total.
+
+      REGLAS CRÍTICAS DE SISTEMA PARA PREVENIR ERRORES:
+      1. RESPONDE SÓLO EN JSON VÁLIDO. NADA DE MARKDOWN FUERA DEL JSON.
+      2. ESCAPA TODOS LOS SALTOS DE LÍNEA USANDO \\n DENTRO DE LAS CADENAS DE TEXTO.
+      
+      ESTRUCTURA EXACTA REQUERIDA:
+      {
+        "title": "TÍTULO DEL TEMA",
+        "theory": "Explicación teórica enfocada en la lógica de los fenómenos químicos, no en memorizar fórmulas. (max 150 palabras)",
+        "trap": "El distractor analítico típico que el ICFES usa en este tema para confundir (ej. hacer creer que la masa cambia en un cambio de estado).",
+        "protocol": "Pasos lógicos para abordar preguntas ICFES de este tema.\\n1. ...\\n2. ...",
+        "demoQuestion": {
+           "text": "Problema analítico tipo ICFES de alta exigencia...",
+           "options": ["A", "B", "C", "D"],
+           "correctIdx": 0,
+           "analysis": "Explicación profunda de por qué es la correcta basándose en el concepto químico."
+        }
+      }
+    `;
+
+    try {
+      const response = await this.fetchWithTimeout(DEEPSEEK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DEEPSEEK_API_KEY}` },
+        body: JSON.stringify({ model: "deepseek-chat", messages: [{ role: "system", content: sysPrompt }], temperature: 0.3, max_tokens: 1200, response_format: { type: "json_object" } })
+      }, 35000); 
+      
+      if(!response.ok) throw new Error("HTTP_ERROR");
+      const data = await response.json();
+      return this.cleanJSON(data.choices[0].message.content);
+    } catch (error) {
+      if (retries > 0) {
+          await new Promise(resolve => setTimeout(resolve, 1500)); 
+          return this.generateMasterclass(topic, lang, retries - 1);
+      }
+      throw error;
+    }
   }
 }
 
@@ -478,7 +308,7 @@ const DICT_REPORT = {
         aiNoData: "Datos biométricos insuficientes. El operador debe completar más simulaciones.",
         topicTitle: "DESGLOSE MICRO-ANALÍTICO POR DOMINIO", topicNoData: "Aún no se han procesado suficientes dominios químicos.",
         topicHit: "Aciertos", topicMiss: "Fallos",
-        footer: "DOCUMENTO CLASIFICADO GENERADO POR LEARNING LABS ENGINE V31.0", footerSub: "Entorno Deep Focus: El conocimiento es la única ventaja táctica inquebrantable."
+        footer: "DOCUMENTO CLASIFICADO GENERADO POR LEARNING LABS ENGINE V30.0", footerSub: "Entorno Deep Focus: El conocimiento es la única ventaja táctica inquebrantable."
     },
     en: {
         docTitle: "ICFES TACTICAL DOSSIER", docSub: "QUANTUM CHEMISTRY SIMULATION",
@@ -494,7 +324,7 @@ const DICT_REPORT = {
         aiNoData: "Insufficient biometric data. Complete more simulations.",
         topicTitle: "MICRO-ANALYTICAL DOMAIN BREAKDOWN", topicNoData: "Not enough chemical domains processed yet.",
         topicHit: "Hits", topicMiss: "Misses",
-        footer: "CLASSIFIED DOCUMENT GENERATED BY LEARNING LABS ENGINE V31.0", footerSub: "Deep Focus Environment: Knowledge is the only unbreakable tactical advantage."
+        footer: "CLASSIFIED DOCUMENT GENERATED BY LEARNING LABS ENGINE V30.0", footerSub: "Deep Focus Environment: Knowledge is the only unbreakable tactical advantage."
     }
 };
 
@@ -649,19 +479,19 @@ const SocraticMasterclass = ({ topic, lang, onBack, onClose, UI }) => {
               </div>
               
               <div style={{ borderLeft: '4px solid #ef4444', padding: '25px', background: 'rgba(239,68,68,0.03)', borderRadius: '0 12px 12px 0' }}>
-                 <h3 style={{color: '#ef4444', marginTop: 0, fontSize: '18px', display: 'flex', alignItems: 'center', gap:'10px', textTransform:'uppercase'}}>⚠️ TRAMPA COGNITIVA COMÚN</h3>
+                 <h3 style={{color: '#ef4444', marginTop: 0, fontSize: '18px', display: 'flex', alignItems: 'center', gap:'10px', textTransform:'uppercase'}}>⚠️ TRAMPA COGNITIVA</h3>
                  <MarkdownParser text={classData.trap} />
               </div>
 
               <div style={{ borderLeft: '4px solid #f59e0b', padding: '25px', background: 'rgba(245,158,11,0.03)', borderRadius: '0 12px 12px 0' }}>
-                 <h3 style={{color: '#f59e0b', marginTop: 0, fontSize: '18px', display: 'flex', alignItems: 'center', gap:'10px', textTransform:'uppercase'}}>⚙️ PROTOCOLO TÁCTICO DE RESOLUCIÓN</h3>
+                 <h3 style={{color: '#f59e0b', marginTop: 0, fontSize: '18px', display: 'flex', alignItems: 'center', gap:'10px', textTransform:'uppercase'}}>⚙️ PROTOCOLO DE RESOLUCIÓN</h3>
                  <MarkdownParser text={classData.protocol} />
               </div>
            </div>
 
            {classData.demoQuestion && (
                <div style={{ marginTop: '50px', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '12px', padding: 'clamp(20px, 4vw, 30px)', background: 'rgba(2, 6, 23, 0.8)' }}>
-                   <h3 style={{color: '#10b981', textAlign: 'center', marginTop: 0, fontSize: '20px', textTransform:'uppercase'}}>🧪 SIMULACIÓN DE CASO (ALTO NIVEL)</h3>
+                   <h3 style={{color: '#10b981', textAlign: 'center', marginTop: 0, fontSize: '20px', textTransform:'uppercase'}}>🧪 SIMULACIÓN DE CASO CLÍNICO</h3>
                    <p style={{color: '#64748b', fontSize: '13px', textAlign: 'center', fontStyle: 'italic', marginBottom:'25px'}}>Problema generado de forma procedural y única.</p>
                    
                    <div style={{ color: '#f8fafc', fontSize: 'clamp(16px, 3vw, 18px)', lineHeight: '1.6', background: 'rgba(255,255,255,0.03)', padding: '25px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -680,7 +510,7 @@ const SocraticMasterclass = ({ topic, lang, onBack, onClose, UI }) => {
                    </div>
                    
                    <div style={{ marginTop: '30px', padding: '25px', background: 'rgba(16, 185, 129, 0.05)', color: '#10b981', borderRadius: '8px', borderLeft: '4px solid #10b981' }}>
-                       <strong style={{fontSize: '18px', display:'block', marginBottom:'10px', textTransform:'uppercase'}}>EXPLICACIÓN FORENSE DEL ICFES:</strong>
+                       <strong style={{fontSize: '18px', display:'block', marginBottom:'10px', textTransform:'uppercase'}}>EXPLICACIÓN FORENSE:</strong>
                        <MarkdownParser text={classData.demoQuestion.analysis} />
                    </div>
                </div>
@@ -741,7 +571,6 @@ function GameApp() {
   const [hintUsed, setHintUsed] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
   
-  // PHANTOM QUEUE STATE
   const [pendingAIQ, setPendingAIQ] = useState(null);
   const isFetchingAI = useRef(false); 
 
@@ -753,6 +582,9 @@ function GameApp() {
   
   const [stats, setStats] = useState(getInitialStats);
 
+  // Inyección de la constante que faltaba para el botón SALIR
+  const resetApp = useGameStore(state => state.resetProgress) || (() => window.location.reload());
+
   const failedTopics = useMemo(() => {
       return Object.keys(stats.topics).filter(topicId => stats.topics[topicId].w > 0);
   }, [stats]);
@@ -762,19 +594,6 @@ function GameApp() {
       window.localStorage.setItem('icfes_telemetry_quimica_v9', JSON.stringify(stats));
     }
   }, [stats]);
-
-  const currentQ = useMemo(() => {
-      if (!currentQData) return null;
-      if (currentQData.texts) {
-          // Si es del fallback local (raro ahora), resolvemos el idioma
-          const d = currentQData.texts[safeLang] || currentQData.texts['es'];
-          let displayOptions = currentQData.options;
-          if (currentQData.optionsKeys) displayOptions = currentQData.optionsKeys.map(k => d.opts[k]);
-          return { ...currentQData, topic: d.topic, text: d.text, options: displayOptions, hint: d.hint, microclass: d.micro, trapExplanations: d.traps };
-      }
-      // Si es de IA (DeepSeek), ya viene listo en el idioma solicitado
-      return currentQData; 
-  }, [currentQData, safeLang]);
 
   const isMounted = useRef(true);
 
@@ -794,7 +613,7 @@ function GameApp() {
     return () => clearInterval(interval);
   }, [timerActive, timeLeft, phase]);
 
-  // Transición suave de LOADING a GAME cuando la IA devuelve la pregunta
+  // Transición suave de LOADING a GAME
   useEffect(() => {
       if (phase === "LOADING" && pendingAIQ) {
           setCurrentQData(pendingAIQ);
@@ -807,7 +626,7 @@ function GameApp() {
       }
   }, [phase, pendingAIQ]);
 
-  // Fetch asíncrono a DeepSeek (ESCUDO DE LATENCIA MEJORADO)
+  // Fetch asíncrono a DeepSeek (SIN HARDCODEO DE FALLBACK)
   const fetchAIQuestionBackground = useCallback(async (forcedTopic) => {
       if (isFetchingAI.current) return;
       isFetchingAI.current = true;
@@ -818,11 +637,9 @@ function GameApp() {
               setConnectionError(false);
           }
       } catch (e) {
-          console.error("DeepSeek TimeOut. Inyectando Redundancia Local.");
+          console.error("Fallo definitivo de red en DeepSeek.");
           if (isMounted.current) {
-              // Si falla la red localmente, inyectamos el Fallback que diseñamos en IcfesEngine para que la experiencia NO colapse
-              setPendingAIQ(IcfesEngine.generateQuestion(safeLang, forcedTopic));
-              setConnectionError(false); // Falsa sensación de éxito para no estresar al alumno
+              setConnectionError(true);
           }
       } finally {
           if (isMounted.current) isFetchingAI.current = false;
@@ -1195,25 +1012,25 @@ function GameApp() {
             )}
 
             {/* CONTENEDOR CENTRAL: PREGUNTA */}
-            {phase === "GAME" && currentQ && (
+            {phase === "GAME" && currentQData && (
               <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', overflowY: 'auto' }}>
                 <div className="glass-panel" style={{ width: '100%', maxWidth: '900px', borderTop: currentQData?.isAi ? '4px solid #d946ef' : '4px solid #00f2ff' }}>
                   
                   {/* Etiqueta de Origen de la Pregunta */}
                   <div style={{ display: 'inline-block', background: currentQData?.isAi ? 'rgba(217, 70, 239, 0.1)' : 'rgba(0, 242, 255, 0.1)', color: currentQData?.isAi ? '#d946ef' : '#00f2ff', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px', marginBottom: '20px' }}>
-                      {currentQData?.isAi ? "GENERADO POR DEEPSEEK IA" : "SISTEMA LOCAL ACTIVO"}
+                      {currentQData?.isAi ? "GENERADO POR DEEPSEEK IA" : "MOTOR ALGORÍTMICO LOCAL"}
                   </div>
 
-                  <h2 style={{color:'#f8fafc', fontSize:'clamp(18px, 3vw, 24px)', lineHeight:'1.7', fontWeight:'400', margin: '0 0 30px 0'}}>{currentQ.text}</h2>
+                  <h2 style={{color:'#f8fafc', fontSize:'clamp(18px, 3vw, 24px)', lineHeight:'1.7', fontWeight:'400', margin: '0 0 30px 0'}}>{currentQData.text}</h2>
                   
                   {scannerActive && (
                       <div style={{background:'rgba(0,242,255,0.05)', borderLeft:'4px solid #00f2ff', padding:'15px', margin:'0 0 30px 0', color:'#00f2ff', fontSize:'15px', fontWeight:'600'}}>
-                          💡 PISTA: {currentQ.hint}
+                          💡 PISTA: {currentQData.hint}
                       </div>
                   )}
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                      {currentQ.options.map((opt, i) => (
+                      {currentQData.options && currentQData.options.map((opt, i) => (
                           <button key={i} className={`opt-btn ${selectedOpt === i ? 'selected' : ''}`} onClick={() => {sfx.click(); setSelectedOpt(i);}}>
                               <span style={{fontWeight:'900', marginRight:'15px', color: selectedOpt === i ? '#00f2ff' : '#64748b'}}>{String.fromCharCode(65 + i)}.</span> {opt}
                           </button>
@@ -1278,7 +1095,7 @@ function GameApp() {
                       
                       <div style={{display:'flex', justifyContent:'flex-end', marginTop:'40px'}}>
                           <button className="hud-btn" style={{background:'#f8fafc', color:'#0f172a', borderColor: '#f8fafc'}} onClick={handleNextPhase}>
-                              CONTINUAR SIMULACIÓN
+                              REINTENTAR MATRIZ
                           </button>
                       </div>
                   </div>
