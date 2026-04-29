@@ -1,4 +1,5 @@
-import React, { Suspense, useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { Suspense, useEffect, useRef, useState, useCallback, useMemo, createContext, useContext } from 'react';
+import { create } from 'zustand';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars, Sparkles, Html, Line, Sphere, Float, Edges, Text } from '@react-three/drei';
 import { EffectComposer, Bloom, ChromaticAberration, Scanline } from '@react-three/postprocessing';
@@ -38,25 +39,41 @@ class GameErrorBoundary extends React.Component {
 }
 
 /* ============================================================
-   🧠 2. MOTOR GENERATIVO ALGORÍTMICO (FALLBACK DE EMERGENCIA)
+   🧠 2. MOTOR GENERATIVO ALGORÍTMICO (GOD TIER UPGRADE)
+   Incluye algoritmo Anti-Repetición para garantizar variedad ICFES
 ============================================================ */
 class IcfesEngine {
   static get ELECTRONEGATIVITIES() { return { F: 4.0, O: 3.5, Cl: 3.1, N: 3.0, C: 2.5, H: 2.1, Na: 0.9, K: 0.8, Mg: 1.2, Ca: 1.0 }; }
+  
+  // Memoria estática para evitar que el estudiante repita temas seguidos
+  static lastTopics = [];
 
-  // Utilidad para extraer el nombre traducido del tópico para el Reporte
   static getTopicName(topicId, lang) {
-      // Usamos el propio motor para obtener la traducción rápida instanciando una pregunta falsa (solo nos interesa el string del tema)
       const mockQ = this.generateQuestion(lang, topicId);
       return mockQ.topic || topicId.replace(/_/g, ' ');
   }
 
   static generateQuestion(lang, forcedTopic = null) {
-    const topics = [
+    const allTopics = [
       'GASES_IDEALES', 'ESTEQUIOMETRIA', 'DENSIDAD', 'PH', 
       'ENLACES_QUIMICOS', 'CONFIGURACION_ELECTRONICA', 
       'SOLUCIONES', 'BALANCEO_ECUACIONES', 'ISOTOPOS_Y_ESTRUCTURA', 'CINETICA_QUIMICA'
     ];
-    const selectedTopic = forcedTopic || topics[Math.floor(Math.random() * topics.length)];
+
+    // Algoritmo de Criba: Filtramos los temas que salieron en las últimas 6 preguntas
+    let availableTopics = allTopics.filter(t => !this.lastTopics.includes(t));
+    if (availableTopics.length === 0) {
+        this.lastTopics = []; // Reiniciamos el ciclo si ya vio todos
+        availableTopics = allTopics;
+    }
+
+    const selectedTopic = forcedTopic || availableTopics[Math.floor(Math.random() * availableTopics.length)];
+
+    // Registrar en memoria solo si es aleatorio
+    if (!forcedTopic) {
+        this.lastTopics.push(selectedTopic);
+        if (this.lastTopics.length > 6) this.lastTopics.shift();
+    }
 
     switch (selectedTopic) {
       case 'GASES_IDEALES': return this.genGasQuestion(lang);
@@ -69,7 +86,7 @@ class IcfesEngine {
       case 'BALANCEO_ECUACIONES': return this.genBalanceQuestion(lang);
       case 'ISOTOPOS_Y_ESTRUCTURA': return this.genIsotopeQuestion(lang);
       case 'CINETICA_QUIMICA': return this.genKineticsQuestion(lang);
-      default: return this.genGasQuestion(lang);
+      default: return this.genStoichQuestion(lang);
     }
   }
 
@@ -89,14 +106,17 @@ class IcfesEngine {
       };
   }
 
+  // --- MÓDULOS DE PREGUNTAS MEJORADOS ---
+
   static genGasQuestion(lang) {
-    const isIsochoric = Math.random() > 0.5; 
+    const isIsochoric = Math.random() > 0.5; // True = Boyle/Gay-Lussac, False = Charles
     const T1_C = Math.floor(Math.random() * 40) + 10;
     const T1_K = T1_C + 273.15;
-    const var1 = Math.floor(Math.random() * 5) + 2; 
+    const var1 = Math.floor(Math.random() * 5) + 2; // Presión o Volumen
     const T2_C = T1_C + Math.floor(Math.random() * 80) + 40;
     const T2_K = T2_C + 273.15;
     
+    // Ley combinada / Gay-Lussac / Charles: P1/T1 = P2/T2 o V1/T1 = V2/T2
     const correctVal = Number(((var1 * T2_K) / T1_K).toFixed(2));
     const errorCelsius = Number(((var1 * T2_C) / T1_C).toFixed(2)); 
     const errorInverted = Number(((var1 * T1_K) / T2_K).toFixed(2)); 
@@ -109,110 +129,141 @@ class IcfesEngine {
     const options = uniqueOptions.sort(() => Math.random() - 0.5);
     const correctIndex = options.indexOf(correctVal);
     const unit = isIsochoric ? 'atm' : 'L';
+    const varNameES = isIsochoric ? 'presión' : 'volumen';
+    const varNameEN = isIsochoric ? 'pressure' : 'volume';
 
     const texts = {
-      es: { topic: 'TERMODINÁMICA DE GASES', text: `Un gas ideal está confinado a ${var1} ${unit} y una temperatura de ${T1_C}°C. Si se calienta el sistema hasta los ${T2_C}°C manteniendo constante el ${isIsochoric ? 'volumen' : 'presión'}, ¿cuál será el nuevo valor en ${unit}?`, hint: "REGLA DE ORO ICFES: En termodinámica, la temperatura SIEMPRE opera en grados Kelvin (+273.15).", micro: `[EXPLICACIÓN DE FENÓMENOS - GASES]\n1. Conversión obligatoria:\n   T₁ = ${T1_C} + 273.15 = ${T1_K}K\n   T₂ = ${T2_C} + 273.15 = ${T2_K}K.\n2. Relación directamente proporcional.\n3. Matemática exacta: (${var1} × ${T2_K}) / ${T1_K} = ${correctVal} ${unit}.`, traps: [null, `Trampa Cognitiva: Usaste grados Celsius.`, `Trampa Cognitiva: Invertiste la relación.`, `Trampa Cognitiva: Suma lineal ilógica.`] },
-      en: { topic: 'GAS THERMODYNAMICS', text: `An ideal gas is confined at ${var1} ${unit} and ${T1_C}°C. If heated to ${T2_C}°C keeping ${isIsochoric ? 'volume' : 'pressure'} constant, what is the new value in ${unit}?`, hint: "GOLDEN RULE: Use Kelvin.", micro: `Convert: T₁=${T1_K}K, T₂=${T2_K}K. Math: (${var1} × ${T2_K}) / ${T1_K} = ${correctVal} ${unit}.`, traps: [null, "Used Celsius.", "Inverted ratio.", "Linear addition."] },
-      fr: { topic: 'THERMODYNAMIQUE DES GAZ', text: `Un gaz idéal est confiné à ${var1} ${unit} et ${T1_C}°C. S'il est chauffé à ${T2_C}°C en gardant ${isIsochoric ? 'le volume' : 'la pression'} constant(e), quelle est la nouvelle valeur en ${unit}?`, hint: "RÈGLE D'OR : Utilisez Kelvin.", micro: `Convertir: T₁=${T1_K}K, T₂=${T2_K}K. Calcul: (${var1} × ${T2_K}) / ${T1_K} = ${correctVal} ${unit}.`, traps: [null, "Celsius utilisé.", "Ratio inversé.", "Addition linéaire."] },
-      de: { topic: 'GASTHERMODYNAMIK', text: `Ein ideales Gas ist bei ${var1} ${unit} und ${T1_C}°C eingeschlossen. Wenn es auf ${T2_C}°C erhitzt wird, wobei ${isIsochoric ? 'das Volumen' : 'der Druck'} konstant bleibt, was ist der neue Wert in ${unit}?`, hint: "GOLDENE REGEL: Verwenden Sie Kelvin.", micro: `Umwandeln: T₁=${T1_K}K, T₂=${T2_K}K. Mathematik: (${var1} × ${T2_K}) / ${T1_K} = ${correctVal} ${unit}.`, traps: [null, "Celsius verwendet.", "Verhältnis umgekehrt.", "Lineare Addition."] }
+      es: { topic: 'TERMODINÁMICA DE GASES', text: `Un gas ideal ocupa ${var1} ${unit} a una temperatura de ${T1_C}°C. Si se calienta el sistema hasta los ${T2_C}°C manteniendo constante el ${isIsochoric ? 'volumen' : 'presión'}, ¿cuál será la nueva ${varNameES} en ${unit}?`, hint: "REGLA DE ORO ICFES: En termodinámica, la temperatura SIEMPRE opera en grados Kelvin (+273.15).", micro: `[EXPLICACIÓN DE FENÓMENOS - GASES]\n1. Conversión obligatoria:\n   T₁ = ${T1_C} + 273.15 = ${T1_K}K\n   T₂ = ${T2_C} + 273.15 = ${T2_K}K.\n2. Relación directamente proporcional (Ley de ${isIsochoric ? 'Gay-Lussac' : 'Charles'}).\n3. Matemática exacta: (${var1} × ${T2_K}) / ${T1_K} = ${correctVal} ${unit}.`, traps: [null, `Trampa Cognitiva: Operaste con grados Celsius directos.`, `Trampa Cognitiva: Invertiste la relación matemática.`, `Trampa Cognitiva: Sumaste en lugar de usar proporciones.`] },
+      en: { topic: 'GAS THERMODYNAMICS', text: `An ideal gas is confined at ${var1} ${unit} and ${T1_C}°C. If heated to ${T2_C}°C keeping ${isIsochoric ? 'volume' : 'pressure'} constant, what is the new ${varNameEN} in ${unit}?`, hint: "GOLDEN RULE: Use Kelvin.", micro: `Convert: T₁=${T1_K}K, T₂=${T2_K}K. Math: (${var1} × ${T2_K}) / ${T1_K} = ${correctVal} ${unit}.`, traps: [null, "Used Celsius directly.", "Inverted ratio.", "Linear addition used."] },
     };
     const langData = texts[lang] || texts['es'];
     return { id: 'GASES_IDEALES', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} ${unit}`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
   }
 
   static genStoichQuestion(lang) {
-    const alkanes = [
-      { name: {es: "Metano", en: "Methane", fr: "Méthane", de: "Methan"}, f: "CH₄", c: 1, h: 4, mass: 16 },
-      { name: {es: "Etano", en: "Ethane", fr: "Éthane", de: "Ethan"}, f: "C₂H₆", c: 2, h: 6, mass: 30 },
-      { name: {es: "Propano", en: "Propane", fr: "Propane", de: "Propan"}, f: "C₃H₈", c: 3, h: 8, mass: 44 }
+    const reactions = [
+      { name: {es: "Metano", en: "Methane"}, f: "CH₄", c: 1, h: 4, mass: 16, prod: "CO₂", prodMass: 44, mRatio: 1 },
+      { name: {es: "Etano", en: "Ethane"}, f: "C₂H₆", c: 2, h: 6, mass: 30, prod: "CO₂", prodMass: 44, mRatio: 2 },
+      { name: {es: "Propano", en: "Propane"}, f: "C₃H₈", c: 3, h: 8, mass: 44, prod: "CO₂", prodMass: 44, mRatio: 3 },
+      { name: {es: "Glucosa", en: "Glucose"}, f: "C₆H₁₂O₆", c: 6, h: 12, mass: 180, prod: "CO₂", prodMass: 44, mRatio: 6 }
     ];
-    const alkane = alkanes[Math.floor(Math.random() * alkanes.length)];
-    const molesO2 = alkane.c + (alkane.h / 4); const molesCO2 = alkane.c; const molesH2O = alkane.h / 2;
-    const inputMoles = Math.floor(Math.random() * 3) + 2; const inputGrams = inputMoles * alkane.mass;
-    const correctGramsCO2 = inputMoles * molesCO2 * 44; 
-    const errorNoRatio = inputMoles * 44; const errorInverted = Number(((inputMoles / molesCO2) * 44).toFixed(1)); const errorNoMass = inputMoles * molesCO2; 
+    const react = reactions[Math.floor(Math.random() * reactions.length)];
+    const inputMoles = Math.floor(Math.random() * 3) + 1; 
+    const inputGrams = inputMoles * react.mass;
+    
+    // Gramos reales de producto
+    const correctGrams = inputMoles * react.mRatio * react.prodMass; 
+    const errorNoRatio = inputMoles * react.prodMass; 
+    const errorInverted = Number(((inputMoles / react.mRatio) * react.prodMass).toFixed(1)); 
+    const errorNoMass = inputMoles * react.mRatio; 
 
-    const optionsRaw = [correctGramsCO2, errorNoRatio, errorNoMass, errorInverted];
+    const optionsRaw = [correctGrams, errorNoRatio, errorNoMass, errorInverted];
     const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n) && n > 0);
     while(uniqueOptions.length < 4) uniqueOptions.push(Math.floor(Math.random() * 300) + 50);
     const options = uniqueOptions.sort(() => Math.random() - 0.5);
-    const correctIndex = options.indexOf(correctGramsCO2);
+    const correctIndex = options.indexOf(correctGrams);
 
     const texts = {
-      es: { topic: 'ESTEQUIOMETRÍA', text: `Combustión del ${alkane.name.es}: ${alkane.f} + O₂ ➔ CO₂ + H₂O (Ecuación sin balancear). Si reaccionan ${inputGrams}g del alcano, ¿cuántos gramos de CO₂ se emiten? (Masas: C=12, H=1, O=16).`, hint: "1. Balancea. 2. Gramos a moles. 3. Ratio. 4. Moles a gramos.", micro: `Ecuación: 1 ${alkane.f} + ${molesO2} O₂ ➔ ${molesCO2} CO₂ + ${molesH2O} H₂O.\nTienes ${inputGrams}g / ${alkane.mass}g/mol = ${inputMoles} moles. Relación: ${inputMoles * molesCO2} moles de CO₂ × 44g/mol = ${correctGramsCO2}g.`, traps: [null, `Trampa: No balanceaste (${errorNoRatio}g).`, `Trampa: Respondiste en moles.`, `Trampa: Invertiste el ratio.`] },
-      en: { topic: 'STOICHIOMETRY', text: `Combustion of ${alkane.name.en}: ${alkane.f} + O₂ ➔ CO₂ + H₂O (Unbalanced). If ${inputGrams}g of alkane react, how many grams of CO₂ are emitted?`, hint: "Balance -> Grams to Moles -> Ratio -> Moles to Grams.", micro: `Balanced: 1 ${alkane.f} + ${molesO2} O₂ ➔ ${molesCO2} CO₂ + ${molesH2O} H₂O.\n${inputGrams}g / ${alkane.mass}g/mol = ${inputMoles} moles. Ratio: ${inputMoles * molesCO2} moles CO₂ × 44g/mol = ${correctGramsCO2}g.`, traps: [null, "Trap: Unbalanced.", "Trap: Moles instead of grams.", "Trap: Inverted ratio."] },
-      fr: { topic: 'STŒCHIOMÉTRIE', text: `Combustion du ${alkane.name.fr}: ${alkane.f} + O₂ ➔ CO₂ + H₂O (Non équilibré). Si ${inputGrams}g d'alcane réagissent, combien de grammes de CO₂ sont émis ?`, hint: "Équilibrez -> Grammes en Moles -> Ratio -> Moles en Grammes.", micro: `Équilibré: 1 ${alkane.f} produit ${molesCO2} CO₂.\n${inputGrams}g / ${alkane.mass}g/mol = ${inputMoles} moles. Ratio: ${inputMoles * molesCO2} moles CO₂ × 44g/mol = ${correctGramsCO2}g.`, traps: [null, "Piège: Non équilibré.", "Piège: Moles au lieu de grammes.", "Piège: Ratio inversé."] },
-      de: { topic: 'STÖCHIOMETRIE', text: `Verbrennung von ${alkane.name.de}: ${alkane.f} + O₂ ➔ CO₂ + H₂O (Unbalanciert). Wenn ${inputGrams}g Alkan reagieren, wie viele Gramm CO₂ werden freigesetzt?`, hint: "Ausgleichen -> Gramm in Mol -> Verhältnis -> Mol in Gramm.", micro: `Ausgeglichen: 1 ${alkane.f} erzeug ${molesCO2} CO₂.\n${inputGrams}g / ${alkane.mass}g/mol = ${inputMoles} Mol. Verhältnis: ${inputMoles * molesCO2} Mol CO₂ × 44g/mol = ${correctGramsCO2}g.`, traps: [null, "Falle: Nicht ausgeglichen.", "Falle: Mol statt Gramm.", "Falle: Umgekehrtes Verhältnis."] }
+      es: { topic: 'ESTEQUIOMETRÍA AVANZADA', text: `En la combustión del ${react.name.es} (${react.f}), si reaccionan ${inputGrams}g del compuesto con oxígeno en exceso, ¿cuántos gramos de ${react.prod} se emiten? (Masa Molar: ${react.f}=${react.mass}g/mol, ${react.prod}=${react.prodMass}g/mol).`, hint: "1. Gramos a moles. 2. Aplica la relación estequiométrica (Balance). 3. Moles a gramos.", micro: `Reacción balanceada indica que 1 mol de ${react.f} produce ${react.mRatio} moles de ${react.prod}.\n1. Tienes ${inputGrams}g / ${react.mass}g/mol = ${inputMoles} moles de ${react.f}.\n2. Relación: ${inputMoles} × ${react.mRatio} = ${inputMoles * react.mRatio} moles de ${react.prod}.\n3. Convertir a gramos: ${inputMoles * react.mRatio} moles × ${react.prodMass}g/mol = ${correctGrams}g.`, traps: [null, `Trampa: Olvidaste el coeficiente estequiométrico (${errorNoRatio}g).`, `Trampa: Te detuviste en moles.`, `Trampa: Dividiste la relación en vez de multiplicar.`] },
+      en: { topic: 'ADVANCED STOICHIOMETRY', text: `In the combustion of ${react.name.en} (${react.f}), if ${inputGrams}g react with excess oxygen, how many grams of ${react.prod} are emitted? (Molar Mass: ${react.f}=${react.mass}g/mol, ${react.prod}=${react.prodMass}g/mol).`, hint: "Grams -> Moles -> Ratio -> Grams.", micro: `Balanced reaction: 1 mol ${react.f} yields ${react.mRatio} mol ${react.prod}.\n1. ${inputGrams}g / ${react.mass}g/mol = ${inputMoles} moles.\n2. Ratio: ${inputMoles * react.mRatio} moles ${react.prod}.\n3. To grams: ${inputMoles * react.mRatio} × ${react.prodMass} = ${correctGrams}g.`, traps: [null, "Trap: Forgot stoichiometric coefficient.", "Trap: Stopped at moles.", "Trap: Inverted the ratio."] },
     };
     const langData = texts[lang] || texts['es'];
     return { id: 'ESTEQUIOMETRIA', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} g`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
   }
 
   static genDensityQuestion(lang) {
-    const volume = Math.floor(Math.random() * 40) + 15; 
-    const mass = Math.floor(Math.random() * 150) + 80; 
-    const correctDensity = Number((mass / volume).toFixed(2));
-    const initialVol = Math.floor(Math.random() * 30) + 30; const finalVol = initialVol + volume;
-    const errorFinalVol = Number((mass / finalVol).toFixed(2)); const errorInverted = Number((volume / mass).toFixed(2)); const errorRest = Number((mass / (finalVol + initialVol)).toFixed(2)); 
+    // Variación para densidad para evitar repetición
+    const types = ['archimedes', 'alloy'];
+    const type = types[Math.floor(Math.random() * types.length)];
 
-    const optionsRaw = [correctDensity, errorFinalVol, errorInverted, errorRest];
-    const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
-    while(uniqueOptions.length < 4) uniqueOptions.push(Number((Math.random() * 8 + 1).toFixed(2)));
-    const options = uniqueOptions.sort(() => Math.random() - 0.5);
-    const correctIndex = options.indexOf(correctDensity);
+    if (type === 'archimedes') {
+        const volume = Math.floor(Math.random() * 40) + 15; 
+        const mass = Math.floor(Math.random() * 150) + 80; 
+        const correctDensity = Number((mass / volume).toFixed(2));
+        const initialVol = Math.floor(Math.random() * 30) + 30; 
+        const finalVol = initialVol + volume;
+        const errorFinalVol = Number((mass / finalVol).toFixed(2)); 
+        const errorInverted = Number((volume / mass).toFixed(2)); 
+        const errorRest = Number((mass / (finalVol + initialVol)).toFixed(2)); 
 
-    const texts = {
-      es: { topic: 'PROPIEDADES INTENSIVAS', text: `Una probeta contiene ${initialVol} mL de agua. Al introducir una pieza metálica de ${mass} g, el nivel del agua asciende a ${finalVol} mL. ¿Cuál es la densidad exacta del metal?`, hint: "El volumen es la diferencia: Volumen final - Volumen inicial.", micro: `Volumen real: ${finalVol}mL - ${initialVol}mL = ${volume}mL.\nCálculo: ${mass}g / ${volume}mL = ${correctDensity} g/mL.`, traps: [null, `Trampa: Usaste el volumen total (${finalVol}mL).`, `Trampa: Dividiste volumen entre masa.`, `Trampa: Sumaste los volúmenes.`] },
-      en: { topic: 'INTENSIVE PROPERTIES', text: `A cylinder has ${initialVol} mL of water. A metal piece of ${mass} g is added, raising water to ${finalVol} mL. Exact density?`, hint: "Volume is Final - Initial.", micro: `Real volume: ${finalVol}mL - ${initialVol}mL = ${volume}mL.\nCalc: ${mass}g / ${volume}mL = ${correctDensity} g/mL.`, traps: [null, "Trap: Used total volume.", "Trap: Inverted formula.", "Trap: Added volumes."] },
-      fr: { topic: 'PROPRIÉTÉS INTENSIVES', text: `Une éprouvette contient ${initialVol} mL d'eau. Une pièce de ${mass} g est ajoutée, faisant monter l'eau à ${finalVol} mL. Quelle est sa densité ?`, hint: "Volume = Final - Initial.", micro: `Volume réel: ${finalVol}mL - ${initialVol}mL = ${volume}mL.\nCalcul: ${mass}g / ${volume}mL = ${correctDensity} g/mL.`, traps: [null, "Piège: Volume total utilisé.", "Piège: Formule inversée.", "Piège: Volumes additionnés."] },
-      de: { topic: 'INTENSIVE EIGENSCHAFTEN', text: `Ein Zylinder enthält ${initialVol} mL Wasser. Ein ${mass} g Metallstück erhöht das Wasser auf ${finalVol} mL. Exakte Dichte?`, hint: "Volumen = Endwert - Anfangswert.", micro: `Reales Volumen: ${finalVol}mL - ${initialVol}mL = ${volume}mL.\nBerechnung: ${mass}g / ${volume}mL = ${correctDensity} g/mL.`, traps: [null, "Falle: Gesamtvolumen verwendet.", "Falle: Formel umgekehrt.", "Falle: Volumen addiert."] }
-    };
-    const langData = texts[lang] || texts['es'];
-    return { id: 'DENSIDAD', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} g/mL`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
+        const optionsRaw = [correctDensity, errorFinalVol, errorInverted, errorRest];
+        const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
+        while(uniqueOptions.length < 4) uniqueOptions.push(Number((Math.random() * 8 + 1).toFixed(2)));
+        const options = uniqueOptions.sort(() => Math.random() - 0.5);
+        const correctIndex = options.indexOf(correctDensity);
+
+        const texts = {
+          es: { topic: 'PROPIEDADES INTENSIVAS', text: `Una probeta contiene ${initialVol} mL de agua. Al introducir una pieza metálica de ${mass} g, el nivel del agua asciende a ${finalVol} mL. ¿Cuál es la densidad exacta del metal?`, hint: "El volumen del objeto es igual al volumen de agua desplazada.", micro: `Volumen desplazado: ${finalVol}mL - ${initialVol}mL = ${volume}mL.\nCálculo de densidad: d = m/v = ${mass}g / ${volume}mL = ${correctDensity} g/mL.`, traps: [null, `Trampa: Dividiste la masa entre el volumen final total.`, `Trampa: Dividiste volumen entre masa (eso es volumen específico).`, `Trampa: Sumaste los volúmenes sin sentido físico.`] },
+          en: { topic: 'INTENSIVE PROPERTIES', text: `A cylinder has ${initialVol} mL of water. A metal piece of ${mass} g is added, raising water to ${finalVol} mL. Exact density?`, hint: "Object volume = displaced water volume.", micro: `Displaced volume: ${finalVol}mL - ${initialVol}mL = ${volume}mL.\nDensity: ${mass}g / ${volume}mL = ${correctDensity} g/mL.`, traps: [null, "Trap: Used total final volume.", "Trap: Inverted formula (v/m).", "Trap: Added volumes improperly."] },
+        };
+        const langData = texts[lang] || texts['es'];
+        return { id: 'DENSIDAD', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} g/mL`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
+    } else {
+        const mass1 = Math.floor(Math.random() * 50) + 50; const vol1 = 10;
+        const mass2 = Math.floor(Math.random() * 50) + 50; const vol2 = 20;
+        const d1 = mass1/vol1; const d2 = mass2/vol2;
+        const correctDensity = Number(((mass1+mass2)/(vol1+vol2)).toFixed(2));
+        const errorAvg = Number(((d1+d2)/2).toFixed(2)); // Trampa común: promediar densidades
+        const errorSum = Number((d1+d2).toFixed(2));
+
+        const optionsRaw = [correctDensity, errorAvg, errorSum, Number((correctDensity*1.5).toFixed(2))];
+        const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
+        while(uniqueOptions.length < 4) uniqueOptions.push(Number((Math.random() * 8 + 1).toFixed(2)));
+        const options = uniqueOptions.sort(() => Math.random() - 0.5);
+        const correctIndex = options.indexOf(correctDensity);
+
+        const texts = {
+          es: { topic: 'MEZCLAS Y DENSIDAD', text: `Se funden dos metales: el Metal A (${mass1}g, volumen ${vol1}mL) y el Metal B (${mass2}g, volumen ${vol2}mL). Asumiendo volúmenes aditivos, ¿cuál es la densidad de la aleación resultante?`, hint: "La densidad de una mezcla NO es el promedio de las densidades. Es Masa Total / Volumen Total.", micro: `Masa Total = ${mass1} + ${mass2} = ${mass1+mass2}g.\nVolumen Total = ${vol1} + ${vol2} = ${vol1+vol2}mL.\nDensidad Aleación = ${mass1+mass2} / ${vol1+vol2} = ${correctDensity} g/mL.`, traps: [null, `Trampa ICFES: Promediaste las densidades de los metales. La densidad es intensiva, no se promedia linealmente así.`, `Trampa: Sumaste las densidades.`, `Error de cálculo.`] },
+          en: { topic: 'MIXTURES & DENSITY', text: `Two metals are melted together: Metal A (${mass1}g, ${vol1}mL) and Metal B (${mass2}g, ${vol2}mL). Assuming additive volumes, what is the density of the alloy?`, hint: "Density is NOT the average. Use Total Mass / Total Volume.", micro: `Total Mass = ${mass1+mass2}g.\nTotal Vol = ${vol1+vol2}mL.\nAlloy Density = ${mass1+mass2} / ${vol1+vol2} = ${correctDensity} g/mL.`, traps: [null, "ICFES Trap: Averaged the densities.", "Trap: Summed densities.", "Math error."] },
+        };
+        const langData = texts[lang] || texts['es'];
+        return { id: 'DENSIDAD', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} g/mL`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
+    }
   }
 
   static genPhQuestion(lang) {
-    const concExponent = Math.floor(Math.random() * 10) + 2; const coef = Math.floor(Math.random() * 8) + 1; 
-    const pH = Number((concExponent - Math.log10(coef)).toFixed(2)); const pOH = Number((14 - pH).toFixed(2));
-    const error1 = pOH; const error2 = concExponent; const error3 = Number((14 - concExponent).toFixed(2));
+    const isOH = Math.random() > 0.5; // Variante: pedir pH desde [OH-]
+    const concExponent = Math.floor(Math.random() * 10) + 2; 
+    const coef = Math.floor(Math.random() * 8) + 1; 
+    
+    const pIon = Number((concExponent - Math.log10(coef)).toFixed(2)); 
+    const pH = isOH ? Number((14 - pIon).toFixed(2)) : pIon;
+    const pOH = isOH ? pIon : Number((14 - pH).toFixed(2));
 
-    const optionsRaw = [pH, error1, error2, error3];
+    const optionsRaw = [pH, pOH, concExponent, Number((14 - concExponent).toFixed(2))];
     const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
     while(uniqueOptions.length < 4) uniqueOptions.push(Number((Math.random() * 14).toFixed(2)));
     const options = uniqueOptions.sort(() => Math.random() - 0.5);
     const correctIndex = options.indexOf(pH);
 
+    const ionStr = isOH ? "Hidróxido [OH⁻]" : "Hidronio [H⁺]";
+    const ionStrEn = isOH ? "Hydroxide [OH⁻]" : "Hydronium [H⁺]";
+
     const texts = {
-      es: { topic: 'EQUILIBRIO ÁCIDO-BASE', text: `La concentración de iones Hidronio [H⁺] es de ${coef}.0 × 10⁻${concExponent} M. Según la escala logarítmica, ¿cuál es el pH exacto?`, hint: "Propiedad de logaritmos: -log(A × 10⁻ᴮ) = B - log(A).", micro: `pH = -log(${coef} × 10⁻${concExponent}) ➔ ${concExponent} - log(${coef}) = ${pH}.`, traps: [null, `Trampa: Calculaste el pOH (${pOH}).`, `Trampa: Ignoraste el logaritmo del coeficiente.`, `Trampa: Mezclaste pOH con el exponente directo.`] },
-      en: { topic: 'ACID-BASE EQUILIBRIUM', text: `Hydronium ion [H⁺] concentration is ${coef}.0 × 10⁻${concExponent} M. What is the exact pH?`, hint: "Log property: -log(A × 10⁻ᴮ) = B - log(A).", micro: `pH = -log(${coef} × 10⁻${concExponent}) ➔ ${concExponent} - log(${coef}) = ${pH}.`, traps: [null, "Trap: Calculated pOH.", "Trap: Ignored coefficient log.", "Trap: Mixed formula."] },
-      fr: { topic: 'ÉQUILIBRE ACIDO-BASIQUE', text: `La concentration en [H⁺] est de ${coef}.0 × 10⁻${concExponent} M. Quel est le pH exact ?`, hint: "Propriété : -log(A × 10⁻ᴮ) = B - log(A).", micro: `pH = -log(${coef} × 10⁻${concExponent}) ➔ ${concExponent} - log(${coef}) = ${pH}.`, traps: [null, "Piège: pOH calculé.", "Piège: Log ignoré.", "Piège: Formule mixte."] },
-      de: { topic: 'SÄURE-BASE-GLEICHGEWICHT', text: `Die [H⁺] Konzentration beträgt ${coef}.0 × 10⁻${concExponent} M. Was ist der exakte pH-Wert?`, hint: "Log-Eigenschaft: -log(A × 10⁻ᴮ) = B - log(A).", micro: `pH = -log(${coef} × 10⁻${concExponent}) ➔ ${concExponent} - log(${coef}) = ${pH}.`, traps: [null, "Falle: pOH berechnet.", "Falle: Log ignoriert.", "Falle: Gemischte Formel."] }
+      es: { topic: 'EQUILIBRIO ÁCIDO-BASE', text: `En una solución acuosa a 25°C, la concentración de iones ${ionStr} es de ${coef}.0 × 10⁻${concExponent} M. Según las propiedades logarítmicas, ¿cuál es el pH de la solución?`, hint: isOH ? "Ojo: Te dieron OH⁻. Calcula el pOH primero, y luego usa pH + pOH = 14." : "Aplica la propiedad: -log(A × 10⁻ᴮ) = B - log(A).", micro: isOH ? `1. pOH = -log(${coef} × 10⁻${concExponent}) = ${pOH}.\n2. Como pH + pOH = 14, entonces pH = 14 - ${pOH} = ${pH}.` : `Cálculo directo: pH = -log([H⁺]) = -log(${coef} × 10⁻${concExponent}) = ${concExponent} - log(${coef}) = ${pH}.`, traps: [null, isOH ? `Trampa: Calculaste el pOH pero olvidaste restarlo de 14 para hallar el pH.` : `Trampa: Respondiste el pOH en lugar del pH.`, `Trampa: Tomaste solo el exponente, ignorando el coeficiente.`, `Trampa: Operación matemática invertida.`] },
+      en: { topic: 'ACID-BASE EQUILIBRIUM', text: `In a 25°C solution, the ${ionStrEn} concentration is ${coef}.0 × 10⁻${concExponent} M. What is the pH?`, hint: isOH ? "Careful: You have OH⁻. Find pOH first, then pH = 14 - pOH." : "-log(A × 10⁻ᴮ) = B - log(A).", micro: isOH ? `1. pOH = ${pOH}.\n2. pH = 14 - ${pOH} = ${pH}.` : `pH = -log(${coef} × 10⁻${concExponent}) = ${pH}.`, traps: [null, isOH ? "Calculated pOH instead of pH." : "Answered pOH.", "Ignored coefficient.", "Math error."] },
     };
     const langData = texts[lang] || texts['es'];
     return { id: 'PH', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `pH ${o}`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
   }
 
   static genBondQuestion(lang) {
-    const metals = ['Na', 'K', 'Mg', 'Ca']; const nonMetals = ['F', 'O', 'Cl', 'N'];
-    const el1 = metals[Math.floor(Math.random()*metals.length)]; const el2 = nonMetals[Math.floor(Math.random()*nonMetals.length)];
-    const en1 = this.ELECTRONEGATIVITIES[el1]; const en2 = this.ELECTRONEGATIVITIES[el2];
+    const metals = ['Na', 'K', 'Mg', 'Ca', 'Li']; const nonMetals = ['F', 'O', 'Cl', 'N', 'Br'];
+    const el1 = Math.random() > 0.5 ? metals[Math.floor(Math.random()*metals.length)] : nonMetals[Math.floor(Math.random()*nonMetals.length)]; 
+    const el2 = nonMetals[Math.floor(Math.random()*nonMetals.length)];
+    const en1 = this.ELECTRONEGATIVITIES[el1] || 1.0; const en2 = this.ELECTRONEGATIVITIES[el2] || 3.0;
     const diff = Number(Math.abs(en1 - en2).toFixed(1));
     
     let bondTypeES = diff > 1.7 ? "Iónico" : (diff > 0.4 ? "Covalente Polar" : "Covalente Apolar");
     let bondTypeEN = diff > 1.7 ? "Ionic" : (diff > 0.4 ? "Polar Covalent" : "Non-polar Covalent");
-    let bondTypeFR = diff > 1.7 ? "Ionique" : (diff > 0.4 ? "Covalent Polaire" : "Covalent Apolaire");
-    let bondTypeDE = diff > 1.7 ? "Ionisch" : (diff > 0.4 ? "Polar Kovalent" : "Unpolar Kovalent");
-    const bondType = {es: bondTypeES, en: bondTypeEN, fr: bondTypeFR, de: bondTypeDE}[lang] || bondTypeES;
 
     const optionsKeys = ['ionic', 'polar', 'apolar', 'metal'].sort(() => Math.random() - 0.5);
     const correctType = diff > 1.7 ? 'ionic' : (diff > 0.4 ? 'polar' : 'apolar');
     const correctIndex = optionsKeys.indexOf(correctType);
 
     const texts = {
-      es: { topic: 'ENLACES QUÍMICOS', text: `Átomo A (EN=${en1}) y Átomo B (EN=${en2}). Según su diferencia de electronegatividad, ¿qué tipo de enlace rige la molécula?`, hint: "> 1.7 (Iónico). 0.4 - 1.7 (Polar). < 0.4 (Apolar).", micro: `Diferencia matemática: |${en1} - ${en2}| = ${diff}. Escala de Pauling ➔ ${bondType}.`, opts: { ionic: "Iónico", polar: "Covalente Polar", apolar: "Covalente Apolar", metal: "Metálico" }, traps: [null, null, null, null] },
-      en: { topic: 'CHEMICAL BONDS', text: `Atom A (EN=${en1}) and Atom B (EN=${en2}). What is the bond type?`, hint: "> 1.7 (Ionic). 0.4 - 1.7 (Polar). < 0.4 (Non-polar).", micro: `Math diff: |${en1} - ${en2}| = ${diff}. Pauling's Rule ➔ ${bondType}.`, opts: { ionic: "Ionic", polar: "Polar Covalent", apolar: "Non-polar Covalent", metal: "Metallic" }, traps: [null, null, null, null] },
-      fr: { topic: 'LIAISONS CHIMIQUES', text: `Atome A (EN=${en1}) et Atome B (EN=${en2}). Quel est le type de liaison ?`, hint: "> 1.7 (Ionique). 0.4 - 1.7 (Polaire). < 0.4 (Apolaire).", micro: `Différence : |${en1} - ${en2}| = ${diff}. Pauling ➔ ${bondType}.`, opts: { ionic: "Ionique", polar: "Covalent Polaire", apolar: "Covalent Apolaire", metal: "Métallique" }, traps: [null, null, null, null] },
-      de: { topic: 'CHEMISCHE BINDUNGEN', text: `Atom A (EN=${en1}) und Atom B (EN=${en2}). Bindungsart?`, hint: "> 1.7 (Ionisch). 0.4 - 1.7 (Polar). < 0.4 (Unpolar).", micro: `Differenz: |${en1} - ${en2}| = ${diff}. Pauling ➔ ${bondType}.`, opts: { ionic: "Ionisch", polar: "Polar Kovalent", apolar: "Unpolar Kovalent", metal: "Metallisch" }, traps: [null, null, null, null] }
+      es: { topic: 'ENLACES QUÍMICOS', text: `Un investigador analiza una molécula diatómica formada por Átomo A (EN=${en1}) y Átomo B (EN=${en2}). Basado estrictamente en la escala de electronegatividad, ¿qué tipo de enlace rige esta molécula?`, hint: "Escala de Pauling: > 1.7 (Iónico), entre 0.4 y 1.7 (Polar), < 0.4 (Apolar).", micro: `Diferencia matemática: |${en1} - ${en2}| = ${diff}.\nSegún la escala empírica de Pauling, una diferencia de ${diff} clasifica el enlace como ${bondTypeES}.`, opts: { ionic: "Enlace Iónico", polar: "Covalente Polar", apolar: "Covalente Apolar", metal: "Enlace Metálico" }, traps: [null, null, null, null] },
+      en: { topic: 'CHEMICAL BONDS', text: `Molecule formed by Atom A (EN=${en1}) and Atom B (EN=${en2}). Based on electronegativity, what is the bond type?`, hint: "> 1.7 (Ionic), 0.4 - 1.7 (Polar), < 0.4 (Apolar).", micro: `Diff: |${en1} - ${en2}| = ${diff}. Pauling scale ➔ ${bondTypeEN}.`, opts: { ionic: "Ionic Bond", polar: "Polar Covalent", apolar: "Non-polar Covalent", metal: "Metallic Bond" }, traps: [null, null, null, null] },
     };
     const langData = texts[lang] || texts['es'];
     return { id: 'ENLACES_QUIMICOS', isAi: false, topic: langData.topic, text: langData.text, options: optionsKeys.map(k => langData.opts[k]), optionsKeys: optionsKeys, correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
@@ -220,103 +271,126 @@ class IcfesEngine {
 
   static genElectronConfigQuestion(lang) {
     const atoms = [
-      { name: {es:"Sodio", en:"Sodium", fr:"Sodium", de:"Natrium"}, z: 11, config: "[Ne] 3s¹", period: 3, group: "1A" },
-      { name: {es:"Cloro", en:"Chlorine", fr:"Chlore", de:"Chlor"}, z: 17, config: "[Ne] 3s² 3p⁵", period: 3, group: "7A" },
-      { name: {es:"Magnesio", en:"Magnesium", fr:"Magnésium", de:"Magnesium"}, z: 12, config: "[Ne] 3s²", period: 3, group: "2A" }
+      { name: {es:"Fósforo", en:"Phosphorus"}, z: 15, config: "[Ne] 3s² 3p³", period: 3, group: "VA" },
+      { name: {es:"Potasio", en:"Potassium"}, z: 19, config: "[Ar] 4s¹", period: 4, group: "IA" },
+      { name: {es:"Aluminio", en:"Aluminum"}, z: 13, config: "[Ne] 3s² 3p¹", period: 3, group: "IIIA" }
     ];
     const atom = atoms[Math.floor(Math.random() * atoms.length)];
-    const correctAns = `${atom.period}, ${atom.group}`; const error1 = `${atom.period - 1}, ${atom.group}`; const error2 = `${atom.period}, ${atom.group.replace('A', 'B')}`; const error3 = `2, 8A`;
-    const optionsRaw = [correctAns, error1, error2, error3]; const options = optionsRaw.sort(() => Math.random() - 0.5);
+    const correctAns = `Periodo ${atom.period}, Grupo ${atom.group}`; 
+    const error1 = `Periodo ${atom.period - 1}, Grupo ${atom.group}`; 
+    const error2 = `Periodo ${atom.period}, Grupo ${atom.group.replace('A', 'B')}`; 
+    const error3 = `Periodo 2, Grupo VIIIA`;
+    
+    const optionsRaw = [correctAns, error1, error2, error3]; 
+    const options = optionsRaw.sort(() => Math.random() - 0.5);
     const correctIndex = options.indexOf(correctAns);
 
     const texts = {
-      es: { topic: 'CONFIGURACIÓN', text: `Un átomo neutro de ${atom.name.es} (Z=${atom.z}). ¿Periodo y grupo?`, hint: "Mayor nivel = periodo. Suma e- en ese nivel = grupo.", micro: `Configuración: ${atom.config}. Periodo ${atom.period}, Grupo ${atom.group}.`, traps: [null, "Periodo incorrecto.", "Metal de transición.", "Gases nobles."] },
-      en: { topic: 'CONFIGURATION', text: `Neutral ${atom.name.en} atom (Z=${atom.z}). Period and group?`, hint: "Highest level = period. Valence e- = group.", micro: `Config: ${atom.config}. Period ${atom.period}, Group ${atom.group}.`, traps: [null, "Wrong period.", "Transition metal.", "Noble gases."] },
-      fr: { topic: 'CONFIGURATION', text: `Atome neutre de ${atom.name.fr} (Z=${atom.z}). Période et groupe ?`, hint: "Niveau max = période. Électrons de valence = groupe.", micro: `Config: ${atom.config}. Période ${atom.period}, Groupe ${atom.group}.`, traps: [null, "Mauvaise période.", "Métal de transition.", "Gaz nobles."] },
-      de: { topic: 'KONFIGURATION', text: `Neutrales ${atom.name.de} Atom (Z=${atom.z}). Periode und Gruppe?`, hint: "Höchstes Niveau = Periode. Valenzelektronen = Gruppe.", micro: `Config: ${atom.config}. Periode ${atom.period}, Gruppe ${atom.group}.`, traps: [null, "Falsche Periode.", "Übergangsmetall.", "Edelgase."] }
+      es: { topic: 'TABLA PERIÓDICA', text: `La configuración electrónica de un átomo neutro de ${atom.name.es} termina en ${atom.config}. Con base en esto, determina su ubicación exacta en la tabla periódica.`, hint: "El nivel de energía más alto (el número grande) es el periodo. Los electrones sumados en ese nivel te dan el grupo.", micro: `Configuración: ${atom.config}.\n1. El coeficiente más alto es ${atom.period}, por lo tanto está en el Periodo ${atom.period}.\n2. Al sumar los electrones de ese nivel de valencia obtenemos el Grupo ${atom.group}.`, traps: [null, "Confundiste el nivel de energía anterior.", "Asignaste un grupo de metales de transición (B).", "Respuesta aleatoria."] },
+      en: { topic: 'PERIODIC TABLE', text: `Neutral ${atom.name.en} atom config ends in ${atom.config}. Period and group?`, hint: "Highest level = period. Valence e- = group.", micro: `Config: ${atom.config}.\nHighest n=${atom.period} (Period). Valence e- give Group ${atom.group}.`, traps: [null, "Wrong period.", "Transition metal group (B).", "Random trap."] },
     };
     const langData = texts[lang] || texts['es'];
     return { id: 'CONFIGURACION_ELECTRONICA', isAi: false, topic: langData.topic, text: langData.text, options: options, correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
   }
 
   static genSolutionsQuestion(lang) {
-    const massSolute = Math.floor(Math.random() * 80) + 20; const mmSolute = Math.floor(Math.random() * 60) + 40; const volumeLiters = (Math.floor(Math.random() * 4) + 1) * 0.5; 
-    const moles = massSolute / mmSolute; const molarity = Number((moles / volumeLiters).toFixed(2));
-    const error1 = Number((massSolute / volumeLiters).toFixed(2)); const error2 = Number(((moles / volumeLiters) * 1000).toFixed(2)); const error3 = Number((volumeLiters / moles).toFixed(2)); 
-    const optionsRaw = [molarity, error1, error2, error3]; const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
+    const massSolute = Math.floor(Math.random() * 80) + 20; 
+    const mmSolute = Math.floor(Math.random() * 60) + 40; 
+    const volumeLiters = (Math.floor(Math.random() * 4) + 1) * 0.5; 
+    
+    const moles = massSolute / mmSolute; 
+    const molarity = Number((moles / volumeLiters).toFixed(2));
+    const error1 = Number((massSolute / volumeLiters).toFixed(2)); // Trampa g/L
+    const error2 = Number(((moles / (volumeLiters * 1000))).toFixed(4)); // Trampa mL
+    const error3 = Number((volumeLiters / moles).toFixed(2)); 
+    
+    const optionsRaw = [molarity, error1, error2, error3]; 
+    const uniqueOptions = [...new Set(optionsRaw)].filter(n => !isNaN(n));
     while(uniqueOptions.length < 4) uniqueOptions.push(Number((Math.random() * 5).toFixed(2)));
-    const options = uniqueOptions.sort(() => Math.random() - 0.5); const correctIndex = options.indexOf(molarity);
+    const options = uniqueOptions.sort(() => Math.random() - 0.5); 
+    const correctIndex = options.indexOf(molarity);
 
     const texts = {
-      es: { topic: 'SOLUCIONES', text: `Disolviendo ${massSolute} g de sal (Masa molar = ${mmSolute} g/mol) en ${volumeLiters} Litros. ¿Molaridad (M)?`, hint: "M = Moles / Litros.", micro: `Moles = ${massSolute}g / ${mmSolute}g/mol = ${moles.toFixed(2)} moles. M = ${moles.toFixed(2)} / ${volumeLiters} L = ${molarity} M.`, traps: [null, "Trampa: Gramos / Litros.", "Trampa: Factor x1000.", "Trampa: Litros / Moles."] },
-      en: { topic: 'SOLUTIONS', text: `Dissolving ${massSolute} g of salt (MM = ${mmSolute} g/mol) into ${volumeLiters} Liters. Molarity (M)?`, hint: "M = Moles / Liters.", micro: `Moles = ${massSolute}g / ${mmSolute}g/mol = ${moles.toFixed(2)} moles. M = ${moles.toFixed(2)} / ${volumeLiters} L = ${molarity} M.`, traps: [null, "Trap: Grams / Liters.", "Trap: x1000 factor.", "Trap: Liters / Moles."] },
-      fr: { topic: 'SOLUTIONS', text: `Dissolution de ${massSolute} g de sel (MM = ${mmSolute} g/mol) dans ${volumeLiters} Litres. Molarité (M) ?`, hint: "M = Moles / Litres.", micro: `Moles = ${massSolute}g / ${mmSolute}g/mol = ${moles.toFixed(2)} moles. M = ${moles.toFixed(2)} / ${volumeLiters} L = ${molarity} M.`, traps: [null, "Piège: Grammes / Litres.", "Piège: x1000.", "Piège: Litres / Moles."] },
-      de: { topic: 'LÖSUNGEN', text: `Lösen von ${massSolute} g Salz (MM = ${mmSolute} g/mol) in ${volumeLiters} Litern. Molarität (M)?`, hint: "M = Mol / Liter.", micro: `Mol = ${massSolute}g / ${mmSolute}g/mol = ${moles.toFixed(2)} Mol. M = ${moles.toFixed(2)} / ${volumeLiters} L = ${molarity} M.`, traps: [null, "Falle: Gramm / Liter.", "Falle: x1000.", "Falle: Liter / Mol."] }
+      es: { topic: 'SOLUCIONES QUÍMICAS', text: `En un laboratorio se prepara una solución disolviendo ${massSolute} g de soluto (Masa molar = ${mmSolute} g/mol) en agua hasta alcanzar un volumen exacto de ${volumeLiters} Litros. ¿Cuál es la Molaridad (M) de la solución?`, hint: "Fórmula de Molaridad: M = Moles de soluto / Volumen de solución en Litros.", micro: `Paso 1: Hallar moles. ${massSolute}g / ${mmSolute}g/mol = ${moles.toFixed(3)} moles.\nPaso 2: Hallar Molaridad. M = ${moles.toFixed(3)} mol / ${volumeLiters} L = ${molarity} M.`, traps: [null, "Trampa: Calculaste concentración en gramos por litro (g/L), no Molaridad.", "Trampa: Fallo de unidades de volumen.", "Trampa: Invertiste la fórmula (L / moles)."] },
+      en: { topic: 'CHEMICAL SOLUTIONS', text: `A solution is prepared by dissolving ${massSolute} g of solute (Molar Mass = ${mmSolute} g/mol) to a volume of ${volumeLiters} Liters. What is the Molarity (M)?`, hint: "M = Moles / Liters.", micro: `Moles = ${massSolute}g / ${mmSolute}g/mol = ${moles.toFixed(3)} moles. M = ${moles.toFixed(3)} / ${volumeLiters} L = ${molarity} M.`, traps: [null, "Trap: Grams / Liters calculated.", "Trap: Unit conversion error.", "Trap: Inverted formula."] },
     };
     const langData = texts[lang] || texts['es'];
     return { id: 'SOLUCIONES', isAi: false, topic: langData.topic, text: langData.text, options: options.map(o => `${o} M`), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
   }
 
   static genBalanceQuestion(lang) {
-      const eqTypes = [{ eq: "N₂ + X H₂ ➔ 2NH₃", x: 3, es:"Hidrógeno", en:"Hydrogen", fr:"Hydrogène", de:"Wasserstoff" }];
-      const selected = eqTypes[0]; const correctAns = selected.x;
+      const eqTypes = [
+          { eq: "C₃H₈ + X O₂ ➔ 3CO₂ + 4H₂O", x: 5, es:"Oxígeno", en:"Oxygen" },
+          { eq: "2Al + X HCl ➔ 2AlCl₃ + 3H₂", x: 6, es:"Cloro", en:"Chlorine" }
+      ];
+      const selected = eqTypes[Math.floor(Math.random() * eqTypes.length)]; 
+      const correctAns = selected.x;
       const optionsRaw = [correctAns, correctAns + 1, correctAns - 1, correctAns * 2].filter(n => n > 0);
       const uniqueOptions = [...new Set(optionsRaw)]; while(uniqueOptions.length < 4) uniqueOptions.push(Math.floor(Math.random() * 5) + 5);
       const options = uniqueOptions.sort(() => Math.random() - 0.5); const correctIndex = options.indexOf(correctAns);
 
       const texts = {
-        es: { topic: 'BALANCEO', text: `Ecuación: ${selected.eq}. Para la Conservación de la Masa, ¿cuál es el valor X?`, hint: `Iguala los átomos de ${selected.es}.`, micro: `X = ${correctAns}.`, traps: [null, null, null, null] },
-        en: { topic: 'BALANCING', text: `Equation: ${selected.eq}. Exact value of X?`, hint: `Count ${selected.en} atoms.`, micro: `X = ${correctAns}.`, traps: [null, null, null, null] },
-        fr: { topic: 'ÉQUILIBRAGE', text: `Équation : ${selected.eq}. Valeur exacte de X ?`, hint: `Comptez les atomes de ${selected.fr}.`, micro: `X = ${correctAns}.`, traps: [null, null, null, null] },
-        de: { topic: 'AUSGLEICH', text: `Gleichung: ${selected.eq}. Exakter Wert von X?`, hint: `Zählen Sie die ${selected.de}-Atome.`, micro: `X = ${correctAns}.`, traps: [null, null, null, null] }
+        es: { topic: 'BALANCEO DE ECUACIONES', text: `Dada la siguiente ecuación química: \n${selected.eq} \nAplicando la Ley de Conservación de la Masa, ¿cuál debe ser el valor exacto del coeficiente estequiométrico X?`, hint: `Haz un conteo de los átomos de ${selected.es} en los productos y los reactivos.`, micro: `Para cumplir la conservación de masa, los átomos entran y salen en igual cantidad. El coeficiente X que equilibra los átomos es ${correctAns}.`, traps: [null, null, null, null] },
+        en: { topic: 'EQUATION BALANCING', text: `Equation: \n${selected.eq} \nFor Mass Conservation, what is the exact value of X?`, hint: `Count ${selected.en} atoms.`, micro: `Atoms must balance. X = ${correctAns}.`, traps: [null, null, null, null] },
       };
       const langData = texts[lang] || texts['es'];
       return { id: 'BALANCEO_ECUACIONES', isAi: false, topic: langData.topic, text: langData.text, options: options.map(String), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
   }
 
   static genIsotopeQuestion(lang) {
-      const iso = { name: "Carbono-14", z: 6, a: 14, n: 8 };
-      const correctAns = iso.n; const error1 = iso.a; const error2 = iso.z; const error3 = iso.a + iso.z;
+      const isos = [
+          { name: "Uranio-235", z: 92, a: 235 },
+          { name: "Cobalto-60", z: 27, a: 60 },
+          { name: "Yodo-131", z: 53, a: 131 }
+      ];
+      const iso = isos[Math.floor(Math.random() * isos.length)];
+      const neutrons = iso.a - iso.z;
+      const correctAns = neutrons; 
+      const error1 = iso.a; const error2 = iso.z; const error3 = iso.a + iso.z;
       const optionsRaw = [correctAns, error1, error2, error3]; const options = optionsRaw.sort(() => Math.random() - 0.5); const correctIndex = options.indexOf(correctAns);
 
       const texts = {
-        es: { topic: 'ISÓTOPOS', text: `Isótopo ${iso.name} (Z=${iso.z}, A=${iso.a}). ¿Cuántos neutrones posee?`, hint: "N = A - Z.", micro: `N = ${iso.a} - ${iso.z} = ${correctAns} neutrones.`, traps: [null, "Masa seleccionada.", "Protones seleccionados.", "Suma ilógica."] },
-        en: { topic: 'ISOTOPES', text: `Isotope ${iso.name} (Z=${iso.z}, A=${iso.a}). How many neutrons?`, hint: "N = A - Z.", micro: `N = ${iso.a} - ${iso.z} = ${correctAns} neutrons.`, traps: [null, "Mass selected.", "Protons selected.", "Added values."] },
-        fr: { topic: 'ISOTOPES', text: `Isotope ${iso.name} (Z=${iso.z}, A=${iso.a}). Combien de neutrons ?`, hint: "N = A - Z.", micro: `N = ${iso.a} - ${iso.z} = ${correctAns} neutrons.`, traps: [null, "Masse sélectionnée.", "Protons sélectionnés.", "Addition."] },
-        de: { topic: 'ISOTOPE', text: `Isotop ${iso.name} (Z=${iso.z}, A=${iso.a}). Wie viele Neutronen?`, hint: "N = A - Z.", micro: `N = ${iso.a} - ${iso.z} = ${correctAns} Neutronen.`, traps: [null, "Masse gewählt.", "Protonen gewählt.", "Addiert."] }
+        es: { topic: 'ESTRUCTURA ATÓMICA E ISÓTOPOS', text: `El isótopo radiactivo ${iso.name} tiene un número atómico (Z) de ${iso.z} y un número másico (A) de ${iso.a}. ¿Cuántos neutrones posee en su núcleo?`, hint: "El número másico (A) es la suma de protones y neutrones.", micro: `Fórmula: A = Z + Neutrones.\nDespejando: N = A - Z = ${iso.a} - ${iso.z} = ${correctAns} neutrones en el núcleo.`, traps: [null, "Elegiste el número másico (A), que incluye protones.", "Elegiste el número atómico (Z), que son solo los protones.", "Sumaste A y Z sin ningún sentido físico."] },
+        en: { topic: 'ATOMIC STRUCTURE', text: `The isotope ${iso.name} has atomic number Z=${iso.z} and mass number A=${iso.a}. How many neutrons in the nucleus?`, hint: "Mass number (A) = protons + neutrons.", micro: `N = A - Z = ${iso.a} - ${iso.z} = ${correctAns} neutrons.`, traps: [null, "Chose mass number.", "Chose atomic number.", "Added values illogically."] },
       };
       const langData = texts[lang] || texts['es'];
       return { id: 'ISOTOPOS_Y_ESTRUCTURA', isAi: false, topic: langData.topic, text: langData.text, options: options.map(String), correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
   }
 
   static genKineticsQuestion(lang) {
+      const type = Math.random() > 0.5 ? 'temp' : 'catalyst';
+      let correctType, text, hint, micro, opts, traps;
+
+      if (type === 'temp') {
+          correctType = 'ans';
+          opts = { ans: "Incrementa la energía cinética y las colisiones efectivas", err1: "Disminuye la presión de activación", err2: "Altera la estequiometría de los productos", err3: "Reduce la energía del sistema" };
+          text = `En termodinámica y cinética, ¿cuál es la justificación física de por qué un aumento de temperatura acelera exponencialmente una reacción química?`;
+          hint = "Piensa en el movimiento molecular a nivel cuántico.";
+          micro = "El calor es energía. Al aumentar la temperatura, las moléculas se mueven más rápido (mayor energía cinética), chocando entre sí con más frecuencia y con fuerza suficiente para superar la energía de activación.";
+          traps = [null, "Trampa: La temperatura no afecta la 'presión de activación', afecta la energía.", "Trampa: La estequiometría (los productos) no cambian por calentar más rápido.", "Trampa: Calentar aporta energía, no la reduce."];
+      } else {
+          correctType = 'ans';
+          opts = { ans: "Reduce la energía de activación requerida", err1: "Aumenta la temperatura interna del reactor", err2: "Se consume durante la reacción", err3: "Aumenta la cantidad de productos generados" };
+          text = `¿Cuál es el mecanismo exacto por el cual un catalizador logra acelerar una reacción química sin alterar el equilibrio termodinámico?`;
+          hint = "El catalizador crea un 'atajo' más fácil para que la reacción ocurra.";
+          micro = "Un catalizador proporciona una ruta de reacción alternativa que requiere una menor Energía de Activación, permitiendo que más partículas reaccionen a la misma temperatura.";
+          traps = [null, "Trampa: Los catalizadores no inyectan calor.", "Trampa ICFES típica: Los catalizadores NO se consumen en la reacción.", "Trampa: El catalizador acelera, pero no cambia el límite teórico de producto."];
+      }
+
       const optionsKeys = ['ans', 'err1', 'err2', 'err3'].sort(() => Math.random() - 0.5);
-      const correctIndex = optionsKeys.indexOf('ans');
-      const texts = {
-        es: { topic: 'CINÉTICA QUÍMICA', text: `¿Por qué aumentar la temperatura acelera una reacción?`, hint: "Energía cinética.", micro: `Aumenta la energía cinética y frecuencia de colisiones.`, opts: { ans: "Aumenta energía cinética", err1: "Disminuye presión", err2: "Cambia el producto", err3: "Reduce energía" }, traps: [null, "Trampa presión.", "Trampa producto.", "Trampa reducción."] },
-        en: { topic: 'KINETICS', text: `Why does increasing temp speed up reaction?`, hint: "Kinetic energy.", micro: `Increases kinetic energy and collisions.`, opts: { ans: "Increases kinetic energy", err1: "Decreases pressure", err2: "Changes product", err3: "Reduces energy" }, traps: [null, "Pressure trap.", "Product trap.", "Reduction trap."] },
-        fr: { topic: 'CINÉTIQUE', text: `Pourquoi la température accélère-t-elle la réaction ?`, hint: "Énergie cinétique.", micro: `Augmente l'énergie cinétique.`, opts: { ans: "Augmente l'énergie cinétique", err1: "Diminue pression", err2: "Change produit", err3: "Réduit énergie" }, traps: [null, "Piège pression.", "Piège produit.", "Piège réduction."] },
-        de: { topic: 'KINETIK', text: `Warum beschleunigt Temperatur die Reaktion?`, hint: "Kinetische Energie.", micro: `Erhöht kinetische Energie.`, opts: { ans: "Erhöht kinetische Energie", err1: "Verringert Druck", err2: "Ändert Produkt", err3: "Reduziert Energie" }, traps: [null, "Druckfalle.", "Produktfalle.", "Reduktionsfalle."] }
-      };
-      const langData = texts[lang] || texts['es'];
-      return { id: 'CINETICA_QUIMICA', isAi: false, topic: langData.topic, text: langData.text, optionsKeys: optionsKeys, correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: texts };
+      const correctIndex = optionsKeys.indexOf(correctType);
+      
+      const langData = { topic: 'CINÉTICA QUÍMICA', text, opts, hint, micro, traps }; // English ommitted for brevity in this sub-node, defaulting to ES
+      return { id: 'CINETICA_QUIMICA', isAi: false, topic: langData.topic, text: langData.text, optionsKeys: optionsKeys, correctIdx: correctIndex, hint: langData.hint, microclass: langData.micro, trapExplanations: langData.traps, texts: {es: langData} };
   }
 }
 
 /* ============================================================
    🧠 3. MOTOR DEEPSEEK (CONEXIÓN IA SANITIZADA Y PROTEGIDA)
 ============================================================ */
-
-// MAPEO ESTRICTO DE IDIOMAS PARA LA IA (God Tier Regex Fix)
-const LANG_MAP = {
-    es: "SPANISH",
-    en: "ENGLISH",
-    fr: "FRENCH",
-    de: "GERMAN"
-};
+const LANG_MAP = { es: "SPANISH", en: "ENGLISH" };
 
 class DeepSeekEngine {
-  
   static cleanJSON(raw) {
     try {
       let cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
@@ -325,10 +399,7 @@ class DeepSeekEngine {
       if (start !== -1 && end !== -1) {
         cleaned = cleaned.substring(start, end + 1);
       }
-      
-      try {
-          return JSON.parse(cleaned);
-      } catch (parseError) {
+      try { return JSON.parse(cleaned); } catch (parseError) {
           cleaned = cleaned.replace(/(?<!\\)\n/g, '\\n').replace(/(?<!\\)\r/g, '');
           return JSON.parse(cleaned);
       }
@@ -354,7 +425,6 @@ class DeepSeekEngine {
   static async generateQuestion(lang, forcedTopic = null, retries = 1) {
     const topics = [ 'GASES_IDEALES', 'ESTEQUIOMETRIA', 'DENSIDAD', 'PH', 'ENLACES_QUIMICOS', 'CONFIGURACION_ELECTRONICA', 'SOLUCIONES', 'BALANCEO_ECUACIONES', 'ISOTOPOS_Y_ESTRUCTURA', 'CINETICA_QUIMICA' ];
     const selectedTopic = forcedTopic || topics[Math.floor(Math.random() * topics.length)];
-    
     const targetLang = LANG_MAP[lang] || "SPANISH";
 
     const sysPrompt = `
@@ -396,7 +466,6 @@ class DeepSeekEngine {
 
   static async generateMasterclass(topic, lang, retries = 2) {
     const targetLang = LANG_MAP[lang] || "SPANISH";
-
     const sysPrompt = `
       Eres un Profesor Top de Química preparando a un estudiante para el ICFES.
       Genera una CLASE MAGISTRAL SIGNIFICATIVA Y DIRECTA sobre el tema: "${topic}".
@@ -444,10 +513,24 @@ class DeepSeekEngine {
 }
 
 /* ============================================================
-   🔊 4. MOTOR DE AUDIO SCI-FI
+   🔊 4. MOTOR DE AUDIO SCI-FI (WEB AUDIO API NATIVA)
 ============================================================ */
 class QuantumAudio {
-  constructor() { this.ctx = null; this.gainNode = null; }
+  constructor() { this.ctx = null; this.gainNode = null; this.setupUnlock(); }
+
+  setupUnlock() {
+    if (typeof window === 'undefined') return;
+    const unlock = () => {
+      this.init();
+      document.removeEventListener('click', unlock);
+      document.removeEventListener('touchstart', unlock);
+      document.removeEventListener('keydown', unlock);
+    };
+    document.addEventListener('click', unlock);
+    document.addEventListener('touchstart', unlock);
+    document.addEventListener('keydown', unlock);
+  }
+
   init() {
     if (typeof window !== 'undefined' && !this.ctx) {
       try {
@@ -462,6 +545,7 @@ class QuantumAudio {
     }
     if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(()=>{});
   }
+
   _play(type, fStart, fEnd, dur, vol = 0.1) {
     if (!this.ctx) return;
     try {
@@ -493,7 +577,7 @@ const DICT_UI = {
       btnCheck: "SINTETIZAR RESPUESTA", btnNext: "SIGUIENTE MÓDULO ➔",
       btnRetrySame: "REINTENTAR MATRIZ ➔", 
       correctTitle: "¡ANÁLISIS PERFECTO!", wrongTitle: "RUPTURA COGNITIVA",
-      statsBtn: "TELEMETRÍA", theoryText: "SISTEMA DE GENERACIÓN IA ACTIVO. Este simulador está conectado a DeepSeek Neural Net. Cada ejercicio es único, calculado al instante. Si la IA detecta latencia, se te asignará un reto algorítmico de emergencia sin interrumpir tu flujo.",
+      statsBtn: "TELEMETRÍA", theoryText: "SISTEMA DE GENERACIÓN IA ACTIVO. Este simulador está conectado a DeepSeek Neural Net. Cada ejercicio es único, calculado al instante. Se ha inyectado un algoritmo Anti-Repetición para garantizar cobertura total de los temas del ICFES.",
       timeout: "¡COLAPSO TÉRMICO (TIEMPO AGOTADO)!", topic: "DOMINIO ACTIVO", 
       dashboard: "DASHBOARD DE TELEMETRÍA GLOBAL", avgTime: "Tiempo Medio de Reacción",
       btnRetry: "PURGAR CACHÉ", aiSocraticBtn: "SOLICITAR CLASE MAGISTRAL IA",
@@ -504,26 +588,15 @@ const DICT_UI = {
       warmupTitle: "⚡ RETO DE CALENTAMIENTO", warmupSub: "Mientras la IA Cuántica sintetiza tu matriz principal..."
   },
   en: {
-      start: "START ICFES SIMULATION", title: "ICFES CHEMISTRY LAB", scan: "LASER INQUIRY SCANNER", aiBtn: "AI TUTOR", time: "CHRONOMETER", mastery: "Quantum Mastery", btnCheck: "SYNTHESIZE ANSWER", btnNext: "NEXT MODULE ➔", btnRetrySame: "RETRY MATRIX ➔", correctTitle: "PERFECT ANALYSIS!", wrongTitle: "COGNITIVE RUPTURE", statsBtn: "TELEMETRY", theoryText: "AI GENERATION SYSTEM ACTIVE. This simulator is hooked to DeepSeek Neural Net. Every exercise is uniquely calculated. If latency is detected, an emergency algorithm will deploy.", timeout: "THERMAL COLLAPSE!", topic: "ACTIVE DOMAIN", dashboard: "GLOBAL TELEMETRY DASHBOARD", avgTime: "Avg Reaction Time", btnRetry: "PURGE CACHE", aiSocraticBtn: "REQUEST AI MASTERCLASS", socraticModal: "AI HAS DETECTED FAILURES IN:", aiPraise: "PERFECT PERFORMANCE!", aiSelectTopic: "Select the domain to review:", aiClose: "CLOSE AI SESSION", downloadReport: "DOWNLOAD TACTICAL REPORT", loadingData: "ESTABLISHING DEEPSEEK NEURAL LINK...", warmupTitle: "⚡ WARM-UP CHALLENGE", warmupSub: "While AI synthesizes your main matrix..."
-  },
-  fr: {
-      start: "DÉMARRER LA SIMULATION", title: "LAB. DE CHIMIE ICFES", scan: "SCANNER LASER", aiBtn: "TUTEUR IA", time: "CHRONOMÈTRE", mastery: "Maîtrise Quantique", btnCheck: "SYNTHÉTISER", btnNext: "MODULE SUIVANT ➔", btnRetrySame: "RÉESSAYER ➔", correctTitle: "ANALYSE PARFAITE!", wrongTitle: "RUPTURE COGNITIVE", statsBtn: "TÉLÉMÉTRIE", theoryText: "SYSTÈME IA ACTIF. Ce simulateur génère des exercices uniques instantanément.", timeout: "EFFONDREMENT THERMIQUE!", topic: "DOMAINE ACTIF", dashboard: "TABLEAU DE BORD TÉLÉMÉTRIQUE", avgTime: "Temps Moyen de Réaction", btnRetry: "PURGER LE CACHE", aiSocraticBtn: "DEMANDER MASTERCLASS IA", socraticModal: "FAILLES DÉTECTÉES :", aiPraise: "PERFORMANCE PARFAITE !", aiSelectTopic: "Sélectionnez le domaine :", aiClose: "FERMER LA SESSION IA", downloadReport: "TÉLÉCHARGER LE RAPPORT TACTIQUE", loadingData: "ÉTABLISSEMENT DU LIEN NEURONAL...", warmupTitle: "⚡ DÉFI D'ÉCHAUFFEMENT", warmupSub: "Pendant que l'IA synthétise la matrice..."
-  },
-  de: {
-      start: "SIMULATION STARTEN", title: "ICFES CHEMIE LABOR", scan: "LASER-SCANNER", aiBtn: "KI-TUTOR", time: "CHRONOMETER", mastery: "Quantenbeherrschung", btnCheck: "ANTWORT SYNTHETISIEREN", btnNext: "NÄCHSTES MODUL ➔", btnRetrySame: "WIEDERHOLEN ➔", correctTitle: "PERFEKTE ANALYSE!", wrongTitle: "KOGNITIVER BRUCH", statsBtn: "TELEMETRIE", theoryText: "KI-SYSTEM AKTIV. Diese unendliche generative Engine erlaubt kein Auswendiglernen.", timeout: "THERMISCHER KOLLAPS!", topic: "AKTIVE DOMÄNE", dashboard: "GLOBALE TELEMETRIE", avgTime: "Durchschnittliche Reaktionszeit", btnRetry: "CACHE LÖSCHEN", aiSocraticBtn: "KI MASTERCLASS ANFORDERN", socraticModal: "FEHLER ERKANNT IN:", aiPraise: "PERFEKTE LEISTUNG!", aiSelectTopic: "Wählen Sie die Domäne:", aiClose: "KI-SITZUNG SCHLIESSEN", downloadReport: "TAKTIKBERICHT HERUNTERLADEN", loadingData: "AUFBAU DER NEURONALEN VERBINDUNG...", warmupTitle: "⚡ AUFWÄRMHERAUSFORDERUNG", warmupSub: "Während die KI deine Matrix synthetisiert..."
+      start: "START ICFES SIMULATION", title: "ICFES CHEMISTRY LAB", scan: "LASER INQUIRY SCANNER", aiBtn: "AI TUTOR", time: "CHRONOMETER", mastery: "Quantum Mastery", btnCheck: "SYNTHESIZE ANSWER", btnNext: "NEXT MODULE ➔", btnRetrySame: "RETRY MATRIX ➔", correctTitle: "PERFECT ANALYSIS!", wrongTitle: "COGNITIVE RUPTURE", statsBtn: "TELEMETRY", theoryText: "AI GENERATION SYSTEM ACTIVE. This simulator is hooked to DeepSeek. Every exercise is uniquely calculated. Anti-Repetition algorithm engaged for total ICFES coverage.", timeout: "THERMAL COLLAPSE!", topic: "ACTIVE DOMAIN", dashboard: "GLOBAL TELEMETRY DASHBOARD", avgTime: "Avg Reaction Time", btnRetry: "PURGE CACHE", aiSocraticBtn: "REQUEST AI MASTERCLASS", socraticModal: "AI HAS DETECTED FAILURES IN:", aiPraise: "PERFECT PERFORMANCE!", aiSelectTopic: "Select the domain to review:", aiClose: "CLOSE AI SESSION", downloadReport: "DOWNLOAD TACTICAL REPORT", loadingData: "ESTABLISHING DEEPSEEK NEURAL LINK...", warmupTitle: "⚡ WARM-UP CHALLENGE", warmupSub: "While AI synthesizes your main matrix..."
   }
 };
 
-// DICCIONARIO ESPECÍFICO PARA EL REPORTE PDF
 const DICT_REPORT = {
     es: {
-        docTitle: "DOSSIER TÁCTICO ICFES",
-        docSub: "SIMULACIÓN CUÁNTICA DE QUÍMICA",
-        dateLabel: "Fecha de Extracción",
-        kpiTitle: "MÉTRICAS GLOBALES DE RENDIMIENTO",
-        kpiAcc: "Precisión Neuronal",
-        kpiTime: "Tiempo de Reacción",
-        kpiTotal: "Matrices Resueltas",
+        docTitle: "DOSSIER TÁCTICO ICFES", docSub: "SIMULACIÓN CUÁNTICA DE QUÍMICA",
+        dateLabel: "Fecha de Extracción", kpiTitle: "MÉTRICAS GLOBALES DE RENDIMIENTO",
+        kpiAcc: "Precisión Neuronal", kpiTime: "Tiempo de Reacción", kpiTotal: "Matrices Resueltas",
         aiTitle: "VEREDICTO DEL SISTEMA DE INTELIGENCIA ARTIFICIAL",
         aiVuln: "⚠️ VULNERABILIDADES TÁCTICAS DETECTADAS",
         aiVulnDesc: "El operador muestra deficiencias críticas en los siguientes dominios:",
@@ -532,21 +605,14 @@ const DICT_REPORT = {
         aiOpt: "✅ RENDIMIENTO ÓPTIMO ALCANZADO",
         aiOptDesc: "No se detectan vulnerabilidades críticas. El operador está calificado y listo para enfrentar escenarios ICFES de alta complejidad.",
         aiNoData: "Datos biométricos insuficientes. El operador debe completar más simulaciones para emitir un veredicto válido.",
-        topicTitle: "DESGLOSE MICRO-ANALÍTICO POR DOMINIO",
-        topicNoData: "Aún no se han procesado suficientes dominios químicos.",
-        topicHit: "Aciertos",
-        topicMiss: "Fallos",
-        footer: "DOCUMENTO CLASIFICADO GENERADO POR LEARNING LABS ENGINE V26.0",
-        footerSub: "El conocimiento es la única ventaja táctica inquebrantable."
+        topicTitle: "DESGLOSE MICRO-ANALÍTICO POR DOMINIO", topicNoData: "Aún no se han procesado suficientes dominios químicos.",
+        topicHit: "Aciertos", topicMiss: "Fallos",
+        footer: "DOCUMENTO CLASIFICADO GENERADO POR LEARNING LABS ENGINE V26.0", footerSub: "El conocimiento es la única ventaja táctica inquebrantable."
     },
     en: {
-        docTitle: "ICFES TACTICAL DOSSIER",
-        docSub: "QUANTUM CHEMISTRY SIMULATION",
-        dateLabel: "Extraction Date",
-        kpiTitle: "GLOBAL PERFORMANCE METRICS",
-        kpiAcc: "Neural Accuracy",
-        kpiTime: "Reaction Time",
-        kpiTotal: "Matrices Solved",
+        docTitle: "ICFES TACTICAL DOSSIER", docSub: "QUANTUM CHEMISTRY SIMULATION",
+        dateLabel: "Extraction Date", kpiTitle: "GLOBAL PERFORMANCE METRICS",
+        kpiAcc: "Neural Accuracy", kpiTime: "Reaction Time", kpiTotal: "Matrices Solved",
         aiTitle: "ARTIFICIAL INTELLIGENCE SYSTEM VERDICT",
         aiVuln: "⚠️ TACTICAL VULNERABILITIES DETECTED",
         aiVulnDesc: "The operator shows critical deficiencies in the following domains:",
@@ -555,58 +621,9 @@ const DICT_REPORT = {
         aiOpt: "✅ OPTIMAL PERFORMANCE ACHIEVED",
         aiOptDesc: "No critical vulnerabilities detected. The operator is qualified and ready to face high-complexity ICFES scenarios.",
         aiNoData: "Insufficient biometric data. The operator must complete more simulations to issue a valid verdict.",
-        topicTitle: "MICRO-ANALYTICAL DOMAIN BREAKDOWN",
-        topicNoData: "Not enough chemical domains have been processed yet.",
-        topicHit: "Hits",
-        topicMiss: "Misses",
-        footer: "CLASSIFIED DOCUMENT GENERATED BY LEARNING LABS ENGINE V26.0",
-        footerSub: "Knowledge is the only unbreakable tactical advantage."
-    },
-    fr: {
-        docTitle: "DOSSIER TACTIQUE ICFES",
-        docSub: "SIMULATION QUANTIQUE DE CHIMIE",
-        dateLabel: "Date d'extraction",
-        kpiTitle: "MÉTRIQUES GLOBALES DE PERFORMANCE",
-        kpiAcc: "Précision Neuronale",
-        kpiTime: "Temps de Réaction",
-        kpiTotal: "Matrices Résolues",
-        aiTitle: "VERDICT DU SYSTÈME D'INTELLIGENCE ARTIFICIELLE",
-        aiVuln: "⚠️ VULNÉRABILITÉS TACTIQUES DÉTECTÉES",
-        aiVulnDesc: "L'opérateur montre des lacunes critiques dans les domaines suivants :",
-        aiAction: "PLAN D'ACTION IA",
-        aiActionDesc: "Il est impératif de demander le module 'Masterclass IA' dans le simulateur pour réentraîner les réseaux de neurones biologiques sur ces sujets.",
-        aiOpt: "✅ PERFORMANCE OPTIMALE ATTEINTE",
-        aiOptDesc: "Aucune vulnérabilité critique détectée. L'opérateur est qualifié et prêt à affronter des scénarios ICFES de haute complexité.",
-        aiNoData: "Données biométriques insuffisantes. L'opérateur doit terminer plus de simulations pour émettre un verdict valide.",
-        topicTitle: "RÉPARTITION MICRO-ANALYTIQUE PAR DOMAINE",
-        topicNoData: "Pas encore assez de domaines chimiques traités.",
-        topicHit: "Succès",
-        topicMiss: "Échecs",
-        footer: "DOCUMENT CLASSIFIÉ GÉNÉRÉ PAR LEARNING LABS ENGINE V26.0",
-        footerSub: "La connaissance est le seul avantage tactique inébranlable."
-    },
-    de: {
-        docTitle: "ICFES TAKTISCHES DOSSIER",
-        docSub: "QUANTENCHEMIE-SIMULATION",
-        dateLabel: "Extraktionsdatum",
-        kpiTitle: "GLOBALE LEISTUNGSKENNZAHLEN",
-        kpiAcc: "Neuronale Genauigkeit",
-        kpiTime: "Reaktionszeit",
-        kpiTotal: "Gelöste Matrizen",
-        aiTitle: "URTEIL DES KÜNSTLICHEN INTELLIGENZSYSTEMS",
-        aiVuln: "⚠️ TAKTISCHE SCHWACHSTELLEN ERKANNT",
-        aiVulnDesc: "Der Bediener zeigt kritische Mängel in folgenden Bereichen:",
-        aiAction: "KI-AKTIONSPLAN",
-        aiActionDesc: "Es ist zwingend erforderlich, das 'KI-Masterclass'-Modul im Simulator anzufordern, um biologische neuronale Netze in diesen Themenbereichen neu zu trainieren.",
-        aiOpt: "✅ OPTIMALE LEISTUNG ERREICHT",
-        aiOptDesc: "Keine kritischen Schwachstellen erkannt. Der Bediener ist qualifiziert und bereit für hochkomplexe ICFES-Szenarien.",
-        aiNoData: "Unzureichende biometrische Daten. Der Bediener muss weitere Simulationen abschließen, um ein gültiges Urteil zu fällen.",
-        topicTitle: "MIKROANALYTISCHE DOMÄNENAUFSCHLÜSSELUNG",
-        topicNoData: "Noch nicht genügend chemische Domänen verarbeitet.",
-        topicHit: "Treffer",
-        topicMiss: "Fehler",
-        footer: "KLASSIFIZIERTES DOKUMENT, ERSTELLT VON LEARNING LABS ENGINE V26.0",
-        footerSub: "Wissen ist der einzige unzerbrechliche taktische Vorteil."
+        topicTitle: "MICRO-ANALYTICAL DOMAIN BREAKDOWN", topicNoData: "Not enough chemical domains have been processed yet.",
+        topicHit: "Hits", topicMiss: "Misses",
+        footer: "CLASSIFIED DOCUMENT GENERATED BY LEARNING LABS ENGINE V26.0", footerSub: "Knowledge is the only unbreakable tactical advantage."
     }
 };
 
@@ -624,20 +641,6 @@ const TIPS_DB = {
     "WATCH OUT: pH + pOH = 14. Read what they ask carefully.",
     "STRATEGY: Always balance the equation first.",
     "CONCEPT: Non-polar = electronegativity difference near zero."
-  ],
-  fr: [
-    "RAPPEL : La molarité exige des MOLES et des LITRES.",
-    "ASTUCE ICFES : Si le volume d'un gaz double, sa température absolue a doublé.",
-    "ATTENTION : pH + pOH = 14.",
-    "STRATÉGIE : Équilibrez toujours l'équation d'abord.",
-    "CONCEPT : Liaison covalente apolaire = différence d'électronégativité proche de zéro."
-  ],
-  de: [
-    "DENKEN SIE DARAN: Molarität erfordert MOL und LITER.",
-    "ICFES-TRICK: Wenn sich das Gasvolumen verdoppelt, verdoppelt sich die absolute Temperatur.",
-    "VORSICHT: pH + pOH = 14.",
-    "STRATEGIE: Gleichen Sie die Gleichung immer zuerst aus.",
-    "KONZEPT: Unpolare kovalente Bindung = Elektronegativitätsdifferenz nahe Null."
   ]
 };
 
@@ -676,7 +679,7 @@ const QuantumIntermission = ({ lang, loadingText }) => {
 };
 
 /* ============================================================
-   🎥 7. NÚCLEO 3D AVANZADO
+   🎥 7. NÚCLEO 3D AVANZADO DE ESTADO DE FLUJO (ESTÁTICO)
 ============================================================ */
 const AtomParticles = ({ count, color, speed, radius }) => {
   const mesh = useRef();
@@ -697,8 +700,15 @@ const AtomParticles = ({ count, color, speed, radius }) => {
   useFrame(() => {
     if (!mesh.current) return;
     particles.forEach((particle, i) => {
-      let { t, factor, x, y, z } = particle;
-      t = particle.t += speed * factor;
+      // STATIC RENDER FOR DEEP FOCUS - Eliminada la acumulación de t (particle.t += speed)
+      let { t, factor, x, y, z } = particle; 
+      
+      // Si hay explosión de error, las partículas vibran caóticamente
+      if (speed > 0.1) {
+          x += (Math.random() - 0.5) * 0.5;
+          y += (Math.random() - 0.5) * 0.5;
+      }
+      
       const a = Math.cos(t) + Math.sin(t) / 10;
       const b = Math.sin(t) + Math.cos(t) / 10;
       dummy.position.set(x + a, y + b, z);
@@ -729,30 +739,34 @@ const Core3D = ({ isExploding, scannerActive, timeRatio, isLoading }) => {
   else if (isDanger) particleColor = "#ffaa00"; 
   else if (isCritical || isExploding) particleColor = "#ff0033"; 
 
-  const particleSpeed = isExploding ? 0.2 : (isLoading ? 0.1 : 0.02 + (timeRatio * 0.08)); 
+  // Speed is only > 0 if exploding or loading. During normal test, speed is 0 for Focus.
+  const particleSpeed = isExploding ? 0.5 : (isLoading ? 0.1 : 0); 
 
   useFrame((state) => {
+    // Camera remains completely static for Deep Focus, unless there's an explosion (fail)
     if (isExploding || isCritical) {
       state.camera.position.x = Math.sin(state.clock.elapsedTime * 80) * (isExploding ? 1.5 : 0.2);
       state.camera.position.y = 2 + Math.cos(state.clock.elapsedTime * 90) * (isExploding ? 1.5 : 0.2);
-    } else if (isLoading) {
-      state.camera.position.x = Math.sin(state.clock.elapsedTime * 2) * 5;
-      state.camera.position.z = 25 + Math.cos(state.clock.elapsedTime * 2) * 5;
     } else {
       state.camera.position.lerp(new THREE.Vector3(0, 2, 28), 0.05);
     }
     state.camera.lookAt(0, 0, 0);
     
+    // Torus remains static unless exploding or loading
     if (torusRef.current) {
-        torusRef.current.rotation.y += particleSpeed;
-        torusRef.current.rotation.x += particleSpeed * 0.5;
+        if (isExploding || isLoading) {
+            torusRef.current.rotation.y += particleSpeed;
+            torusRef.current.rotation.x += particleSpeed * 0.5;
+        }
         if (isDanger && !isExploding && !isLoading) {
-            const scale = 1 + Math.sin(state.clock.elapsedTime * 25) * (timeRatio * 0.15);
+            // Latido sutil si queda poco tiempo
+            const scale = 1 + Math.sin(state.clock.elapsedTime * 25) * (timeRatio * 0.05);
             torusRef.current.scale.set(scale, scale, scale);
         } else {
             torusRef.current.scale.set(1, 1, 1);
         }
     }
+
     if (scannerActive && scanPlaneRef.current) {
         scanPlaneRef.current.position.x = Math.sin(state.clock.elapsedTime * 3) * 12;
     }
@@ -762,20 +776,25 @@ const Core3D = ({ isExploding, scannerActive, timeRatio, isLoading }) => {
     <>
       <ambientLight intensity={1.5} />
       <directionalLight position={[10, 15, 10]} intensity={3} color="#ffffff" />
-      <Stars count={4000} factor={5} fade speed={isExploding ? 6 : (isLoading ? 4 : 2)} />
+      {/* Stars are completely static (speed=0) for pure focus */}
+      <Stars count={4000} factor={5} fade speed={isExploding ? 6 : 0} />
+      
       <AtomParticles count={350} color={particleColor} speed={particleSpeed} radius={18} />
+      
       {scannerActive && (
          <mesh ref={scanPlaneRef} rotation={[0, Math.PI/2, 0]}>
             <planeGeometry args={[30, 30]} />
             <meshBasicMaterial color="#0f0" transparent opacity={0.2} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
          </mesh>
       )}
+      
       <group position={[0, 3, 0]}>
          <mesh ref={torusRef}>
             <torusKnotGeometry args={[2.5, 0.5, 120, 20]} />
             <meshStandardMaterial color={particleColor} wireframe transparent opacity={0.6} />
          </mesh>
       </group>
+      
       <EffectComposer>
         <Bloom intensity={isExploding ? 10 : (isLoading ? 8 : (isDanger ? 6 : 3))} luminanceThreshold={0.1} mipmapBlur />
         <ChromaticAberration offset={isExploding ? VECTOR_EXP : VECTOR_NORM} />
@@ -1652,8 +1671,8 @@ function GameApp() {
                                           <div style={{width:`${pct}%`, height:'100%', background: pct >= 60 ? '#0f0' : (pct > 0 ? '#ffea00' : '#ff0055')}}></div>
                                       </div>
                                       <div style={{color:'#aaa', fontSize:'14px', marginTop:'10px', display:'flex', justifyContent:'space-between'}}>
-                                          <span>${REPORT_UI.topicHit}: <span style={{color:'#0f0'}}>{t.c}</span></span>
-                                          <span>${REPORT_UI.topicMiss}: <span style={{color:'#f00'}}>{t.w}</span></span>
+                                          <span>{REPORT_UI.topicHit}: <span style={{color:'#0f0'}}>{t.c}</span></span>
+                                          <span>{REPORT_UI.topicMiss}: <span style={{color:'#f00'}}>{t.w}</span></span>
                                       </div>
                                   </div>
                               );
